@@ -1,9 +1,12 @@
 <script setup>
 import OrganicLayout from "@/Layouts/OrganicLayout.vue";
-import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
+import { Head, Link, useForm, usePage, router } from "@inertiajs/vue3";
 import { ref, onMounted } from "vue";
 
 import Typewriter from "typewriter-effect/dist/core";
+
+// LINE LIFF
+import liff from "@line/liff";
 
 import StarIcon from "@/../icons/star.svg";
 import FuelerIcon from "@/../icons/fueler.svg";
@@ -59,7 +62,6 @@ let typeWords = (el_id, text_arr = []) => {
 // Example usage
 
 onMounted(() => {
-
     typeWords("service_typing", [
         "แบบเรียน HSK 1-6",
         "แบบฝึกหัด HSK 1-6",
@@ -70,6 +72,46 @@ onMounted(() => {
         "ฝีกเขียนจีน Hànzì",
         "แข่งกับเพื่อน",
     ]);
+
+    // Initialize LIFF with your LIFF ID here
+    liff.init({ liffId: "2001165902-JR5Z95AG" })
+        .then(() => {
+            console.log("LIFF initialization successful");
+            if (!liff.isLoggedIn()) {
+                liff.login(); // Prompt the login if not already logged in
+            }
+            // Additional logic after successful initialization
+            liff.getProfile()
+                .then((profile) => {
+                    // console.log(profile.displayName);
+                    // console.log(profile.userId);
+                    // console.log(profile.pictureUrl);
+                    // console.log(profile.statusMessage);
+                    // Here you can either display the user info in your app or send it to your backend for processing/storage
+
+                    const userData = {
+                        provider: "line",
+                        userId: profile.userId, // LINE user ID
+                        displayName: profile.displayName,
+                        email: liff.getDecodedIDToken()?.email, // Ensure your LIFF has email permission
+                        pictureUrl: profile.pictureUrl,
+                    };
+
+                    // Make an API call to your backend
+                    router.post(`login/lineliff`, userData, {
+                        preserveScroll: true,
+                        onSuccess: (page) => {
+                            console.log(page);
+                        },
+                    });
+                })
+                .catch((err) => {
+                    console.error("Failed to get user profile:", err);
+                });
+        })
+        .catch((err) => {
+            console.error("LIFF Initialization failed", err);
+        });
 });
 </script>
 
@@ -117,7 +159,9 @@ onMounted(() => {
                 <span class="whitespace-nowrap">จนเป็นนักรบที่แข็งแกร่ง</span>
             </p>
 
-            <div class="flex sm:ml-20 pt-4 font-sans font-semibold space-x-4 sm:space-x-6">
+            <div
+                class="flex sm:ml-20 pt-4 font-sans font-semibold space-x-4 sm:space-x-6"
+            >
                 <div
                     id="service_typing"
                     class="mt-5 text-2xl text-center text-red"
@@ -173,8 +217,13 @@ onMounted(() => {
                     >
                         <img src="@/../images/img/object/fan_1.png" alt="" />
                     </div>
-                    <div class="w-13 h-13 bg-white/80 group-hover/card:border-red/40 rounded-2xl border-2 border-white object-cover overflow-hidden">
-                        <img src="@/../images/img/object/lantern_2.png" alt=""/>
+                    <div
+                        class="w-13 h-13 bg-white/80 group-hover/card:border-red/40 rounded-2xl border-2 border-white object-cover overflow-hidden"
+                    >
+                        <img
+                            src="@/../images/img/object/lantern_2.png"
+                            alt=""
+                        />
                     </div>
                 </div>
                 <div class="pt-3 font-bold">สร้างโปรไฟล์เพื่อบันทึกเลเวล</div>

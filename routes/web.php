@@ -26,14 +26,6 @@ Route::get('/warrior_home', function () {
     return Inertia::render('Warrior');
 });
 
-Route::get('/warrior_textbook', function () {
-    return Inertia::render('WarriorHSKTextbook');
-});
-
-Route::get('/warrior_workbook', function () {
-    return Inertia::render('WarriorHSKWorkbook');
-});
-
 Route::get('/test', function () {
 
     return Inertia::render('Test');
@@ -56,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
+Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
+
 
 Route::fallback(function () {
     return Inertia::render('404');

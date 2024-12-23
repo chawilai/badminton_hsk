@@ -20,6 +20,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@line/liff": "^2.25.1",
         "hanzi-writer": "^3.6.1",
         "hanzi-writer-data": "^2.0.1",
         "paper-css": "^0.4.1",
