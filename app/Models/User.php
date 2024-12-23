@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -24,6 +26,9 @@ class User extends Authenticatable
         'provider_id',
         'avatar',
         'profile_picture',
+        'gender',
+        'date_of_birth',
+        'badminton_rank_id',
     ];
 
     /**
@@ -35,6 +40,14 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected $dates = ['date_of_birth'];
+
+    // Accessor for age
+    public function getAgeAttribute()
+    {
+        return $this->date_of_birth ? Carbon::parse($this->date_of_birth)->age : null;
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -49,30 +62,20 @@ class User extends Authenticatable
         ];
     }
 
-    public function addExperience(int $amount, string $reason = null)
+    public function badmintonRank()
     {
-        $this->experience += $amount;
-        $this->save();
-
-        $this->experienceHistory()->create([
-            'change' => $amount,
-            'reason' => $reason,
-        ]);
+        return $this->belongsTo(BadmintonRank::class, 'badminton_rank_id');
     }
 
-    public function cutExperience(int $amount, string $reason = null)
+    // Users have many GamePlayers
+    public function gamePlayers()
     {
-        $this->experience = max(0, $this->experience - $amount);
-        $this->save();
-
-        $this->experienceHistory()->create([
-            'change' => -$amount,
-            'reason' => $reason,
-        ]);
+        return $this->hasMany(GamePlayer::class);
     }
 
-    public function experienceHistory()
+    // Optional: Users might have many PartyMembers if that relationship is useful for other features
+    public function partyMembers()
     {
-        return $this->hasMany(ExperienceHistory::class);
+        return $this->hasMany(PartyMember::class);
     }
 }

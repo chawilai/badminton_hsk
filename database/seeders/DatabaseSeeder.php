@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Court;
+use App\Models\Party;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,12 +19,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ThaiAddressSeeder::class);
         $this->call(BadmintonRanksTableSeeder::class);
 
-        // User::factory(500)->create();
-
-        // Court::factory(20)->create();
-
-        // Party::factory(10)->create();
-
-        // $this->call(PartyMembersSeeder::class);
+        User::factory(500)->create();
+        Court::factory(20)->create();
+        Party::factory(10)->create();
+        $this->call(PartyMembersSeeder::class);
     }
 }

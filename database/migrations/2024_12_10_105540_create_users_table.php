@@ -24,7 +24,14 @@ return new class extends Migration
             $table->string('provider_id')->nullable();
             $table->string('avatar')->nullable();
             $table->string('profile_picture')->nullable();
+            $table->string('provider_name')->nullable();
             // social
+
+            // badminton profile
+            $table->foreignId('badminton_rank_id')->nullable()->constrained('badminton_ranks')->onDelete('set null');
+            $table->string('gender')->nullable();  // Assuming gender is optional and stored as a string
+            $table->date('date_of_birth')->nullable();  // Assuming date of birth is optional
+            $table->string('player_motto')->nullable();
 
             $table->timestamps();
         });

@@ -2,65 +2,472 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ChineseWord;
+use App\Models\Game;
+use App\Models\GameSet;
+use App\Models\GamePlayer;
+use App\Models\Party;
+use App\Models\PartyMember;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
-    public function getWords()
+    /**
+     * Store a new game.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
     {
-        $words = ChineseWord::all();
-        return response()->json($words);
-    }
 
-    public function updateProgress(Request $request)
-    {
-        $user = Auth::user();
-        $wordId = $request->input('word_id');
-        $isCorrect = $request->input('is_correct');
+        $request->validate([
+            'party_id' => 'required|exists:parties,id',
+            'game_type' => 'required|in:double,quadruple',
+            'status' => 'required|in:setting,listing,playing,finished',
+            'game_list_date' => 'sometimes|date',
+            'game_start_date' => 'sometimes|date|after:game_list_date',
+            'game_end_date' => 'sometimes|date|after:game_start_date',
+            'initial_shuttlecock_game' => 'sometimes|numeric|min:0'
+        ]);
 
-        $userWord = UserWord::firstOrNew(['user_id' => $user->id, 'word_id' => $wordId]);
+        // Check if there's already a game in the 'setting' status for the same party
+        $existingGameSetting = Game::where('party_id', $request->party_id)
+            ->where('status', 'setting')
+            ->exists();
 
-        // Initialize recent_attempts if not set
-        if (!$userWord->recent_attempts) {
-            $userWord->recent_attempts = [];
+        if ($existingGameSetting) {
+            return back()->with('error', 'There is already a game in the setting status for this party.');
         }
 
-        // Add the new attempt to the recent_attempts array
-        $attempts = $userWord->recent_attempts;
-        array_push($attempts, $isCorrect);
+        $game = Game::create([
+            'party_id' => $request->party_id,
+            'game_type' => $request->game_type,
+            'status' => $request->status,
+            'game_create_date' => now(),
+            'game_list_date' => $request->game_list_date,
+            'game_start_date' => $request->game_start_date,
+            'game_end_date' => $request->game_end_date
+        ]);
 
-        // Keep only the last 5 attempts
-        if (count($attempts) > 5) {
-            array_shift($attempts);
-        }
+        // Fetch default shuttlecocks from the party if not provided
+        $party = Party::find($request->party_id);
+        $initialShuttlecocks = $request->input('initial_shuttlecock_game', $party->default_initial_shuttlecocks);
 
-        $userWord->recent_attempts = $attempts;
-        $userWord->status = $this->determineStatus($attempts);
-        $userWord->save();
+        // Check for an existing initial shuttlecock record
+        $initialShuttlecockEntry = $game->shuttlecocks()->where('type', 'initial')->first();
 
-        // Add experience points for correct answers
-        if ($isCorrect) {
-            $user->addExperience(10, 'Learned a new word');
-        }
-
-        return response()->json(['message' => 'Progress updated']);
-    }
-
-    private function determineStatus($attempts)
-    {
-        $correctCount = array_sum($attempts);
-        $totalAttempts = count($attempts);
-        $accuracy = $correctCount / $totalAttempts;
-
-        if ($accuracy == 1) {
-            return 'learned';
-        } elseif ($accuracy > 0.75) {
-            return 'almost remember';
-        } elseif ($accuracy >= 0.5) {
-            return 'use to it';
+        if ($initialShuttlecocks > 0) {
+            if ($initialShuttlecockEntry) {
+                // Update the existing record if it exists
+                $initialShuttlecockEntry->update([
+                    'quantity' => $initialShuttlecocks
+                ]);
+            } else {
+                // Create a new record if no existing record is found
+                $game->shuttlecocks()->create([
+                    'type' => 'initial',
+                    'quantity' => $initialShuttlecocks
+                ]);
+            }
         } else {
-            return 'do not know yet';
+            // If $initialShuttlecocks is 0 and an entry exists, consider deleting or updating it to 0
+            if ($initialShuttlecockEntry) {
+                $initialShuttlecockEntry->update(['quantity' => 0]);
+            }
         }
+
+        return back();
+    }
+
+    /**
+     * Add a "ready" party member to a game.
+     *
+     * @param Request $request
+     * @param Game $game
+     * @return \Illuminate\Http\Response
+     */
+    public function addPlayer(Request $request, Game $game)
+    {
+        $request->validate([
+            'party_member_id' => 'required|exists:party_members,id',
+            'team' => 'required|in:team1,team2',
+        ]);
+
+        // Check if the game is in the 'setting' state
+        if ($game->status !== 'setting') {
+            return back()->with('error', 'Players can only be added when the game is setting.');
+        }
+
+        // Define the maximum players allowed for each team based on the game type
+        $maxPlayersPerTeam = $game->game_type === 'double' ? 1 : 2;
+
+        // Check the current number of players in the specific team
+        $currentTeamPlayerCount = $game->gamePlayers()->where('team', $request->team)->count();
+        if ($currentTeamPlayerCount >= $maxPlayersPerTeam) {
+
+            session()->flash('error', ['team_player_limit' => "The maximum number of players for {$request->team} in a {$game->game_type} game has already been reached."]);
+            return redirect()->route('party');
+        }
+
+        // Fetch the party member
+        $partyMember = PartyMember::where('id', $request->party_member_id)->firstOrFail();
+
+        // Add the player to the game
+        $game->gamePlayers()->create([
+            'game_id' => $game->id,
+            'user_id' => $partyMember->user_id,
+            'team' => $request->team
+        ]);
+
+        return back()->with('success', 'Player added successfully to the game.');
+    }
+
+    /**
+     * Fetch players in the party with status 'ready' based on game_id.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchReadyPlayers(Request $request)
+    {
+        $request->validate([
+            'game_id' => 'required|exists:games,id'
+        ]);
+
+        // Assuming a Game has a Party through a relationship
+        $game = Game::with('party')->find($request->game_id);
+
+        if (!$game || !$game->party) {
+            return response()->json(['error' => 'No party associated with this game'], 404);
+        }
+
+        $currentDateTime = now(); // Get the current date and time
+
+        // Fetching party members who are ready, and eager load their User, BadmintonRank, and their games
+        $query = PartyMember::with([
+            'user.badmintonRank',
+            'user',
+            'user.gamePlayers.game',
+            'user.gamePlayers.game.gameSets'
+        ])
+            ->where('party_id', $game->party_id)
+            ->where('game_status', 'ready')
+            ->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
+                $subQuery->whereIn('status', ['setting', 'listing']);
+            });
+
+        if (!$game->party->is_inc_playing) {
+            $query->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
+                $subQuery->whereIn('status', ['playing']);
+            });
+        }
+
+        $readyPlayers = $query->get();
+
+        return response()->json([
+            'game_id' => $game->id,
+            'readyPlayers' => $readyPlayers->map(function ($player) use ($game, $currentDateTime) {
+                // $finishedGamesCount = $player->user->gamePlayers->where('game.status', 'finished')->count(); // Counting finished games associated with the user
+
+                $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
+                    ->whereHas('game', function ($query) use ($game) {
+                        $query->where('status', 'finished')
+                            ->where('party_id', $game->party_id);
+                    })
+                    ->count();
+
+                $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
+                    ->join('games', 'game_players.game_id', '=', 'games.id')
+                    ->where('games.status', 'finished')
+                    ->latest('games.game_end_date')
+                    ->select('game_players.*', 'games.game_end_date as game_end_date') // Ensure to select game_end_date
+                    ->first();
+
+                // Calculate waiting time in seconds
+                $waitingTime = $lastGameEndTime ?
+                    abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game->game_end_date, false))) :
+                    abs(round($currentDateTime->diffInSeconds($game->party->party_start_date, false)));
+
+                $gameDetails = $player->user->gamePlayers->map(function ($gamePlayer) {
+                    // Group players by team within the game
+                    $teamPlayers = $gamePlayer->game->gamePlayers
+                        ->groupBy('team')
+                        ->map(function ($teamGroup) {
+                            // Map each team's players
+                            return $teamGroup->map(function ($player) {
+                                return [
+                                    'player_id' => $player->user_id,
+                                    'name' => $player->user->name
+                                ];
+                            });
+                        });
+
+                    // Mapping game sets to include starting sides
+                    $gameSets = $gamePlayer->game->gameSets->map(function ($set) {
+                        return ['team1' => ['side' => $set->team1_start_side], 'team2' => ['side' => $set->team2_start_side]];
+                    });
+
+                    return [
+                        'game_id' => $gamePlayer->game->id,
+                        'party_id' => $gamePlayer->game->party_id,
+                        'status' => $gamePlayer->game->status,
+                        'teams' => [
+                            'team1' => $teamPlayers->get('team1') ?? [],
+                            'team2' => $teamPlayers->get('team2') ?? []
+                        ],
+                        'game_sets' => $gameSets  // Added game sets with starting sides
+                    ];
+                });
+
+                return [
+                    'user_id' => $player->user->id,
+                    'party_member_id' => $player->id,
+                    'name' => $player->user->name,
+                    'gender' => $player->user->gender,
+                    'age' => $player->user->age,
+                    'date_of_birth' => $player->user->date_of_birth,
+                    'badminton_rank' => $player->user->badmintonRank->education_rank,
+                    'game_status' => $player->game_status,
+                    'finished_games_count' => $finishedGamesCount,
+                    'games' => $gameDetails,  // Include game details for each player
+                    'waiting_time' => $waitingTime
+                ];
+            })
+        ]);
+    }
+
+    public function removePlayer(Request $request)
+    {
+        $request->validate([
+            'game_id' => 'required|exists:games,id',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        // Retrieve the game and the user/player to be removed
+        $gamePlayer = GamePlayer::where('game_id', $request->game_id)
+            ->where('user_id', $request->user_id)  // Changed from id to user_id
+            ->first();
+
+        if (!$gamePlayer) {
+            return back()->with('error', 'Player not found in the specified game.');
+        }
+
+        // Remove the player from the game
+        $gamePlayer->delete();
+
+        return back()->with('success', 'Player has been removed and set to ready.');
+    }
+
+    public function listGame(Request $request, $gameId)
+    {
+        // Validate the request input for starting sides
+        $validatedData = $request->validate([
+            'team1_start_side' => [
+                'sometimes',
+                Rule::in(['north', 'south'])
+            ]
+        ]);
+
+        // Find the game or fail with a 404 error
+        $game = Game::with('gamePlayers')->findOrFail($gameId);
+
+        // Determine the required number of players per team
+        $requiredPlayersPerTeam = $game->game_type === 'double' ? 1 : 2;
+        $requiredTotalPlayers = $requiredPlayersPerTeam * 2;
+
+        // Check if the game has enough players
+        if ($game->gamePlayers->count() < $requiredTotalPlayers) {
+            return back()->with('error', 'Cannot list the game: not enough players.');
+        }
+
+        // Check if the game is already in progress or has started
+        if ($game->status !== 'setting') {
+            return back()->with('error', 'Game is not in a setting state to list');
+        }
+
+        // Determine sides based on input or default values
+        $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
+        $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
+
+        // Determine the next set number by finding the highest current set number and adding 1
+        $nextSetNumber = $game->gameSets()->max('set_number') + 1 ?? 1;
+
+        // Start the game
+        $game->status = 'listing';
+        $game->game_list_date = Carbon::now();
+        $game->save();
+
+        // Initialize the first game set with specified or default sides
+        $initialSet = $game->gameSets()->create([
+            'set_number' => $nextSetNumber,
+            'team1_start_side' => $team1StartSide,
+            'team2_start_side' => $team2StartSide,
+        ]);
+
+        // return to_route('party')->with('success', 'Player added successfully to the game.');
+        return back()->with('success', 'The game has been listed for play.');
+    }
+
+    public function startGame(Request $request, $gameId)
+    {
+        // Find the game or fail with a 404 error
+        $game = Game::with('gamePlayers')->findOrFail($gameId);
+
+        // Check if the game is already in progress or has started
+        if ($game->status !== 'listing') {
+            return back()->with('error', 'Game is not in a state listing to start');
+        }
+
+        // Check if any player is currently playing in another game within the same party
+        $playerUserIds = $game->gamePlayers->pluck('user_id')->toArray();
+        $activeGamesCount = GamePlayer::whereIn('user_id', $playerUserIds)
+            ->whereHas('game', function ($query) use ($gameId, $game) {
+                $query->where('id', '!=', $gameId) // Ignore the current game
+                    ->where('status', 'playing') // Only consider games that are currently playing
+                    ->where('party_id', $game->party_id); // Restrict to games within the same party
+            })
+            ->count();
+
+        if ($activeGamesCount > 0) {
+            return back()->with('error', 'One or more players are currently playing in another game within the same party.');
+        }
+
+        // Start the game
+        $game->status = 'playing';
+        $game->game_start_date = Carbon::now();
+        $game->save();
+
+        return back()->with('success', 'Game is starting.');
+    }
+
+    public function finishGame(Request $request, $gameId)
+    {
+        $game = Game::with('gamePlayers')->findOrFail($gameId);
+
+        if ($game->status !== 'playing') {
+            return back()->with('error', 'Game is not in a state that can be finished');
+        }
+
+        $game->status = 'finished';
+        $game->game_end_date = Carbon::now();  // Assuming you have a field for tracking game end time
+        $game->save();
+
+        // Fetch the user IDs of all game players
+        $playerUserIds = $game->gamePlayers->pluck('user_id');
+
+        // Conditionally update game_status to 'break' if the party setting is true
+        if ($game->party->is_break_aftergame) {
+            PartyMember::whereIn('user_id', $playerUserIds)
+                ->where('party_id', $game->party_id)
+                ->update(['game_status' => 'break']);
+        }
+
+        // Retrieve returned shuttlecocks count from the request
+        $returnedShuttlecocks = $request->input('returned_shuttlecocks', 0);
+
+        // Log the returned shuttlecocks
+        if ($returnedShuttlecocks > 0) {
+            $game->shuttlecocks()->create([
+                'type' => 'returned',
+                'quantity' => -$returnedShuttlecocks // Negative to denote returns
+            ]);
+        }
+
+        return back()->with('success', 'Game finished successfully');
+    }
+
+    // auto add player to the game
+    public function autoAddPlayers(Request $request, $gameId)
+    {
+        $game = Game::with('gamePlayers')->findOrFail($gameId);
+
+        // Check if the game is in the 'setting' state
+        if ($game->status !== 'setting') {
+            return back()->with('error', 'Players can only be added when the game is setting.');
+        }
+
+        // Determine the maximum players per team based on the game type
+        $maxPlayersPerTeam = $game->game_type === 'double' ? 1 : 2;
+        $totalMaxPlayers = $maxPlayersPerTeam * 2; // Since there are two teams
+
+        // Initial check to see if the game is already full
+        if ($game->gamePlayers()->count() >= $totalMaxPlayers) {
+            return back()->with('error', 'The game is already full and cannot accept more players.');
+        }
+
+        // Retrieve all ready party members
+        $readyMembers = PartyMember::where('party_id', $game->party_id)
+            ->where('game_status', 'ready')
+            ->get()
+            ->shuffle();
+
+        foreach ($readyMembers as $member) {
+            // Check if both teams are full
+            $team1Count = $game->gamePlayers()->where('team', 'team1')->count();
+            $team2Count = $game->gamePlayers()->where('team', 'team2')->count();
+
+            if ($team1Count < $maxPlayersPerTeam || $team2Count < $maxPlayersPerTeam) {
+                $teamToAssign = $team1Count < $team2Count ? 'team1' : 'team2';
+                $this->addPlayerToGame($game, $member, $teamToAssign);
+            } else {
+                // All teams are full
+                break;
+            }
+        }
+
+        return back()->with('success', 'Players added automatically to the game.');
+    }
+
+    protected function addPlayerToGame($game, $member, $team)
+    {
+        // Check the current number of players in the specific team
+        $currentTeamPlayerCount = $game->gamePlayers()->where('team', $team)->count();
+        $maxPlayersPerTeam = $game->game_type === 'double' ? 1 : 2;
+
+        if ($currentTeamPlayerCount < $maxPlayersPerTeam) {
+            // Add the player to the game
+            $game->gamePlayers()->create([
+                'user_id' => $member->user_id,
+                'team' => $team
+            ]);
+        }
+    }
+
+    // Shuttlecocks
+    public function setInitialShuttlecocks(Game $game, $quantity)
+    {
+        $game->shuttlecocks()->create([
+            'type' => 'initial',
+            'quantity' => $quantity
+        ]);
+    }
+
+    public function addAdditionalShuttlecocks(Game $game, Request $request)
+    {
+
+        // Check if the game is finished
+        if ($game->status === 'finished') {
+            return back()->with('error', 'Cannot add shuttlecocks to a finished game');
+        }
+
+        $quantity = $request->input('quantity', 1);
+
+        $game->shuttlecocks()->create([
+            'type' => 'additional',
+            'quantity' => $quantity
+        ]);
+    }
+
+    public function returnShuttlecocks(Game $game, $quantity)
+    {
+        $game->shuttlecocks()->create([
+            'type' => 'returned',
+            'quantity' => -$quantity // Negative to indicate returns
+        ]);
     }
 }

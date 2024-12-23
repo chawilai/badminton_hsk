@@ -77,6 +77,10 @@ onMounted(() => {
     liff.init({ liffId: "2001165902-JR5Z95AG" })
         .then(() => {
             console.log("LIFF initialization successful");
+
+            // liff.logout(); // Prompt the login if not already logged in
+
+            // if (liff.isInClient()) {
             if (!liff.isLoggedIn()) {
                 liff.login(); // Prompt the login if not already logged in
             }
@@ -101,13 +105,14 @@ onMounted(() => {
                     router.post(`login/lineliff`, userData, {
                         preserveScroll: true,
                         onSuccess: (page) => {
-                            console.log(page);
+                            // console.log(page);
                         },
                     });
                 })
                 .catch((err) => {
                     console.error("Failed to get user profile:", err);
                 });
+            // }
         })
         .catch((err) => {
             console.error("LIFF Initialization failed", err);
