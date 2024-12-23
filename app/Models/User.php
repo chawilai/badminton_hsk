@@ -26,6 +26,7 @@ class User extends Authenticatable
         'provider_id',
         'avatar',
         'profile_picture',
+        'provider_name',
         'gender',
         'date_of_birth',
         'badminton_rank_id',

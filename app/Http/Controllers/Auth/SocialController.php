@@ -95,6 +95,7 @@ class SocialController extends Controller
                         'provider_id' => $providerId,
                         'avatar' => $pictureUrl,
                         'profile_picture' => $pictureUrl,
+                        'provider_name' => $displayName,
                     ]);
                 }
                 return $authUser;
@@ -109,6 +110,7 @@ class SocialController extends Controller
             'provider_id' => $providerId,
             'avatar' => $pictureUrl,
             'profile_picture' => $pictureUrl,
+            'provider_name' => $displayName,
             'password' => Hash::make(Str::random(10)), // Securely hashing a random password
         ]);
     }
