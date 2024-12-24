@@ -124,93 +124,95 @@ onMounted(() => {
     <Head title="Home" />
 
     <div
-        class="flex flex-wrap-reverse gap-y-24 justify-between py-14 px-6 mx-auto max-w-screen-xl sm:px-8 md:px-12 lg:px-16 xl:px-24"
+        class="tw-flex tw-flex-wrap-reverse tw-gap-y-24 tw-justify-between tw-py-14 tw-px-6 tw-mx-auto tw-max-w-screen-xl sm:tw-px-8 md:tw-px-12 lg:tw-px-16 xl:tw-px-24"
     >
-        <div class="relative z-10 md:w-1/2 w-full">
+        <div class="tw-relative tw-z-10 md:tw-w-1/2 tw-w-full">
             <img
-                class="absolute z-20 -top-6 right-4 md:right-14 md:-top-8 w-14 h-auto rotate-12 hover:scale-125 duration-300"
+                class="tw-absolute tw-z-20 -tw-top-6 tw-right-4 md:tw-right-14 md:-tw-top-8 tw-w-14 tw-h-auto tw-rotate-12 hover:tw-scale-125 tw-duration-300"
                 src="@/../images/img/object/lantern_1.png"
                 alt=""
             />
             <img
-                class="absolute z-20 bottom-6 left-0 md:bottom-20 md:left-0 w-14 h-auto -rotate-12 hover:scale-125 duration-300"
+                class="tw-absolute tw-z-20 tw-bottom-6 tw-left-0 md:tw-bottom-20 md:tw-left-0 tw-w-14 tw-h-auto -tw-rotate-12 hover:tw-scale-125 tw-duration-300"
                 src="@/../images/img/object/lantern_1.png"
                 alt=""
             />
-            <span class="flex items-center px-1 text-xl text-red">
-                <span class="font-medium">🚀🇨🇳 ฝึกฝนจนเป็นจอมยุทธ! 🇹🇭💪</span>
-                <!-- <img
-                        class="w-auto h-8"
-                        src="@/../images/img/vegetable.png"
-                        alt=""
-                    /> -->
+            <span
+                class="tw-flex tw-items-center tw-px-1 tw-text-xl tw-text-red"
+            >
+                <span class="tw-font-medium"
+                    >🚀🇨🇳 ฝึกฝนจนเป็นจอมยุทธ! 🇹🇭💪</span
+                >
             </span>
             <h1
-                class="pt-4 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-loose whitespace-nowrap"
+                class="tw-pt-4 tw-text-4xl sm:tw-text-5xl lg:tw-text-6xl tw-font-bold tw-tracking-tight tw-leading-loose tw-whitespace-nowrap"
             >
-                <span class="whitespace-nowrap text-red"> HSK </span>
-                <span class="whitespace-nowrap">Warrior</span><br />
-                <span class="whitespace-nowrap">สนุกกับภาษาจีน</span>
+                <span class="tw-whitespace-nowrap tw-text-red"> HSK </span>
+                <span class="tw-whitespace-nowrap">Warrior</span><br />
+                <span class="tw-whitespace-nowrap">สนุกกับภาษาจีน</span>
             </h1>
             <p
-                class="pt-8 sm:text-lg max-w-md font-normal text-gray-600 leading-relaxed"
+                class="tw-pt-8 sm:tw-text-lg tw-max-w-md tw-font-normal tw-text-gray-600 tw-leading-relaxed"
             >
-                <span class="whitespace-nowrap"
+                <span class="tw-whitespace-nowrap"
                     >ผ่านแบบเรียน แบบฝึกหัด และเกมสนุก ๆ</span
                 >
-                <span class="whitespace-nowrap"
+                <span class="tw-whitespace-nowrap"
                     >พร้อมบันทึกประวัติการฝึกฝน เพิ่มระดับเลเวลของคุณ</span
                 >
-                <span class="whitespace-nowrap">จนเป็นนักรบที่แข็งแกร่ง</span>
+                <span class="tw-whitespace-nowrap"
+                    >จนเป็นนักรบที่แข็งแกร่ง</span
+                >
             </p>
 
             <div
-                class="flex sm:ml-20 pt-4 font-sans font-semibold space-x-4 sm:space-x-6"
+                class="tw-flex sm:tw-ml-20 tw-pt-4 tw-font-sans tw-font-semibold tw-space-x-4 sm:tw-space-x-6"
             >
                 <div
                     id="service_typing"
-                    class="mt-5 text-2xl text-center text-red"
+                    class="tw-mt-5 tw-text-2xl tw-text-center tw-text-red"
                 ></div>
             </div>
 
-            <div class="flex sm:ml-24 pt-8 space-x-4 sm:space-x-6">
+            <div
+                class="tw-flex sm:tw-ml-24 tw-pt-8 tw-space-x-4 sm:tw-space-x-6"
+            >
                 <Link
                     role="button"
                     href="/login"
-                    class="flex justify-center items-center w-full sm:w-auto h-16 px-7 py-2 text-xl font-medium hover:-rotate-3 transition-all ease-out duration-300 text-base font-semibold leading-7 text-white bg-red border border-red rounded-lg focus:outline-red focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 hover:bg-transparent hover:text-red sm:w-auto hover:scale-[1.01] focus:bg-transparent focus:text-red hover:shadow-hsk whitespace-nowrap"
+                    class="tw-flex tw-justify-center tw-items-center tw-w-full sm:tw-w-auto tw-h-16 tw-px-7 tw-py-2 tw-text-xl tw-font-medium hover:-tw-rotate-3 tw-transition-all tw-ease-out tw-duration-300 tw-leading-7 tw-text-white tw-bg-red tw-border tw-border-red tw-rounded-lg focus:tw-outline-red focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-sky-500 hover:tw-bg-transparent hover:tw-text-red hover:tw-scale-[1.01] focus:tw-bg-transparent focus:tw-text-red hover:tw-shadow-hsk tw-whitespace-nowrap"
                 >
                     เริ่มผจญภัย
                 </Link>
-                <!-- <button
-                        class="flex justify-center items-center w-full sm:w-auto h-13 px-8 font-medium text-gray-900 border border-gray-900 rounded-xl whitespace-nowrap hover:shadow-xl transition-shadow duration-300"
-                    >
-                        Explore menu
-                    </button> -->
             </div>
 
             <div v-if="false">
                 <div
-                    class="flex md:hidden pt-8 justify-end space-x-1 font-bold"
+                    class="tw-flex md:tw-hidden tw-pt-8 tw-justify-end tw-space-x-1 tw-font-bold"
                 >
                     <span>Powered by</span>
-                    <FuelerIcon class="w-6 h-6 text-gray-900 fill-current" />
+                    <FuelerIcon
+                        class="tw-w-6 tw-h-6 tw-text-gray-900 tw-fill-current"
+                    />
                     <span>Fueler</span>
                 </div>
             </div>
         </div>
 
-        <div class="relative md:w-1/2 w-full flex flex-col justify-between">
+        <div
+            class="tw-relative md:tw-w-1/2 tw-w-full tw-flex tw-flex-col tw-justify-between"
+        >
             <img
-                class="w-96 lg:w-full drop-shadow-2xl self-center lg:self-end animate-up-down"
+                class="tw-w-96 lg:tw-w-full tw-drop-shadow-2xl tw-self-center lg:tw-self-end tw-animate-up-down"
                 src="@/../images/warrior_exam.png"
                 alt=""
             />
             <div
-                class="absolute right-0 md:-right-10 lg:-right-6 -top-16 md:-top-24 lg:-top-16 flex flex-col py-5 px-7 rounded-2xl shadow-xl bg-white/40 hover:bg-white/80 backdrop-blur-md hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 group/card"
+                class="tw-absolute tw-right-0 md:-tw-right-10 lg:-tw-right-6 -tw-top-16 md:-tw-top-24 lg:-tw-top-16 tw-flex tw-flex-col tw-py-5 tw-px-7 tw-rounded-2xl tw-shadow-xl tw-bg-white/40 hover:tw-bg-white/80 tw-backdrop-blur-md hover:-tw-translate-y-2 hover:tw-shadow-2xl tw-transition-all tw-duration-300 tw-group/card"
             >
-                <div class="flex justify-center space-x-1">
+                <div class="tw-flex tw-justify-center tw-space-x-1">
                     <div
-                        class="w-13 h-13 bg-white/80 group-hover/card:border-red/80 rounded-2xl border-2 border-white object-cover overflow-hidden"
+                        class="tw-w-13 tw-h-13 tw-bg-white/80 tw-group-hover/card:border-red/80 tw-rounded-2xl tw-border-2 tw-border-white tw-object-cover tw-overflow-hidden"
                     >
                         <img
                             src="@/../images/img/object/calculator.png"
@@ -218,12 +220,12 @@ onMounted(() => {
                         />
                     </div>
                     <div
-                        class="w-13 h-13 bg-white/80 group-hover/card:border-red/40 rounded-2xl border-2 border-white object-cover overflow-hidden"
+                        class="tw-w-13 tw-h-13 tw-bg-white/80 tw-group-hover/card:border-red/40 tw-rounded-2xl tw-border-2 tw-border-white tw-object-cover tw-overflow-hidden"
                     >
                         <img src="@/../images/img/object/fan_1.png" alt="" />
                     </div>
                     <div
-                        class="w-13 h-13 bg-white/80 group-hover/card:border-red/40 rounded-2xl border-2 border-white object-cover overflow-hidden"
+                        class="tw-w-13 tw-h-13 tw-bg-white/80 tw-group-hover/card:border-red/40 tw-rounded-2xl tw-border-2 tw-border-white tw-object-cover tw-overflow-hidden"
                     >
                         <img
                             src="@/../images/img/object/lantern_2.png"
@@ -231,41 +233,49 @@ onMounted(() => {
                         />
                     </div>
                 </div>
-                <div class="pt-3 font-bold">สร้างโปรไฟล์เพื่อบันทึกเลเวล</div>
-                <div class="flex items-center text-gray-600 leading-relaxed">
-                    <StarIcon class="w-5 h-5" />
-                    <StarIcon class="w-5 h-5" />
-                    <span class="pl-1">ระดับ 16 (ในจังหวัด)</span>
+                <div class="tw-pt-3 tw-font-bold">
+                    สร้างโปรไฟล์เพื่อบันทึกเลเวล
+                </div>
+                <div
+                    class="tw-flex tw-items-center tw-text-gray-600 tw-leading-relaxed"
+                >
+                    <StarIcon class="tw-w-5 tw-h-5" />
+                    <StarIcon class="tw-w-5 tw-h-5" />
+                    <span class="tw-pl-1">ระดับ 16 (ในจังหวัด)</span>
                 </div>
             </div>
             <div
-                class="absolute left-0 bottom-0 md:-bottom-6 lg:-left-16 lg:bottom-16 flex rounded-2xl shadow-xl bg-white/40 hover:bg-white/80 backdrop-blur-md hover:-translate-y-2 hover:shadow-2xl transition-all duration-300"
+                class="tw-absolute tw-left-0 tw-bottom-0 md:-tw-bottom-6 lg:-tw-left-16 lg:tw-bottom-16 tw-flex tw-rounded-2xl tw-shadow-xl tw-bg-white/40 hover:tw-bg-white/80 tw-backdrop-blur-md hover:-tw-translate-y-2 hover:tw-shadow-2xl tw-transition-all tw-duration-300"
             >
-                <div class="flex items-center gap-x-2">
+                <div class="tw-flex tw-items-center tw-gap-x-2">
                     <img
-                        class="w-auto h-20 ml-3"
+                        class="tw-w-auto tw-h-20 tw-ml-3"
                         src="@/../images/img/object/object_1.png"
                         alt=""
                     />
-                    <div class="pr-7 pl-2 py-5">
-                        <div class="font-bold text-red">เรียนด้วย Game</div>
-                        <div class="text-gray-600 leading-relaxed">
+                    <div class="tw-pr-7 tw-pl-2 tw-py-5">
+                        <div class="tw-font-bold tw-text-red">
+                            เรียนด้วย Game
+                        </div>
+                        <div class="tw-text-gray-600 tw-leading-relaxed">
                             เพียง 10 นาทีต่อวัน 🔥
                         </div>
                     </div>
                 </div>
             </div>
             <img
-                class="absolute z-20 bottom-16 right-4 md:right-14 md:bottom-18 w-14 h-auto rotate-12 hover:scale-125 duration-300"
+                class="tw-absolute tw-z-20 tw-bottom-16 tw-right-4 md:tw-right-14 md:tw-bottom-18 tw-w-14 tw-h-auto tw-rotate-12 hover:tw-scale-125 tw-duration-300"
                 src="@/../images/img/object/lantern_1.png"
                 alt=""
             />
             <div
-                class="hidden md:flex justify-end space-x-1 font-bold"
+                class="tw-hidden md:tw-flex tw-justify-end tw-space-x-1 tw-font-bold"
                 v-if="false"
             >
                 <span>Powered by</span>
-                <FuelerIcon class="w-6 h-6 text-gray-900 fill-current" />
+                <FuelerIcon
+                    class="tw-w-6 tw-h-6 tw-text-gray-900 tw-fill-current"
+                />
                 <span>Fueler</span>
             </div>
         </div>

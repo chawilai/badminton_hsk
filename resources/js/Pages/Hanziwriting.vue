@@ -165,18 +165,23 @@ const submitForm = () => {
 
     <Main>
         <div
-            class="flex flex-col-reverse items-center justify-center md:flex-row"
+            class="tw-flex tw-flex-col-reverse tw-items-center tw-justify-center md:tw-flex-row"
         >
             <div
-                class="relative z-10 -mt-48 flex flex-col items-center justify-center min-h-screen pb-5 md:-mt-48 md:pt-48 md:py-24 xl:pb-0"
+                class="tw-relative tw-z-10 -tw-mt-48 tw-flex tw-flex-col tw-items-center tw-justify-center tw-min-h-screen tw-pb-5 md:-tw-mt-48 md:tw-pt-48 md:tw-py-24 xl:tw-pb-0"
             >
                 <form @submit.prevent="submitForm">
-                    <input type="text" name="search" v-model="form.search" />
+                    <input
+                        type="text"
+                        name="search"
+                        v-model="form.search"
+                        class="tw-border tw-border-gray-300 tw-rounded tw-px-3 tw-py-2"
+                    />
 
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="border border-gray-300 rounded bg-blue-600 text-white px-3 py-2"
+                        class="tw-border tw-border-gray-300 tw-rounded tw-bg-blue-600 tw-text-white tw-px-3 tw-py-2"
                     >
                         Search
                     </button>
@@ -185,3 +190,4 @@ const submitForm = () => {
         </div>
     </Main>
 </template>
+

@@ -25,18 +25,18 @@ const form = useForm({
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+            <h2 class="tw-text-lg tw-font-medium tw-text-gray-900 dark:text-gray-100">
                 โปรไฟล์
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p class="tw-mt-1 tw-text-sm tw-text-gray-600 dark:text-gray-400">
                 แก้ไขข้อมูลชื่อ และ Email.
             </p>
         </header>
 
         <form
             @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
+            class="tw-mt-6 tw-space-y-6"
         >
             <div>
                 <InputLabel for="name" value="Name" />
@@ -44,14 +44,14 @@ const form = useForm({
                 <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="tw-mt-1 tw-block tw-w-full"
                     v-model="form.name"
                     required
                     autofocus
                     autocomplete="name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="tw-mt-2" :message="form.errors.name" />
             </div>
 
             <div>
@@ -60,23 +60,23 @@ const form = useForm({
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="tw-mt-1 tw-block tw-w-full"
                     v-model="form.email"
                     required
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="tw-mt-2" :message="form.errors.email" />
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
+                <p class="tw-text-sm tw-mt-2 tw-text-gray-800 dark:text-gray-200">
                     Your email address is unverified.
                     <Link
                         :href="route('verification.send')"
                         method="post"
                         as="button"
-                        class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                        class="tw-underline tw-text-sm tw-text-gray-600 dark:text-gray-400 hover:tw-text-gray-900 dark:hover:tw-text-gray-100 tw-rounded-md focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-indigo-500 dark:focus:tw-ring-offset-gray-800"
                     >
                         Click here to re-send the verification email.
                     </Link>
@@ -84,23 +84,23 @@ const form = useForm({
 
                 <div
                     v-show="status === 'verification-link-sent'"
-                    class="mt-2 font-medium text-sm text-green-600 dark:text-green-400"
+                    class="tw-mt-2 tw-font-medium tw-text-sm tw-text-green-600 dark:text-green-400"
                 >
                     A new verification link has been sent to your email address.
                 </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="tw-flex tw-items-center tw-gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
 
                 <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
+                    enter-active-class="tw-transition tw-ease-in-out"
+                    enter-from-class="tw-opacity-0"
+                    leave-active-class="tw-transition tw-ease-in-out"
+                    leave-to-class="tw-opacity-0"
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600 dark:text-gray-400"
+                        class="tw-text-sm tw-text-gray-600 dark:text-gray-400"
                     >
                         Saved.
                     </p>

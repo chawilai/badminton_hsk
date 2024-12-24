@@ -86,21 +86,21 @@ onBeforeUnmount(() => {
 
     <Main>
         <div
-            class="flex flex-col-reverse items-center justify-center md:flex-row"
+            class="tw-flex tw-flex-col-reverse tw-items-center tw-justify-center md:tw-flex-row"
         >
             <div
-                class="relative z-10 -mt-48 flex flex-col items-center justify-center min-h-screen pb-5 md:-mt-48 md:pt-48 md:py-24 xl:pb-0"
+                class="tw-relative tw-z-10 -tw-mt-48 tw-flex tw-flex-col tw-items-center tw-justify-center tw-min-h-screen tw-pb-5 md:-tw-mt-48 md:tw-pt-48 md:tw-py-24 xl:tw-pb-0"
             >
-                <div class="flex">
+                <div class="tw-flex">
                     <button
                         @click="playSound(hsk1_lists)"
-                        class="border border-gray-400 py-3 px-4 rounded-xl bg-green-700 text-white"
+                        class="tw-border tw-border-gray-400 tw-py-3 tw-px-4 tw-rounded-xl tw-bg-green-700 tw-text-white"
                     >
                         All
                     </button>
                     <button
                         @click="stopPlayback()"
-                        class="border border-gray-400 py-3 px-4 rounded-xl bg-red-300 text-white"
+                        class="tw-border tw-border-gray-400 tw-py-3 tw-px-4 tw-rounded-xl tw-bg-red-300 tw-text-white"
                     >
                         Stop
                     </button>
@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
                         <tr
                             v-for="(word, index) in props.hsk1"
                             :key="index"
-                            :class="{ 'bg-green-300': isPlaying(word.hanzi) }"
+                            :class="{ 'tw-bg-green-300': isPlaying(word.hanzi) }"
                         >
                             <td>{{ index + 1 }}</td>
                             <td>{{ word.hanzi }}</td>
@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
                             <td>
                                 <span
                                     @click="playSound(word.hanzi)"
-                                    class="cursor-pointer border border-gray-200 rounded-xl text-white bg-blue-700 py-px px-2"
+                                    class="tw-cursor-pointer tw-border tw-border-gray-200 tw-rounded-xl tw-text-white tw-bg-blue-700 tw-py-px tw-px-2"
                                     >Play</span
                                 >
                             </td>
@@ -140,21 +140,21 @@ onBeforeUnmount(() => {
                 <label>你想去哪里？</label>
                 <button
                     @click="playSound('你想去哪里？')"
-                    class="border border-gray-400 py-3 px-4 rounded-xl bg-green-700 text-white"
+                    class="tw-border tw-border-gray-400 tw-py-3 tw-px-4 tw-rounded-xl tw-bg-green-700 tw-text-white"
                 >
                     Speak
                 </button>
                 <label>请等我一下。</label>
                 <button
                     @click="playSound('请等我一下。')"
-                    class="border border-gray-400 py-3 px-4 rounded-xl bg-green-700 text-white"
+                    class="tw-border tw-border-gray-400 tw-py-3 tw-px-4 tw-rounded-xl tw-bg-green-700 tw-text-white"
                 >
                     Speak
                 </button>
                 <label>我们可以一起去。</label>
                 <button
                     @click="playSound('我们可以一起去。')"
-                    class="border border-gray-400 py-3 px-4 rounded-xl bg-green-700 text-white"
+                    class="tw-border tw-border-gray-400 tw-py-3 tw-px-4 tw-rounded-xl tw-bg-green-700 tw-text-white"
                 >
                     Speak
                 </button>

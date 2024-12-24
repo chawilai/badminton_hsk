@@ -63,7 +63,7 @@ onMounted(() => {
 <template>
     <Head title="คัดจีน (Hànzì)" />
 
-    <div class="container text-center mx-auto flex justify-center items-center">
+    <div class="tw-container tw-text-center tw-mx-auto tw-flex tw-justify-center tw-items-center">
         <svg
             ref="svgElement"
             width="50"
@@ -91,18 +91,6 @@ onMounted(() => {
             <g
                 transform="translate(3, 41.671875) scale(0.04296875, -0.04296875)"
             >
-                <!-- <circle cx="25" cy="421" r="150" fill="red" />
-                <text
-                    x="25"
-                    y="421"
-                    font-size="150"
-                    text-anchor="middle"
-                    fill="white"
-                    dy=".3em"
-                    transform="scale(1,-1) translate(0,-842)"
-                >
-                    1
-                </text> -->
                 <g style="opacity: 1">
                     <path
                         clip-path='url("#mask-82")'
@@ -144,13 +132,11 @@ onMounted(() => {
                 </g>
             </g>
         </svg>
-
-        <!-- <div id="character-target-div"></div> -->
     </div>
     <div
-        class="container text-center mx-auto flex justify-center items-center mt-20"
+        class="tw-container tw-text-center tw-mx-auto tw-flex tw-justify-center tw-items-center tw-mt-20"
     >
-        <HanziBox><div id="character-target-div" class="z-10"></div></HanziBox>
+        <HanziBox><div id="character-target-div" class="tw-z-10"></div></HanziBox>
     </div>
 </template>
 

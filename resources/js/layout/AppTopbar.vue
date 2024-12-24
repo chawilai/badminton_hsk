@@ -84,14 +84,14 @@ const onSidebarButtonClick = () => {
     <div class="topbar-end">
       <ul class="topbar-menu">
         <li
-          :class="isHorizontal ? 'topbar-search hidden' : 'topbar-search hidden sm:block'"
+          :class="isHorizontal ? 'topbar-search hidden' : 'topbar-search hidden sm:tw-block'"
         >
           <IconField iconPosition="left">
             <InputIcon class="pi pi-search" />
-            <InputText type="text" placeholder="Search" class="w-12rem sm:w-full" />
+            <InputText type="text" placeholder="Search" class="w-12rem sm:tw-w-full" />
           </IconField>
         </li>
-        <li :class="isHorizontal ? 'block topbar-item' : 'block sm:hidden topbar-item'">
+        <li :class="isHorizontal ? 'block topbar-item' : 'block sm:tw-hidden topbar-item'">
           <a
             v-styleclass="{
               selector: '@next',

@@ -84,52 +84,52 @@ onMounted(() => {
 
 <template>
     <div
-        class="w-full min-h-screen font-sans text-gray-900 bg-gradient-to-br from-transparent to-red-100"
-        :class="sidebarOpen ? 'overflow-hidden h-screen' : ''"
-    >
+    class="tw-w-full tw-min-h-screen tw-font-sans tw-text-gray-900 tw-bg-gradient-to-br tw-from-transparent tw-to-red-100"
+    :class="sidebarOpen ? 'tw-overflow-hidden tw-h-screen' : ''"
+>
         <!-- <ScreenIndicator /> -->
 
         <nav
-            class="flex justify-between items-center py-8 px-6 mx-auto max-w-screen-xl lg:px-12 lg:px-16 xl:px-24"
+            class="tw-flex tw-justify-between tw-items-center tw-py-8 tw-px-6 tw-mx-auto tw-max-w-screen-xl lg:tw-px-12 lg:tw-px-16 xl:px-24"
         >
             <a
                 href="/warrior_home"
-                class="text-2xl font-bold tracking-wide text-red-600"
+                class="tw-text-2xl tw-font-bold tw-tracking-wide tw-text-red-600"
             >
-                <div class="flex justify-center items-center">
-                    <img class="w-20 h-auto" :src="warrior_logo" alt="" />
+                <div class="tw-flex tw-justify-center tw-items-center">
+                    <img class="tw-w-20 tw-h-auto" :src="warrior_logo" alt="" />
                     <span>HSK</span>
-                    <span class="text-black">Warrior</span>
+                    <span class="tw-text-black">Warrior</span>
                 </div>
             </a>
             <div
-                class="inset-0 transition-all bg-white/70 backdrop-blur-xl z-20 flex-col items-center justify-center space-y-8 lg:static lg:bg-transparent lg:flex lg:space-y-0 lg:space-x-8 lg:flex-row lg:space-x-14"
-                :class="sidebarOpen ? 'fixed flex' : 'hidden'"
+                class="tw-inset-0 tw-transition-all tw-bg-white/70 tw-backdrop-blur-xl tw-z-20 tw-flex-col tw-items-center tw-justify-center tw-space-y-8 lg:tw-static lg:tw-bg-transparent lg:tw-flex lg:tw-space-y-0 lg:tw-flex-row lg:tw-space-x-14"
+                :class="sidebarOpen ? 'tw-fixed tw-flex' : 'tw-hidden'"
             >
                 <ul
-                    class="flex flex-col lg:flex-row items-center space-y-6 lg:space-y-0 lg:space-x-6 lg:-x-8"
+                    class="tw-flex tw-flex-col lg:tw-flex-row tw-items-center tw-space-y-6 lg:tw-space-y-0 lg:tw-space-x-6 lg:-tw-tw-x-8"
                 >
                     <li
                         v-for="menu in menus"
-                        class="text-lg lg:text-base font-medium group"
+                        class="tw-text-lg lg:tw-text-base tw-font-medium tw-group"
                     >
                         <Link
                             @click="sidebarOpen = false"
                             as="a"
                             preserve-scroll
                             :href="menu.url"
-                            class="relative flex items-center justify-center w-full h-16 px-1 text-base text-gray-900 text-opacity-100 transition-all duration-300 rounded outline-none cursor-pointer group lg:w-auto lg:h-auto lg:inline-block lg:hover:-rotate-3 active:ring-0 active:outline-none"
+                            class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-text-opacity-100 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer tw-group lg:tw-w-auto lg:tw-h-auto lg:tw-inline-block lg:hover:-tw-rotate-3 tw-active:ring-0 tw-active:outline-none"
                         >
                             <span
-                                class="relative z-20 whitespace-nowrap"
+                                class="tw-relative tw-z-20 tw-whitespace-nowrap"
                                 :class="{
-                                    'text-red':
+                                    'tw-text-red':
                                         menu.component === page.component,
                                 }"
                                 >{{ menu.title }}</span
                             >
                             <span
-                                class="absolute bottom-0 left-0 z-10 w-0 h-2 transition-all duration-300 ease-out skew-x-12 group-hover:w-full bg-red-400"
+                                class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
                             ></span>
                         </Link>
                     </li>
@@ -139,7 +139,7 @@ onMounted(() => {
                     @click="sidebarOpen = false"
                     role="button"
                     href="/login"
-                    class="flex justify-center items-center px-7 py-2 hover:-rotate-3 transition-all ease-out duration-300 text-base font-semibold leading-7 text-white bg-red border border-red rounded-lg focus:outline-red focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 hover:bg-transparent hover:text-red sm:w-auto hover:scale-[1.01] focus:bg-transparent focus:text-red hover:shadow-hsk whitespace-nowrap"
+                    class="tw-flex tw-justify-center tw-items-center tw-px-7 tw-py-2 hover:-tw-rotate-3 tw-transition-all tw-ease-out tw-duration-300 tw-text-base tw-font-semibold tw-leading-7 tw-text-white tw-bg-red tw-border tw-border-red tw-rounded-lg focus:tw-outline-red focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-sky-500 hover:tw-bg-transparent hover:tw-text-red sm:tw-w-auto hover:tw-scale-[1.01] focus:tw-bg-transparent focus:tw-text-red hover:tw-shadow-hsk tw-whitespace-nowrap"
                 >
                     เริ่มผจญภัย
                 </Link>
@@ -147,31 +147,35 @@ onMounted(() => {
                     v-if="page.props.auth.user"
                     role="a"
                     href="/profile"
-                    class="flex flex-col justify-center items-center"
+                    class="tw-flex tw-flex-col tw-justify-center tw-items-center"
                 >
                     <img
-                        class="w-14 h-auto rounded-full"
+                        class="tw-w-14 tw-h-auto tw-rounded-full"
                         :src="page.props.auth.user.avatar"
                         alt=""
                     />
                     <span
-                        class="font-bold"
+                        class="tw-font-bold"
                         v-text="page.props.auth.user.name"
                     ></span>
                 </Link> -->
-                <Dropdown align="right" width="48"
-                v-if="page.props.auth.user"
-                contentClasses="sm:rounded-lg shadow-md hover:shadow-xl bg-white/90 hover:bg-white backdrop-blur-xl"
+                <Dropdown
+                    align="right"
+                    width="48"
+                    v-if="page.props.auth.user"
+                    contentClasses="sm:tw-rounded-lg tw-shadow-md hover:tw-tw-shadow-xl tw-bg-white/90 hover:tw-bg-white tw-backdrop-blur-xl"
                 >
                     <template #trigger>
-                        <div class="flex flex-col justify-center items-center cursor-pointer">
+                        <div
+                            class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-cursor-pointer"
+                        >
                             <img
-                                class="w-14 h-auto rounded-full"
+                                class="tw-w-14 tw-h-auto tw-rounded-full"
                                 :src="page.props.auth.user.avatar"
                                 alt=""
                             />
                             <span
-                                class="font-bold"
+                                class="tw-font-bold"
                                 v-text="page.props.auth.user.name"
                             ></span>
                         </div>
@@ -179,14 +183,16 @@ onMounted(() => {
 
                     <template #content>
                         <DropdownLink :href="route('profile.edit')">
-                            <i class="pi pi-user"></i><span class="ml-2">โปรไฟล์</span>
+                            <i class="pi pi-user"></i
+                            ><span class="tw-ml-2">โปรไฟล์</span>
                         </DropdownLink>
                         <DropdownLink
                             :href="route('logout')"
                             method="post"
                             as="button"
                         >
-                            <i class="pi pi-sign-out"></i><span class="ml-2">Log Out</span>
+                            <i class="pi pi-sign-out"></i
+                            ><span class="tw-ml-2">Log Out</span>
                         </DropdownLink>
                     </template>
                 </Dropdown>
@@ -194,30 +200,32 @@ onMounted(() => {
 
             <button
                 @click="sidebarOpen = !sidebarOpen"
-                class="block lg:hidden relative z-30"
+                class="tw-block lg:tw-hidden tw-relative tw-z-30"
             >
-                <HamburgerIcon class="w-8 h-8 fill-current text-gray-900" />
+                <HamburgerIcon
+                    class="tw-w-8 tw-h-8 tw-fill-current tw-text-gray-900"
+                />
             </button>
         </nav>
+
         <slot />
 
         <!-- flowbit -->
 
         <!-- <slot name="content2"></slot> -->
 
-        <div class="container mx-auto px-5" v-if="false">
+        <div class="tw-container tw-mx-auto tw-px-5" v-if="false">
             <form>
-                <div class="grid gap-6 mb-6 lg:grid-cols-2">
+                <div class="tw-grid tw-gap-6 tw-mb-6 lg:tw-grid-cols-2">
                     <div>
                         <label
                             for="first_name"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >First name</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >First name</label>
                         <input
                             type="text"
                             id="first_name"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder="John"
                             required
                         />
@@ -225,13 +233,12 @@ onMounted(() => {
                     <div>
                         <label
                             for="last_name"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >Last name</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >Last name</label>
                         <input
                             type="text"
                             id="last_name"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder="Doe"
                             required
                         />
@@ -239,13 +246,12 @@ onMounted(() => {
                     <div>
                         <label
                             for="company"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >Company</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >Company</label>
                         <input
                             type="text"
                             id="company"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder="Flowbite"
                             required
                         />
@@ -253,13 +259,12 @@ onMounted(() => {
                     <div>
                         <label
                             for="phone"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >Phone number</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >Phone number</label>
                         <input
                             type="tel"
                             id="phone"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder="123-45-678"
                             pattern="[0-9]{3}-[0-9]{2}-[0-9]{3}"
                             required
@@ -268,13 +273,12 @@ onMounted(() => {
                     <div>
                         <label
                             for="website"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >Website URL</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >Website URL</label>
                         <input
                             type="url"
                             id="website"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder="flowbite.com"
                             required
                         />
@@ -282,293 +286,271 @@ onMounted(() => {
                     <div>
                         <label
                             for="visitors"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >Unique visitors (per month)</label
-                        >
+                            class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                        >Unique visitors (per month)</label>
                         <input
                             type="number"
                             id="visitors"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                             placeholder=""
                             required
                         />
                     </div>
                 </div>
-                <div class="mb-6">
+                <div class="tw-mb-6">
                     <label
                         for="email"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Email address</label
-                    >
+                        class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                    >Email address</label>
                     <input
                         type="email"
                         id="email"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                         placeholder="john.doe@company.com"
                         required
                     />
                 </div>
-                <div class="mb-6">
+                <div class="tw-mb-6">
                     <label
                         for="password"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Password</label
-                    >
+                        class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                    >Password</label>
                     <input
                         type="password"
                         id="password"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                         placeholder="•••••••••"
                         required
                     />
                 </div>
-                <div class="mb-6">
+                <div class="tw-mb-6">
                     <label
                         for="confirm_password"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Confirm password</label
-                    >
+                        class="tw-block tw-mb-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-white"
+                    >Confirm password</label>
                     <input
                         type="password"
                         id="confirm_password"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="tw-bg-gray-50 tw-border tw-border-gray-300 tw-text-gray-900 tw-text-sm tw-rounded-lg focus:tw-ring-blue-500 focus:tw-border-blue-500 tw-block tw-w-full tw-p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:tw-ring-blue-500 dark:focus:tw-border-blue-500"
                         placeholder="•••••••••"
                         required
                     />
                 </div>
-                <div class="flex items-start mb-6">
-                    <div class="flex items-center h-5">
+                <div class="tw-flex tw-items-start tw-mb-6">
+                    <div class="tw-flex tw-items-center tw-h-5">
                         <input
                             id="remember"
                             type="checkbox"
                             value=""
-                            class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800"
+                            class="tw-w-4 tw-h-4 tw-border tw-border-gray-300 tw-rounded tw-bg-gray-50 focus:tw-ring-3 focus:tw-ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800"
                             required
                         />
                     </div>
                     <label
                         for="remember"
-                        class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                        >I agree with the
-                        <a
-                            href="#"
-                            class="text-blue-600 hover:underline dark:text-blue-500"
-                            >terms and conditions</a
-                        >.</label
-                    >
+                        class="tw-ml-2 tw-text-sm tw-font-medium tw-text-gray-900 dark:text-gray-300"
+                    >I agree with the
+                    <a
+                        href="#"
+                        class="tw-text-blue-600 hover:tw-underline dark:text-blue-500"
+                    >terms and conditions</a>.</label>
                 </div>
                 <button
                     type="submit"
-                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    class="tw-text-white tw-bg-blue-700 hover:tw-bg-blue-800 focus:tw-ring-4 focus:tw-outline-none focus:tw-ring-blue-300 tw-font-medium tw-rounded-lg tw-text-sm tw-w-full sm:tw-w-auto tw-px-5 tw-py-2.5 tw-text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:tw-ring-blue-800"
                 >
                     Submit
                 </button>
             </form>
         </div>
+
         <!-- flowbit -->
-        <hr class="my-5" v-if="false" />
+        <hr class="tw-my-5" v-if="false" />
         <!-- flowbit table -->
-        <div class="container mx-auto px-5" v-if="false">
-            <div class="relative overflow-x-auto sm:rounded-lg">
-                <table
-                    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                >
-                    <thead
-                        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-                    >
+        <div class="tw-container tw-mx-auto tw-px-5" v-if="false">
+            <div class="tw-relative tw-overflow-x-auto sm:tw-rounded-lg">
+                <table class="tw-w-full tw-text-sm tw-text-left tw-rtl:text-right tw-text-gray-500 dark:text-gray-400">
+                    <thead class="tw-text-xs tw-text-gray-700 tw-uppercase tw-bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="p-4">
-                                <div class="flex items-center">
-                                    <input
-                                        id="checkbox-all-search"
-                                        type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                    />
-                                    <label
-                                        for="checkbox-all-search"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                            <th scope="col" class="tw-p-4">
+                                <div class="tw-flex tw-items-center">
+                                    <input id="checkbox-all-search" type="checkbox" class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"/>
+                                    <label for="checkbox-all-search" class="tw-sr-only">checkbox</label>
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3">Product name</th>
-                            <th scope="col" class="px-6 py-3">Color</th>
-                            <th scope="col" class="px-6 py-3">Category</th>
-                            <th scope="col" class="px-6 py-3">Price</th>
-                            <th scope="col" class="px-6 py-3">Action</th>
+                            <th scope="col" class="tw-px-6 tw-py-3">Product name</th>
+                            <th scope="col" class="tw-px-6 tw-py-3">Color</th>
+                            <th scope="col" class="tw-px-6 tw-py-3">Category</th>
+                            <th scope="col" class="tw-px-6 tw-py-3">Price</th>
+                            <th scope="col" class="tw-px-6 tw-py-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            class="tw-bg-white tw-border-b dark:bg-gray-800 dark:border-gray-700 hover:tw-bg-gray-50 dark:hover:bg-gray-600"
                         >
-                            <td class="w-4 p-4">
-                                <div class="flex items-center">
+                            <td class="tw-w-4 tw-p-4">
+                                <div class="tw-flex tw-items-center">
                                     <input
                                         id="checkbox-table-search-1"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-1"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                                        class="tw-sr-only"
+                                    >checkbox</label>
                                 </div>
                             </td>
                             <th
                                 scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                class="tw-px-6 tw-py-4 tw-font-medium tw-text-gray-900 tw-whitespace-nowrap dark:text-white"
                             >
                                 Apple MacBook Pro 17"
                             </th>
-                            <td class="px-6 py-4">Silver</td>
-                            <td class="px-6 py-4">Laptop</td>
-                            <td class="px-6 py-4">$2999</td>
-                            <td class="px-6 py-4">
+                            <td class="tw-px-6 tw-py-4">Silver</td>
+                            <td class="tw-px-6 tw-py-4">Laptop</td>
+                            <td class="tw-px-6 tw-py-4">$2999</td>
+                            <td class="tw-px-6 tw-py-4">
                                 <a
                                     href="#"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                    >Edit</a
-                                >
+                                    class="tw-font-medium tw-text-blue-600 dark:text-blue-500 hover:tw-underline"
+                                >Edit</a>
                             </td>
                         </tr>
+
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            class="tw-bg-white tw-border-b dark:bg-gray-800 dark:border-gray-700 hover:tw-bg-gray-50 dark:hover:bg-gray-600"
                         >
-                            <td class="w-4 p-4">
-                                <div class="flex items-center">
+                            <td class="tw-w-4 tw-p-4">
+                                <div class="tw-flex tw-items-center">
                                     <input
                                         id="checkbox-table-search-2"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-2"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                                        class="tw-sr-only"
+                                    >checkbox</label>
                                 </div>
                             </td>
                             <th
                                 scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                class="tw-px-6 tw-py-4 tw-font-medium tw-text-gray-900 tw-whitespace-nowrap dark:text-white"
                             >
                                 Microsoft Surface Pro
                             </th>
-                            <td class="px-6 py-4">White</td>
-                            <td class="px-6 py-4">Laptop PC</td>
-                            <td class="px-6 py-4">$1999</td>
-                            <td class="px-6 py-4">
+                            <td class="tw-px-6 tw-py-4">White</td>
+                            <td class="tw-px-6 tw-py-4">Laptop PC</td>
+                            <td class="tw-px-6 tw-py-4">$1999</td>
+                            <td class="tw-px-6 tw-py-4">
                                 <a
                                     href="#"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                    >Edit</a
-                                >
+                                    class="tw-font-medium tw-text-blue-600 dark:text-blue-500 hover:tw-underline"
+                                >Edit</a>
                             </td>
                         </tr>
+
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            class="tw-bg-white tw-border-b dark:bg-gray-800 dark:border-gray-700 hover:tw-bg-gray-50 dark:hover:bg-gray-600"
                         >
-                            <td class="w-4 p-4">
-                                <div class="flex items-center">
+                            <td class="tw-w-4 tw-p-4">
+                                <div class="tw-flex tw-items-center">
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                                        class="tw-sr-only"
+                                    >checkbox</label>
                                 </div>
                             </td>
                             <th
                                 scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                class="tw-px-6 tw-py-4 tw-font-medium tw-text-gray-900 tw-whitespace-nowrap dark:text-white"
                             >
                                 Magic Mouse 2
                             </th>
-                            <td class="px-6 py-4">Black</td>
-                            <td class="px-6 py-4">Accessories</td>
-                            <td class="px-6 py-4">$99</td>
-                            <td class="px-6 py-4">
+                            <td class="tw-px-6 tw-py-4">Black</td>
+                            <td class="tw-px-6 tw-py-4">Accessories</td>
+                            <td class="tw-px-6 tw-py-4">$99</td>
+                            <td class="tw-px-6 tw-py-4">
                                 <a
                                     href="#"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                    >Edit</a
-                                >
+                                    class="tw-font-medium tw-text-blue-600 dark:text-blue-500 hover:tw-underline"
+                                >Edit</a>
                             </td>
                         </tr>
+
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            class="tw-bg-white tw-border-b dark:bg-gray-800 dark:border-gray-700 hover:tw-bg-gray-50 dark:hover:bg-gray-600"
                         >
-                            <td class="w-4 p-4">
-                                <div class="flex items-center">
+                            <td class="tw-w-4 tw-p-4">
+                                <div class="tw-flex tw-items-center">
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                                        class="tw-sr-only"
+                                    >checkbox</label>
                                 </div>
                             </td>
                             <th
                                 scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                class="tw-px-6 tw-py-4 tw-font-medium tw-text-gray-900 tw-whitespace-nowrap dark:text-white"
                             >
                                 Apple Watch
                             </th>
-                            <td class="px-6 py-4">Black</td>
-                            <td class="px-6 py-4">Watches</td>
-                            <td class="px-6 py-4">$199</td>
-                            <td class="px-6 py-4">
+                            <td class="tw-px-6 tw-py-4">Black</td>
+                            <td class="tw-px-6 tw-py-4">Watches</td>
+                            <td class="tw-px-6 tw-py-4">$199</td>
+                            <td class="tw-px-6 tw-py-4">
                                 <a
                                     href="#"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                    >Edit</a
-                                >
+                                    class="tw-font-medium tw-text-blue-600 dark:text-blue-500 hover:tw-underline"
+                                >Edit</a>
                             </td>
                         </tr>
+
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            class="tw-bg-white tw-border-b dark:bg-gray-800 dark:border-gray-700 hover:tw-bg-gray-50 dark:hover:bg-gray-600"
                         >
-                            <td class="w-4 p-4">
-                                <div class="flex items-center">
+                            <td class="tw-w-4 tw-p-4">
+                                <div class="tw-flex tw-items-center">
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="tw-w-4 tw-h-4 tw-text-blue-600 tw-bg-gray-100 tw-border-gray-300 tw-rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
-                                        class="sr-only"
-                                        >checkbox</label
-                                    >
+                                        class="tw-sr-only"
+                                    >checkbox</label>
                                 </div>
                             </td>
                             <th
                                 scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                class="tw-px-6 tw-py-4 tw-font-medium tw-text-gray-900 tw-whitespace-nowrap dark:text-white"
                             >
                                 Apple iMac
                             </th>
-                            <td class="px-6 py-4">Silver</td>
-                            <td class="px-6 py-4">PC</td>
-                            <td class="px-6 py-4">$2999</td>
-                            <td class="px-6 py-4">
+                            <td class="tw-px-6 tw-py-4">Silver</td>
+                            <td class="tw-px-6 tw-py-4">PC</td>
+                            <td class="tw-px-6 tw-py-4">$2999</td>
+                            <td class="tw-px-6 tw-py-4">
                                 <a
                                     href="#"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                                    >Edit</a
-                                >
+                                    class="tw-font-medium tw-text-blue-600 dark:text-blue-500 hover:tw-underline"
+                                >Edit</a>
                             </td>
                         </tr>
+
                         <tr
                             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                         >
@@ -577,7 +559,7 @@ onMounted(() => {
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
@@ -611,7 +593,7 @@ onMounted(() => {
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
@@ -645,7 +627,7 @@ onMounted(() => {
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
@@ -679,7 +661,7 @@ onMounted(() => {
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
@@ -713,7 +695,7 @@ onMounted(() => {
                                     <input
                                         id="checkbox-table-search-3"
                                         type="checkbox"
-                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:tw-ring-blue-500 dark:focus:tw-ring-blue-600 dark:ring-offset-gray-800 dark:focus:tw-ring-offset-gray-800 focus:tw-ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                     <label
                                         for="checkbox-table-search-3"
@@ -741,80 +723,37 @@ onMounted(() => {
                         </tr>
                     </tbody>
                 </table>
-                <nav
-                    class="flex items-center flex-column flex-wrap lg:flex-row justify-between pt-4 mb-4"
-                    aria-label="Table navigation"
-                >
-                    <span
-                        class="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 lg:mb-0 block w-full lg:inline lg:w-auto"
-                        >Showing
-                        <span
-                            class="font-semibold text-gray-900 dark:text-white"
-                            >1-10</span
-                        >
-                        of
-                        <span
-                            class="font-semibold text-gray-900 dark:text-white"
-                            >1000</span
-                        ></span
-                    >
-                    <ul
-                        class="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8"
-                    >
+                <nav class="tw-flex tw-items-center tw-flex-column tw-flex-wrap lg:tw-flex-row tw-justify-between tw-pt-4 tw-mb-4" aria-label="Table navigation">
+                    <span class="tw-text-sm tw-font-normal tw-text-gray-500 dark:text-gray-400 tw-mb-4 lg:tw-mb-0 tw-block tw-w-full lg:tw-inline lg:tw-w-auto">
+                        Showing <span class="tw-font-semibold tw-text-gray-900 dark:text-white">1-10</span> of <span class="tw-font-semibold tw-text-gray-900 dark:text-white">1000</span>
+                    </span>
+                    <ul class="tw-inline-flex -tw-space-x-px tw-rtl:space-x-reverse tw-text-sm tw-h-8">
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >Previous</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-ms-0 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 tw-rounded-s-lg hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Previous</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >1</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >2</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                aria-current="page"
-                                class="flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                                >3</a
-                            >
+                            <a href="#" aria-current="page" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-text-blue-600 tw-border tw-border-gray-300 tw-bg-blue-50 hover:tw-bg-blue-100 hover:tw-text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >4</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">4</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >5</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">5</a>
                         </li>
                         <li>
-                            <a
-                                href="#"
-                                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                >Next</a
-                            >
+                            <a href="#" class="tw-flex tw-items-center tw-justify-center tw-px-3 tw-h-8 tw-leading-tight tw-text-gray-500 tw-bg-white tw-border tw-border-gray-300 tw-rounded-e-lg hover:tw-bg-gray-100 hover:tw-text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Next</a>
                         </li>
                     </ul>
                 </nav>
             </div>
         </div>
+
         <!-- flowbit table -->
     </div>
 </template>
