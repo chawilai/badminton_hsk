@@ -1,14 +1,14 @@
 <script setup>
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import { Link } from "@inertiajs/vue3";
-import warrior_logo from "@/../images/warrior_logo.png";
+import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 </script>
 
 <template>
     <div class="min-h-screen flex flex-column align-items-center pt-8 bg-red-50">
         <div>
             <Link href="/">
-                <img class="w-16rem h-auto" :src="warrior_logo" alt="" />
+                <img class="w-16rem h-auto" :src="badminton_party" alt="" />
             </Link>
         </div>
 

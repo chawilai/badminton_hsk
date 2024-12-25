@@ -2,7 +2,7 @@
 import { Link } from "@inertiajs/vue3";
 // import Badge from '@/Components/Badge.vue';
 
-import warrior_logo from "/resources/images/warrior_logo.png";
+import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 </script>
 
 <template>
@@ -33,7 +33,7 @@ import warrior_logo from "/resources/images/warrior_logo.png";
                                 <div
                                     class="tw-relative tw-w-12 tw-h-12 tw-mr-2"
                                 >
-                                    <img :src="warrior_logo" alt="" />
+                                    <img :src="badminton_party" alt="" />
                                 </div>
                                 <span
                                     class="tw-text-3xl tw-font-bold tw-text-transparent tw-bg-clip-text tw-bg-gradient-to-br tw-from-red-500 tw-to-gray-900"

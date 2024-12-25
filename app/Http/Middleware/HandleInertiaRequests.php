@@ -41,10 +41,16 @@ class HandleInertiaRequests extends Middleware
         }
 
         $flash = [];
+        $response = [];
 
         // Retrieve flash error messages from the session
 
         if ($request->session()->has('success')) $flash['success'] = $request->session()->get('success');
+
+        if ($request->session()->has('response')) {
+            $response = $request->session()->get('response');
+        }
+
         if ($request->session()->has('error')) {
 
             $sessionError = is_array($request->session()->get('error')) ? $request->session()->get('error') : ['error' => $request->session()->get('error')];
@@ -55,6 +61,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'errors' => Inertia::always($errors),
             'flash' => $flash,
+            'response' => $response,
             'auth' => [
                 'user' => $request->user(),
             ],

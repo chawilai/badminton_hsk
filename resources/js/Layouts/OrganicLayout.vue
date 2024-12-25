@@ -7,7 +7,8 @@ import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 
 import HamburgerIcon from "@/../icons/hamburger.svg";
-import warrior_logo from "@/../images/warrior_logo.png";
+// import warrior_logo from "@/../images/warrior_logo.png";
+import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 
 const page = usePage();
 
@@ -97,7 +98,7 @@ onMounted(() => {
                 class="tw-text-2xl tw-font-bold tw-tracking-wide tw-text-red-600"
             >
                 <div class="tw-flex tw-justify-center tw-items-center">
-                    <img class="tw-w-20 tw-h-auto" :src="warrior_logo" alt="" />
+                    <img class="tw-w-20 tw-h-auto" :src="badminton_party" alt="" />
                     <span>HSK</span>
                     <span class="tw-text-black">Warrior</span>
                 </div>

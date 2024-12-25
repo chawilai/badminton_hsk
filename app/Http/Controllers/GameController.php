@@ -169,76 +169,78 @@ class GameController extends Controller
 
         $readyPlayers = $query->get();
 
-        return response()->json([
-            'game_id' => $game->id,
-            'readyPlayers' => $readyPlayers->map(function ($player) use ($game, $currentDateTime) {
-                // $finishedGamesCount = $player->user->gamePlayers->where('game.status', 'finished')->count(); // Counting finished games associated with the user
+        // dd($readyPlayers);
 
-                $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
-                    ->whereHas('game', function ($query) use ($game) {
-                        $query->where('status', 'finished')
-                            ->where('party_id', $game->party_id);
-                    })
-                    ->count();
 
-                $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
-                    ->join('games', 'game_players.game_id', '=', 'games.id')
-                    ->where('games.status', 'finished')
-                    ->latest('games.game_end_date')
-                    ->select('game_players.*', 'games.game_end_date as game_end_date') // Ensure to select game_end_date
-                    ->first();
+        $mappedPlayers = $readyPlayers->map(function ($player) use ($game, $currentDateTime) {
+            // $finishedGamesCount = $player->user->gamePlayers->where('game.status', 'finished')->count(); // Counting finished games associated with the user
 
-                // Calculate waiting time in seconds
-                $waitingTime = $lastGameEndTime ?
-                    abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game->game_end_date, false))) :
-                    abs(round($currentDateTime->diffInSeconds($game->party->party_start_date, false)));
+            $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
+                ->whereHas('game', function ($query) use ($game) {
+                    $query->where('status', 'finished')
+                        ->where('party_id', $game->party_id);
+                })
+                ->count();
 
-                $gameDetails = $player->user->gamePlayers->map(function ($gamePlayer) {
-                    // Group players by team within the game
-                    $teamPlayers = $gamePlayer->game->gamePlayers
-                        ->groupBy('team')
-                        ->map(function ($teamGroup) {
-                            // Map each team's players
-                            return $teamGroup->map(function ($player) {
-                                return [
-                                    'player_id' => $player->user_id,
-                                    'name' => $player->user->name
-                                ];
-                            });
+            $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
+                ->join('games', 'game_players.game_id', '=', 'games.id')
+                ->where('games.status', 'finished')
+                ->latest('games.game_end_date')
+                ->select('game_players.*', 'games.game_end_date as game_end_date') // Ensure to select game_end_date
+                ->first();
+
+            // Calculate waiting time in seconds
+            $waitingTime = $lastGameEndTime ?
+                abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game->game_end_date, false))) :
+                abs(round($currentDateTime->diffInSeconds($game->party->party_start_date, false)));
+
+            $gameDetails = $player->user->gamePlayers->map(function ($gamePlayer) {
+                // Group players by team within the game
+                $teamPlayers = $gamePlayer->game->gamePlayers
+                    ->groupBy('team')
+                    ->map(function ($teamGroup) {
+                        // Map each team's players
+                        return $teamGroup->map(function ($player) {
+                            return [
+                                'player_id' => $player->user_id,
+                                'name' => $player->user->name
+                            ];
                         });
-
-                    // Mapping game sets to include starting sides
-                    $gameSets = $gamePlayer->game->gameSets->map(function ($set) {
-                        return ['team1' => ['side' => $set->team1_start_side], 'team2' => ['side' => $set->team2_start_side]];
                     });
 
-                    return [
-                        'game_id' => $gamePlayer->game->id,
-                        'party_id' => $gamePlayer->game->party_id,
-                        'status' => $gamePlayer->game->status,
-                        'teams' => [
-                            'team1' => $teamPlayers->get('team1') ?? [],
-                            'team2' => $teamPlayers->get('team2') ?? []
-                        ],
-                        'game_sets' => $gameSets  // Added game sets with starting sides
-                    ];
+                // Mapping game sets to include starting sides
+                $gameSets = $gamePlayer->game->gameSets->map(function ($set) {
+                    return ['team1' => ['side' => $set->team1_start_side], 'team2' => ['side' => $set->team2_start_side]];
                 });
 
                 return [
-                    'user_id' => $player->user->id,
-                    'party_member_id' => $player->id,
-                    'name' => $player->user->name,
-                    'gender' => $player->user->gender,
-                    'age' => $player->user->age,
-                    'date_of_birth' => $player->user->date_of_birth,
-                    'badminton_rank' => $player->user->badmintonRank->education_rank,
-                    'game_status' => $player->game_status,
-                    'finished_games_count' => $finishedGamesCount,
-                    'games' => $gameDetails,  // Include game details for each player
-                    'waiting_time' => $waitingTime
+                    'game_id' => $gamePlayer->game->id,
+                    'party_id' => $gamePlayer->game->party_id,
+                    'status' => $gamePlayer->game->status,
+                    'teams' => [
+                        'team1' => $teamPlayers->get('team1') ?? [],
+                        'team2' => $teamPlayers->get('team2') ?? []
+                    ],
+                    'game_sets' => $gameSets  // Added game sets with starting sides
                 ];
-            })
-        ]);
+            });
+
+            return [
+                'user_id' => $player->user->id,
+                'party_member_id' => $player->id,
+                'name' => $player->user->name,
+                'gender' => $player->user->gender,
+                'age' => $player->user->age,
+                'date_of_birth' => $player->user->date_of_birth,
+                'badminton_rank' => $player->user->badmintonRank->education_rank,
+                'game_status' => $player->game_status,
+                'finished_games_count' => $finishedGamesCount,
+                'games' => $gameDetails,  // Include game details for each player
+                'waiting_time' => $waitingTime
+            ];
+        });
+
+        return back()->with(['response' => $mappedPlayers]);
     }
 
     public function removePlayer(Request $request)
@@ -407,16 +409,21 @@ class GameController extends Controller
             ->shuffle();
 
         foreach ($readyMembers as $member) {
-            // Check if both teams are full
-            $team1Count = $game->gamePlayers()->where('team', 'team1')->count();
-            $team2Count = $game->gamePlayers()->where('team', 'team2')->count();
+            // Check if the player is already in the game
+            $isPlayerInGame = $game->gamePlayers()->where('user_id', $member->user_id)->exists();
 
-            if ($team1Count < $maxPlayersPerTeam || $team2Count < $maxPlayersPerTeam) {
-                $teamToAssign = $team1Count < $team2Count ? 'team1' : 'team2';
-                $this->addPlayerToGame($game, $member, $teamToAssign);
-            } else {
-                // All teams are full
-                break;
+            if (!$isPlayerInGame) {
+                // Check if both teams are full
+                $team1Count = $game->gamePlayers()->where('team', 'team1')->count();
+                $team2Count = $game->gamePlayers()->where('team', 'team2')->count();
+
+                if ($team1Count < $maxPlayersPerTeam || $team2Count < $maxPlayersPerTeam) {
+                    $teamToAssign = $team1Count < $team2Count ? 'team1' : 'team2';
+                    $this->addPlayerToGame($game, $member, $teamToAssign);
+                } else {
+                    // All teams are full
+                    break;
+                }
             }
         }
 

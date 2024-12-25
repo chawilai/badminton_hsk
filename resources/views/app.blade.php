@@ -9,14 +9,14 @@
     <meta property="og:image" content="{{ Vite::asset('resources/images/warrior_exam.png') }}" />
     {{-- <meta property="og:image:width" content="1200" /> <!-- Optional: Width of image in pixels --> --}}
     {{-- <meta property="og:image:height" content="630" /> <!-- Optional: Height of image in pixels --> --}}
-    <meta property="og:url" content="https://hskwarrior.com/warrior_home" />
-    <meta property="og:title" content="HSK Warrior" />
-    <meta property="og:description" content="เรียนภาษาจีน ผ่านเกม สุดแสนสนุก" />
+    <meta property="og:url" content="https://badmintonparty.com/party" />
+    <meta property="og:title" content="Badminton Party" />
+    <meta property="og:description" content="ตั้งปาร์ตี้ จอยปาร์ตี้ ตีแบดมินตัน" />
     <meta property="og:type" content="website" />
     {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
     {{-- facebook --}}
 
-    <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/images/warrior_logo.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/assets/images/badminton_party_no_bg.png') }}">
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

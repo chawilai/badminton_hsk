@@ -6,7 +6,7 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { Link } from "@inertiajs/vue3";
-import warrior_logo from "@/../images/warrior_logo.png";
+import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -28,7 +28,7 @@ const showingNavigationDropdown = ref(false);
                                 <Link :href="route('home')">
                                     <img
                                         class="tw-w-14 tw-h-auto"
-                                        :src="warrior_logo"
+                                        :src="badminton_party"
                                         alt=""
                                     />
                                 </Link>
