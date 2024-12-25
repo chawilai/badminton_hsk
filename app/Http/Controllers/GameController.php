@@ -250,9 +250,17 @@ class GameController extends Controller
             'user_id' => 'required|exists:users,id',
         ]);
 
-        // Retrieve the game and the user/player to be removed
+        // Retrieve the game and ensure it's in the correct state
+        $game = Game::findOrFail($request->game_id);
+
+        // Allow removal only if the game is in the 'setting' or 'listing' state
+        if (!in_array($game->status, ['setting', 'listing'])) {
+            return back()->with('error', 'Players can only be removed when the game is in the setting or listing state.');
+        }
+
+        // Retrieve the player to be removed
         $gamePlayer = GamePlayer::where('game_id', $request->game_id)
-            ->where('user_id', $request->user_id)  // Changed from id to user_id
+            ->where('user_id', $request->user_id)
             ->first();
 
         if (!$gamePlayer) {
@@ -261,6 +269,11 @@ class GameController extends Controller
 
         // Remove the player from the game
         $gamePlayer->delete();
+
+        // If the game was in the 'listing' state, set it back to 'setting' if no players are left
+        if ($game->status === 'listing') {
+            $game->update(['status' => 'setting']);
+        }
 
         return back()->with('success', 'Player has been removed and set to ready.');
     }
