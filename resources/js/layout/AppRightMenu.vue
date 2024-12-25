@@ -9,7 +9,7 @@ const { layoutState } = useLayout();
   <Sidebar
     v-model:visible="layoutState.rightMenuActive.value"
     position="right"
-    class="layout-profile-sidebar w-full sm:tw-w-25rem"
+    class="layout-profile-sidebar w-full sm:w-25rem"
     :pt="{
       closeButton: 'ml-auto',
     }"

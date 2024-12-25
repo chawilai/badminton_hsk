@@ -472,18 +472,18 @@ const model = ref([
         items: [
             {
                 label: 'Home',
-                icon: 'pi pi-fw pi-globe',
+                icon: 'pi pi-home',
                 to: '/home'
             },
             {
-                label: 'Party',
-                icon: 'pi pi-fw pi-globe',
-                to: '/party'
+                label: 'Profile',
+                icon: 'pi pi-user',
+                to: '/profile'
             },
             {
-                label: 'Log Out',
-                icon: 'pi pi-fw pi-globe',
-                to: '/'
+                label: 'Party Lists',
+                icon: 'pi pi-list',
+                to: '/party'
             },
             // {
             //     label: 'Landing',

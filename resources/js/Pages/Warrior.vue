@@ -5,9 +5,6 @@ import { ref, onMounted } from "vue";
 
 import Typewriter from "typewriter-effect/dist/core";
 
-// LINE LIFF
-import liff from "@line/liff";
-
 import StarIcon from "@/../icons/star.svg";
 import FuelerIcon from "@/../icons/fueler.svg";
 
@@ -72,51 +69,6 @@ onMounted(() => {
         "ฝีกเขียนจีน Hànzì",
         "แข่งกับเพื่อน",
     ]);
-
-    // Initialize LIFF with your LIFF ID here
-    liff.init({ liffId: "2001165902-JR5Z95AG" })
-        .then(() => {
-            console.log("LIFF initialization successful");
-
-            // liff.logout(); // Prompt the login if not already logged in
-
-            // if (liff.isInClient()) {
-            if (!liff.isLoggedIn()) {
-                liff.login(); // Prompt the login if not already logged in
-            }
-            // Additional logic after successful initialization
-            liff.getProfile()
-                .then((profile) => {
-                    // console.log(profile.displayName);
-                    // console.log(profile.userId);
-                    // console.log(profile.pictureUrl);
-                    // console.log(profile.statusMessage);
-                    // Here you can either display the user info in your app or send it to your backend for processing/storage
-
-                    const userData = {
-                        provider: "line",
-                        userId: profile.userId, // LINE user ID
-                        displayName: profile.displayName,
-                        email: liff.getDecodedIDToken()?.email, // Ensure your LIFF has email permission
-                        pictureUrl: profile.pictureUrl,
-                    };
-
-                    // Make an API call to your backend
-                    router.post(`login/lineliff`, userData, {
-                        preserveScroll: true,
-                        onSuccess: (page) => {
-                            // console.log(page);
-                        },
-                    });
-                })
-                .catch((err) => {
-                    console.error("Failed to get user profile:", err);
-                });
-            // }
-        })
-        .catch((err) => {
-            console.error("LIFF Initialization failed", err);
-        });
 });
 </script>
 

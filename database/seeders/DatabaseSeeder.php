@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ThaiAddressSeeder::class);
         $this->call(BadmintonRanksTableSeeder::class);
 
-        User::factory(500)->create();
+        // User::factory(10)->create();
         Court::factory(20)->create();
-        Party::factory(10)->create();
+        Party::factory(1)->create();
         $this->call(PartyMembersSeeder::class);
     }
 }

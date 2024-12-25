@@ -5,10 +5,16 @@ import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, usePage, router } from "@inertiajs/vue3";
+
+import { ref, onMounted } from "vue";
+// import { useLiffStore } from "@/Stores/liffStore";
+import liff from "@line/liff";
 
 import btn_login_base from "@/../images/btn_login_base.png";
 import google_login from "@/../images/google_login.png";
+
+const page = usePage();
 
 defineProps({
     canResetPassword: {
@@ -34,6 +40,64 @@ const submit = () => {
 // Social media login URLs
 const googleLoginUrl = route("social.login", "google");
 const lineLoginUrl = route("social.login", "line");
+
+onMounted(() => {
+    // Initialize LIFF with your LIFF ID here
+
+    const isGuest = ref(!page.props.auth.user);
+
+    if (isGuest.value) {
+        liff.init({ liffId: "2001165902-JR5Z95AG" })
+            .then(() => {
+                console.log("LIFF initialization successful");
+
+                if (!liff.isInClient()) {
+                    console.error("LIFF must be accessed from LINE app.");
+                    // alert("Please open this link in the LINE app.");
+                    return;
+                }
+
+                // liff.logout(); // Prompt the login if not already logged in
+
+                // if (liff.isInClient()) {
+                if (!liff.isLoggedIn()) {
+                    liff.login(); // Prompt the login if not already logged in
+                }
+                // Additional logic after successful initialization
+                liff.getProfile()
+                    .then((profile) => {
+                        // console.log(profile.displayName);
+                        // console.log(profile.userId);
+                        // console.log(profile.pictureUrl);
+                        // console.log(profile.statusMessage);
+                        // Here you can either display the user info in your app or send it to your backend for processing/storage
+
+                        const userData = {
+                            provider: "line",
+                            userId: profile.userId, // LINE user ID
+                            displayName: profile.displayName,
+                            email: liff.getDecodedIDToken()?.email, // Ensure your LIFF has email permission
+                            pictureUrl: profile.pictureUrl,
+                        };
+
+                        // Make an API call to your backend
+                        router.post(`login/lineliff`, userData, {
+                            preserveScroll: true,
+                            onSuccess: (res) => {
+                                isGuest.value = res.props.auth.user;
+                            },
+                        });
+                    })
+                    .catch((err) => {
+                        console.error("Failed to get user profile:", err);
+                    });
+                // }
+            })
+            .catch((err) => {
+                console.error("LIFF Initialization failed", err);
+            });
+    }
+});
 </script>
 
 <template>
@@ -42,7 +106,7 @@ const lineLoginUrl = route("social.login", "line");
 
         <div
             v-if="status"
-            class="tw-mb-4 tw-font-medium tw-text-sm tw-text-green-600"
+            class="mb-4 font-medium text-sm text-green-600"
         >
             {{ status }}
         </div>
@@ -54,53 +118,53 @@ const lineLoginUrl = route("social.login", "line");
                 <TextInput
                     id="email"
                     type="email"
-                    class="tw-mt-1 tw-block tw-w-full"
+                    class="mt-1 block w-full"
                     v-model="form.email"
                     required
                     autofocus
                     autocomplete="username"
                 />
 
-                <InputError class="tw-mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="tw-mt-4">
+            <div class="mt-4">
                 <InputLabel for="password" value="Password" />
 
                 <TextInput
                     id="password"
                     type="password"
-                    class="tw-mt-1 tw-block tw-w-full"
+                    class="mt-1 block w-full"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
                 />
 
-                <InputError class="tw-mt-2" :message="form.errors.password" />
+                <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="tw-block tw-mt-4">
-                <label class="tw-flex tw-items-center">
+            <div class="block mt-4">
+                <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
                     <span
-                        class="tw-ms-2 tw-text-sm tw-text-gray-600 dark:tw-text-gray-400"
+                        class="ms-2 text-sm text-gray-600 dark:text-gray-400"
                         >Remember me</span
                     >
                 </label>
             </div>
 
-            <div class="tw-flex tw-items-center tw-justify-end tw-mt-4">
+            <div class="flex items-center justify-end mt-4">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="tw-underline tw-text-sm tw-text-gray-600 dark:tw-text-gray-400 hover:tw-text-gray-900 dark:hover:tw-text-gray-100 tw-rounded-md focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-indigo-500 dark:focus:tw-ring-offset-gray-800"
+                    class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                 >
                     ลืม Password ?
                 </Link>
 
                 <PrimaryButton
-                    class="tw-ms-4"
-                    :class="{ 'tw-opacity-25': form.processing }"
+                    class="ms-4"
+                    :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
                     ลงชื่อเข้าใช้
@@ -108,19 +172,19 @@ const lineLoginUrl = route("social.login", "line");
             </div>
         </form>
 
-        <hr class="tw-my-4" v-if="false" />
+        <hr class="my-4" v-if="false" />
 
-        <h2 class="tw-text-center tw-mb-4 tw-text-xl tw-font-bold">
+        <h2 class="text-center mb-4 text-xl font-bold">
             เข้าสู่ระบบ
         </h2>
-        <hr class="tw-my-4" />
+        <hr class="my-4" />
 
-        <div class="tw-flex tw-justify-center tw-gap-4 tw-py-4">
-            <a :href="googleLoginUrl">
-                <img :src="google_login" class="tw-h-10 tw-w-auto" alt="" />
-            </a>
+        <div class="flex justify-center gap-4 py-4">
+            <!-- <a :href="googleLoginUrl">
+                <img :src="google_login" class="h-3rem w-auto" alt="" />
+            </a> -->
             <a :href="lineLoginUrl">
-                <img :src="btn_login_base" class="tw-h-10 tw-w-auto" alt="" />
+                <img :src="btn_login_base" class="h-3rem w-auto" alt="" />
             </a>
         </div>
     </GuestLayout>

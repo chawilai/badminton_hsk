@@ -1,0 +1,55 @@
+
+@keyframes clippath {
+    0%,
+    100% {
+        -webkit-clip-path: inset(0 0 98% 0);
+        clip-path: inset(0 0 98% 0);
+    }
+
+    25% {
+        -webkit-clip-path: inset(0 98% 0 0);
+        clip-path: inset(0 98% 0 0);
+    }
+    50% {
+        -webkit-clip-path: inset(98% 0 0 0);
+        clip-path: inset(98% 0 0 0);
+    }
+    75% {
+        -webkit-clip-path: inset(0 0 0 98%);
+        clip-path: inset(0 0 0 98%);
+    }
+}
+
+.animate-border:after,
+.animate-border:before {
+    animation: clippath 3s linear infinite;
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    bottom: -2px;
+    content: "";
+    left: -2px;
+    opacity: 0;
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    transition: all 0.5s;
+    z-index: -1;
+}
+
+.animate-border:hover:after,
+.animate-border:hover:before {
+    opacity: 1;
+}
+
+.animate-border:after {
+    animation: clippath 3s linear -1.5s infinite;
+}
+
+.animate-border {
+    position: relative;
+    z-index: 0;
+}
+
+.box-shadow {
+    box-shadow: 0px 7px 15px 0px rgba(0, 0, 0, .02), 0px 28px 28px 0px rgba(0, 0, 0, .02), 0px 63px 38px 0px rgba(0, 0, 0, .01);;
+}

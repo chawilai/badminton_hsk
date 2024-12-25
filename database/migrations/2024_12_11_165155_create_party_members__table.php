@@ -19,7 +19,7 @@ class CreatePartyMembersTable extends Migration
             $table->timestamp('request_date')->nullable();
             $table->timestamp('accept_date')->nullable();
             $table->timestamp('confirm_date')->nullable();
-            $table->string('play_state')->default('null'); // null, ready, break, done/finished
+            $table->string('play_state')->nullable(); // null, ready, break, done/finished
             $table->timestamps();
         });
     }

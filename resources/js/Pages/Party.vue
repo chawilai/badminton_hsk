@@ -2,9 +2,10 @@
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from "@/layout/AppLayout.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
-import { reactive, ref, computed } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
+import Crud from "@/Pages/Prime/Crud.vue";
 
 const toast = useToast();
 const confirmPopup = useConfirm();
@@ -13,18 +14,21 @@ const page = usePage();
 
 const data = reactive({
     party_id: "",
-    game_type: "",
+    game_type: "quadruple",
     status: "setting",
     initial_shuttlecock_game: null,
 });
 
 const parties = ref([]);
+const selectedParty = ref({});
 const games = ref([]);
+const isSidebar = ref(true);
 
 parties.value = page.props.parties;
 games.value = page.props.games;
 
-const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null
+const settingGame =
+    page.props.games.find((sc) => sc.status === "setting") ?? null;
 
 const visibleGameId = ref(settingGame ? settingGame.id : null);
 const game_players = ref(settingGame ? settingGame.game_players : []);
@@ -38,10 +42,19 @@ const game_data = reactive({
     ready_players: [],
 });
 
-const fethReadyPlayer = (game_id) => {
+const fetchReadyPlayer = (game_id) => {
     axios
-        .post("/party_player/", { game_id })
+        .post(
+            "/party_player/",
+            { game_id },
+            {
+                headers: {
+                    Accept: "application/json",
+                },
+            }
+        )
         .then((res) => {
+            // console.log(res.data.readyPlayers)
             game_data.ready_players = res.data.readyPlayers;
         })
         .catch((error) => {
@@ -53,10 +66,13 @@ const addPlayer = () => {
     if (game_data.game_id) {
         router.post(`/games/${game_data.game_id}/add-player`, game_data, {
             preserveScroll: true,
+            headers: {
+                Accept: "application/json",
+            },
             onSuccess: (page) => {
                 game_data.party_member_id = "";
                 games.value = res.props.games;
-                fethReadyPlayer(game_data.game_id);
+                fetchReadyPlayer(game_data.game_id);
                 visibleGameId.value = null;
             },
         });
@@ -69,12 +85,17 @@ const autoAddPlayers = (gameId) => {
         {},
         {
             preserveScroll: true,
+            headers: {
+                Accept: "application/json",
+            },
             onSuccess: (res) => {
                 game_data.game_id = gameId;
                 games.value = res.props.games;
-                fethReadyPlayer(gameId);
+                fetchReadyPlayer(gameId);
 
-                game_players.value = games.value.find((sc) => sc.id == gameId).game_players
+                game_players.value = games.value.find(
+                    (sc) => sc.id == gameId
+                ).game_players;
             },
         }
     );
@@ -87,7 +108,7 @@ const togglePlayers = (gameId) => {
     }
 
     visibleGameId.value = gameId;
-    game_players.value = games.value.find((sc) => sc.id == gameId).game_players
+    game_players.value = games.value.find((sc) => sc.id == gameId).game_players;
 };
 
 const showTime = (dateString) => {
@@ -124,8 +145,8 @@ const readAbleTime = (secondTime) => {
 const listGame = (gameId, event) => {
     confirmPopup.require({
         target: event.target,
-        message: "Are you sure you want to proceed?",
-        icon: "pi pi-exclamation-triangle",
+        message: "Are you sure you want to list the game?",
+        icon: "pi pi-list",
         accept: () => {
             team1Side.value = "north";
 
@@ -135,10 +156,13 @@ const listGame = (gameId, event) => {
                     { team1_start_side: team1Side.value },
                     {
                         preserveScroll: true,
+                        headers: {
+                            Accept: "application/json",
+                        },
                         onSuccess: (res) => {
                             game_data.game_id = gameId;
                             games.value = res.props.games;
-                            fethReadyPlayer(gameId);
+                            fetchReadyPlayer(gameId);
 
                             toast.add({
                                 severity: "success",
@@ -163,46 +187,121 @@ const listGame = (gameId, event) => {
 };
 
 const createGame = () => {
-    router.post(`/games`, data, {
-        preserveScroll: true,
-        onSuccess: (res) => {
+    confirmPopup.require({
+        target: event.target,
+        message: "Do you want to create the game ?",
+        icon: "pi pi-microsoft",
+        accept: () => {
+            router.post(`/games`, data, {
+                preserveScroll: true,
+                headers: {
+                    Accept: "application/json",
+                },
+                onSuccess: (res) => {
+                    games.value = res.props.games;
 
-            games.value = res.props.games;
+                    visibleGameId.value = res.props.games.find(
+                        (sc) => sc.status === "setting"
+                    ).id;
 
-            visibleGameId.value = res.props.games.find((sc) => sc.status === "setting").id
-
+                    toast.add({
+                        severity: "success",
+                        summary: "Confirmed",
+                        detail: "The game is created.",
+                        life: 3000,
+                    });
+                },
+            });
+        },
+        reject: () => {
+            toast.add({
+                severity: "error",
+                summary: "Rejected",
+                detail: "You have rejected creating the game",
+                life: 3000,
+            });
         },
     });
 };
 
 const startGame = (gameId) => {
-    router.post(
-        `/games/${gameId}/start`,
-        { visibleGameId: data.initial_shuttlecock_game },
-        {
-            preserveScroll: true,
-            onSuccess: (res) => {
-                game_data.game_id = gameId;
-                games.value = res.props.games;
-                fethReadyPlayer(gameId);
-            },
-        }
-    );
+    confirmPopup.require({
+        target: event.target,
+        message: "Do you want to start the game ?",
+        icon: "pi pi-play",
+        accept: () => {
+            router.post(
+                `/games/${gameId}/start`,
+                { visibleGameId: data.initial_shuttlecock_game },
+                {
+                    preserveScroll: true,
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    onSuccess: (res) => {
+                        game_data.game_id = gameId;
+                        games.value = res.props.games;
+                        fetchReadyPlayer(gameId);
+
+                        toast.add({
+                            severity: "success",
+                            summary: "Confirmed",
+                            detail: "The game is started.",
+                            life: 3000,
+                        });
+                    },
+                }
+            );
+        },
+        reject: () => {
+            toast.add({
+                severity: "error",
+                summary: "Rejected",
+                detail: "You have rejected starting the game",
+                life: 3000,
+            });
+        },
+    });
 };
 
 const finishGame = (gameId) => {
-    router.post(
-        `/games/${gameId}/finish`,
-        {},
-        {
-            preserveScroll: true,
-            onSuccess: (res) => {
-                game_data.game_id = gameId;
-                games.value = res.props.games;
-                fethReadyPlayer(gameId);
-            },
-        }
-    );
+    confirmPopup.require({
+        target: event.target,
+        message: "Are you sure that the game is finished ?",
+        icon: "pi pi-stop",
+        accept: () => {
+            router.post(
+                `/games/${gameId}/finish`,
+                {},
+                {
+                    preserveScroll: true,
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    onSuccess: (res) => {
+                        game_data.game_id = gameId;
+                        games.value = res.props.games;
+                        fetchReadyPlayer(gameId);
+
+                        toast.add({
+                            severity: "success",
+                            summary: "Confirmed",
+                            detail: "The game is finished.",
+                            life: 3000,
+                        });
+                    },
+                }
+            );
+        },
+        reject: () => {
+            toast.add({
+                severity: "error",
+                summary: "Rejected",
+                detail: "You have rejected finishing the game",
+                life: 3000,
+            });
+        },
+    });
 };
 
 const deletePlayer = (gameId, playerId) => {
@@ -211,11 +310,16 @@ const deletePlayer = (gameId, playerId) => {
         { game_id: gameId, user_id: playerId },
         {
             preserveScroll: true,
+            headers: {
+                Accept: "application/json",
+            },
             onSuccess: (res) => {
                 game_data.game_id = gameId;
                 games.value = res.props.games;
-                fethReadyPlayer(gameId);
-                game_players.value = games.value.find((sc) => sc.id == gameId).game_players
+                fetchReadyPlayer(gameId);
+                game_players.value = games.value.find(
+                    (sc) => sc.id == gameId
+                ).game_players;
             },
         }
     );
@@ -238,6 +342,9 @@ const addPartyInitShuttleCock = (partyId) => {
         { initial_shuttlecocks: initial_shuttlecock_party.value },
         {
             preserveScroll: true,
+            headers: {
+                Accept: "application/json",
+            },
             onSuccess: (res) => {
                 parties.value = res.props.parties;
                 data.initial_shuttlecock_game = initial_shuttlecock_party.value;
@@ -247,9 +354,11 @@ const addPartyInitShuttleCock = (partyId) => {
 };
 
 const selectParty = (partyId) => {
-    initial_shuttlecock_party.value = parties.value.filter(
+    selectedParty.value = parties.value.filter(
         (party) => party.id == partyId
-    )[0].default_initial_shuttlecocks;
+    )[0];
+    initial_shuttlecock_party.value =
+        selectedParty.value.default_initial_shuttlecocks;
 
     data.initial_shuttlecock_game = initial_shuttlecock_party.value;
 };
@@ -266,16 +375,41 @@ const shuttlecocksTotal = (game) => {
 };
 
 const addShuttlecock = (gameId) => {
-    router.post(
-        `/games/${gameId}/add-shuttlecock`,
-        { quantity: 1 },
-        {
-            preserveScroll: true,
-            onSuccess: (res) => {
-                games.value = res.props.games;
-            },
-        }
-    );
+    confirmPopup.require({
+        target: event.target,
+        message: "Are you sure you want to add 1 Shuttlecock ?",
+        icon: "pi pi-plus-circle",
+        accept: () => {
+            router.post(
+                `/games/${gameId}/add-shuttlecock`,
+                { quantity: 1 },
+                {
+                    preserveScroll: true,
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    onSuccess: (res) => {
+                        games.value = res.props.games;
+
+                        toast.add({
+                            severity: "success",
+                            summary: "Confirmed",
+                            detail: "1 Shuttlecock has been added to the game",
+                            life: 3000,
+                        });
+                    },
+                }
+            );
+        },
+        reject: () => {
+            toast.add({
+                severity: "error",
+                summary: "Rejected",
+                detail: "You have rejected adding shuttlecock",
+                life: 3000,
+            });
+        },
+    });
 };
 
 // compute
@@ -284,6 +418,8 @@ const playerSortWaiting = computed(() => {
         (a, b) => b.waiting_time - a.waiting_time
     );
 });
+
+onMounted(() => {});
 </script>
 
 <template>
@@ -296,10 +432,22 @@ const playerSortWaiting = computed(() => {
             </h2>
         </template>
 
+        <!-- <Sidebar
+            v-model:visible="isSidebar"
+            position="bottom"
+            class=""
+            :pt="{
+                closeButton: 'ml-auto',
+            }"
+        >
+            asdfasdf
+        </Sidebar> -->
+
         <div class="py-12">
             <div class="max-w-7xl mx-auto">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
+                    <ConfirmPopup></ConfirmPopup>
                     <button type="button" @click="createGame()">
                         Create Game
                     </button>
@@ -332,17 +480,19 @@ const playerSortWaiting = computed(() => {
                         @blur="addPartyInitShuttleCock(data.party_id)"
                     />
                     <input
+                        v-if="data.party_id"
                         v-model.number="data.initial_shuttlecock_game"
                         type="number"
                         min="0"
                         name="initial_shuttlecock_game"
                     />
 
+                    {{ selectedParty ? selectedParty.is_break_aftergame : "" }}
                     <br />
 
                     <select
                         name="game_id"
-                        @change="fethReadyPlayer(game_data.game_id)"
+                        @change="fetchReadyPlayer(game_data.game_id)"
                         v-model="game_data.game_id"
                     >
                         <option></option>
@@ -402,29 +552,38 @@ const playerSortWaiting = computed(() => {
                         ></li>
                     </ul>
 
-                    <table v-if="visibleGameId" class="mx-auto mb-3 mt-2">
-                        <thead class="bg-green-700 text-white">
+                    <table
+                        v-if="visibleGameId"
+                        class="tw-mx-auto tw-mb-3 tw-mt-2"
+                    >
+                        <thead class="tw-bg-green-700 tw-text-white">
                             <tr>
-                                <th class="px-2 py-1">Player ID</th>
-                                <th class="px-2 py-1">Name</th>
-                                <th class="px-2 py-1">Team</th>
-                                <th class="px-2 py-1">Gender</th>
-                                <th class="px-2 py-1">Range</th>
-                                <th class="px-2 py-1">Action</th>
+                                <th class="tw-px-2 tw-py-1">Player ID</th>
+                                <th class="tw-px-2 tw-py-1">Name</th>
+                                <th class="tw-px-2 tw-py-1">Team</th>
+                                <th class="tw-px-2 tw-py-1">Gender</th>
+                                <th class="tw-px-2 tw-py-1">Range</th>
+                                <th class="tw-px-2 tw-py-1">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="player in game_players" :key="player.id">
-                                <td class="px-2 py-1">{{ player.user.id }}</td>
-                                <td class="px-2 py-1">{{ player.user.name }}</td>
-                                <td class="px-2 py-1">{{ player.team }}</td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
+                                    {{ player.user.id }}
+                                </td>
+                                <td class="tw-px-2 tw-py-1">
+                                    {{ player.user.name }}
+                                </td>
+                                <td class="tw-px-2 tw-py-1">
+                                    {{ player.team }}
+                                </td>
+                                <td class="tw-px-2 tw-py-1">
                                     {{ player.user.gender }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ player.user.badminton_rank_id }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     <button
                                         @click="
                                             deletePlayer(
@@ -449,91 +608,92 @@ const playerSortWaiting = computed(() => {
                                     ID
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Party ID
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Game Type
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Players Count
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Status
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     List At
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Played At
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Finished At
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Duration
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Players Lists
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Init
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Total
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     +
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     List
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Start
                                 </th>
                                 <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
                                 >
                                     Finish
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="game in games"
-                                :key="game.id"
-                            >
-                                <td class="px-2 py-1">{{ game.id }}</td>
-                                <td class="px-2 py-1">{{ game.party_id }}</td>
-                                <td class="px-2 py-1">{{ game.game_type }}</td>
-                                <td class="px-2 py-1">
+                            <tr v-for="game in games" :key="game.id">
+                                <td class="tw-px-2 tw-py-1">{{ game.id }}</td>
+                                <td class="tw-px-2 tw-py-1">
+                                    {{ game.party_id }}
+                                </td>
+                                <td class="tw-px-2 tw-py-1">
+                                    {{ game.game_type }}
+                                </td>
+                                <td class="tw-px-2 tw-py-1">
                                     {{ game.game_players_count }}
                                     <button
                                         type="button"
@@ -543,19 +703,19 @@ const playerSortWaiting = computed(() => {
                                     </button>
                                 </td>
                                 <td
-                                    class="px-2 py-1"
+                                    class="tw-px-2 tw-py-1"
                                     v-html="gameStatus(game.status)"
                                 ></td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ showTime(game.game_list_date) }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ showTime(game.game_start_date) }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ showTime(game.game_end_date) }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{
                                         playTime(
                                             game.game_start_date,
@@ -563,36 +723,34 @@ const playerSortWaiting = computed(() => {
                                         )
                                     }}
                                 </td>
-                                <td class="px-2 py-1">
-                                    <button
-                                        @click="togglePlayers(game.id)"
-                                    >
+                                <td class="tw-px-2 tw-py-1">
+                                    <button @click="togglePlayers(game.id)">
                                         Game Detail
                                     </button>
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ shuttlecocksInit(game) }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     {{ shuttlecocksTotal(game) }}
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     <button @click="addShuttlecock(game.id)">
                                         Add
                                     </button>
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     <ConfirmPopup></ConfirmPopup>
                                     <button @click="listGame(game.id, $event)">
                                         List
                                     </button>
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     <button @click="startGame(game.id)">
                                         Start
                                     </button>
                                 </td>
-                                <td class="px-2 py-1">
+                                <td class="tw-px-2 tw-py-1">
                                     <button @click="finishGame(game.id)">
                                         Finish
                                     </button>
@@ -603,5 +761,7 @@ const playerSortWaiting = computed(() => {
                 </div>
             </div>
         </div>
+
+        <!-- <Crud></Crud> -->
     </AppLayout>
 </template>

@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\UserController;
+use App\Http\Middleware\CheckUserSetup;
 use App\Models\Game;
 use App\Models\Party;
 use App\Models\User;
@@ -30,12 +32,15 @@ use Inertia\Inertia;
 // });
 
 Route::get('/', function () {
-    return Inertia::render('Warrior', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+
+    return redirect('/party');
+
+    // return Inertia::render('Warrior', [
+    //     'canLogin' => Route::has('login'),
+    //     'canRegister' => Route::has('register'),
+    //     'laravelVersion' => Application::VERSION,
+    //     'phpVersion' => PHP_VERSION,
+    // ]);
 })->name('home');
 
 Route::get('/organic', function () {
@@ -65,7 +70,11 @@ Route::get('/landing', function () {
 });
 
 Route::get('/home', function () {
-    return Inertia::render('Dashboard');
+    return redirect('/party');
+});
+
+Route::get('/crud', function () {
+    return Inertia::render('Prime/Crud');
 });
 
 // game
@@ -105,30 +114,22 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/party', function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 
-        $games = Game::with(['gamePlayers.user', 'shuttlecocks']) // Added 'shuttlecocks' to the eager loading array
-        ->withCount('gamePlayers') // Continue counting the number of game players
-        ->orderBy('id', 'desc') // Keep the order by id in descending order
-        ->get();
-
-        $parties = Party::withCount('members')->get();
-
-        return Inertia::render('Party', [
-            'parties' => $parties,
-            'games' => $games,
-        ]);
-    })->name('party');
+    Route::get('/party', [PartyController::class, 'index'])->name('party');
+    Route::get('/party', [PartyController::class, 'index'])->name('party')->middleware(CheckUserSetup::class);
 });
+
+Route::get('/setup', [UserController::class, 'showSetupForm'])->name('user.setup');
+Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.update');
 
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
-
 
 Route::fallback(function () {
     return Inertia::render('404');

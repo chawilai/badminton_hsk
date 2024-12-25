@@ -13,6 +13,7 @@
     <meta property="og:title" content="HSK Warrior" />
     <meta property="og:description" content="เรียนภาษาจีน ผ่านเกม สุดแสนสนุก" />
     <meta property="og:type" content="website" />
+    {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
     {{-- facebook --}}
 
     <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/images/warrior_logo.png') }}">

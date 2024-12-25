@@ -83,15 +83,15 @@ const onSidebarButtonClick = () => {
     </div>
     <div class="topbar-end">
       <ul class="topbar-menu">
-        <li
+        <!-- <li
           :class="isHorizontal ? 'topbar-search hidden' : 'topbar-search hidden sm:tw-block'"
         >
           <IconField iconPosition="left">
             <InputIcon class="pi pi-search" />
             <InputText type="text" placeholder="Search" class="w-12rem sm:tw-w-full" />
           </IconField>
-        </li>
-        <li :class="isHorizontal ? 'block topbar-item' : 'block sm:tw-hidden topbar-item'">
+        </li> -->
+        <!-- <li :class="isHorizontal ? 'block topbar-item' : 'block sm:tw-hidden topbar-item'">
           <a
             v-styleclass="{
               selector: '@next',
@@ -114,7 +114,7 @@ const onSidebarButtonClick = () => {
               <InputText type="text" placeholder="Search" class="w-full" />
             </IconField>
           </ul>
-        </li>
+        </li> -->
         <li class="topbar-item">
           <a
             v-styleclass="{
@@ -135,7 +135,7 @@ const onSidebarButtonClick = () => {
             />
           </a>
           <ul :class="'topbar-menu active-topbar-menu p-4 w-15rem z-5 hidden'">
-            <li role="menuitem" class="m-0 mb-3">
+            <!-- <li role="menuitem" class="m-0 mb-3">
               <a
                 href="#"
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"
@@ -151,8 +151,8 @@ const onSidebarButtonClick = () => {
                 <i class="pi pi-fw pi-lock mr-2"></i>
                 <span>Privacy</span>
               </a>
-            </li>
-            <li role="menuitem" class="m-0 mb-3">
+            </li> -->
+            <!-- <li role="menuitem" class="m-0 mb-3">
               <a
                 href="#"
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"
@@ -168,13 +168,28 @@ const onSidebarButtonClick = () => {
                 <i class="pi pi-fw pi-cog mr-2"></i>
                 <span>Settings</span>
               </a>
+            </li> -->
+            <li role="menuitem" class="m-0 mb-3">
+              <a
+                href="#"
+                class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                v-styleclass="{
+                  selector: '@grandparent',
+                  enterClass: 'hidden',
+                  enterActiveClass: 'px-scalein',
+                  leaveToClass: 'hidden',
+                  leaveActiveClass: 'px-fadeout',
+                  hideOnOutsideClick: 'true',
+                }"
+              >
+                <i class="pi pi-fw pi-user mr-2"></i>
+                <span>Profile</span>
+              </a>
             </li>
             <li role="menuitem" class="m-0">
               <Link
-                href="/logout"
+                :href="route('logout')"
                 method="post"
-                as="button"
-                :data="{ '_token': '{{ csrf_token() }}' }"
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"
                 v-styleclass="{
                   selector: '@grandparent',
@@ -191,7 +206,7 @@ const onSidebarButtonClick = () => {
             </li>
           </ul>
         </li>
-        <li>
+        <!-- <li>
           <Button
             type="button"
             icon="pi pi-cog"
@@ -200,8 +215,8 @@ const onSidebarButtonClick = () => {
             severity="secondary"
             @click="onConfigButtonClick()"
           ></Button>
-        </li>
-        <li>
+        </li> -->
+        <!-- <li>
           <Button
             type="button"
             icon="pi pi-arrow-left"
@@ -210,7 +225,7 @@ const onSidebarButtonClick = () => {
             severity="secondary"
             @click="onSidebarButtonClick()"
           ></Button>
-        </li>
+        </li> -->
       </ul>
     </div>
   </div>

@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { useLayout } from "@/layout/composables/layout";
 // import { useRouter } from 'vue-router';
 
+import badminton_logo from "@/../assets/images/badminton_party_no_bg.png" // new URL(`/resources/assets/images/badminton_party_no_bg.png`, import.meta.url).href
 // const router = useRouter();
 
 const navigateToDashboard = () => {
@@ -35,13 +36,18 @@ const onMouseLeave = () => {
 const anchor = () => {
   layoutState.anchored.value = !layoutState.anchored.value;
 };
+
+// const getImagePath = (imageName) => {
+//     return new URL(`/resources/assets/images/badminton_party_no_bg.png`, import.meta.url).href;
+// };
 </script>
 
 <template>
   <div class="layout-sidebar" @mouseenter="onMouseEnter()" @mouseleave="onMouseLeave()">
     <div class="sidebar-header">
-      <Link href="/" class="app-logo cursor-pointer">
-        <svg
+      <Link href="/party" class="app-logo cursor-pointer text-center">
+        <img :src="badminton_logo" class="w-8" alt="">
+        <!-- <svg
           viewBox="0 0 66 19"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +172,7 @@ const anchor = () => {
               <stop offset="1" stop-color="var(--primary-700)" />
             </linearGradient>
           </defs>
-        </svg>
+        </svg> -->
       </Link>
       <button
         class="layout-sidebar-anchor p-link"

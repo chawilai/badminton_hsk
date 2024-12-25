@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 /* Layout */
-@import '@/../assets/layout/layout.scss';
+@import '../assets/layout/layout.scss';
 
 /* Prime */
 // @import 'primevue/resources/primevue.min.css'; // version deplicated. You must open the command line if you are using < 3.29.00
@@ -9,7 +9,7 @@
 @import 'primeflex/primeflex.scss';
 
 /* Demos */
-@import '@/../assets/demo/demo.scss';
+@import '../assets/demo/demo.scss';
 
 
 /* Remove focus ring for all buttons by default */
@@ -55,4 +55,8 @@
 
 .p-button-plain.p-button-raised:focus {
     --button-focus-color: rgba(108, 117, 125, 0.5); /* Plain color or customize as needed */
+}
+
+body {
+    background: #efefef !important;
 }

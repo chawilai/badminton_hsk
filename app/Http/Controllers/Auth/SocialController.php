@@ -22,7 +22,7 @@ class SocialController extends Controller
         $socialUser = Socialite::driver($provider)->stateless()->user();
         $authUser = $this->findOrCreateUser($socialUser, $provider);
         Auth::login($authUser, true);
-        return redirect()->route('home');
+        return redirect()->route('party');
     }
 
     public function findOrCreateUser($socialUser, $provider)
@@ -54,8 +54,10 @@ class SocialController extends Controller
             }
         }
 
+        $randomRank = \DB::table('badminton_ranks')->inRandomOrder()->value('id');
+
         // If the user does not exist by provider ID or email, create a new user
-        return User::create([
+        $newUser = User::create([
             'name' => $socialUser->getName(),
             'email' => $socialUser->getEmail() ?? Str::random(10) . '@example.com', // Handle case where email is not provided
             'provider' => $provider,
@@ -63,7 +65,17 @@ class SocialController extends Controller
             'avatar' => $socialUser->getAvatar(),
             'profile_picture' => $socialUser->getAvatar(),
             'password' => Hash::make(Str::random(10)), // Set a random password
+            'badminton_rank_id' => $randomRank, // Assign a random rank
         ]);
+
+        \DB::table('party_members')->insert([
+            'user_id' => $newUser->id,
+            'party_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $newUser;
     }
 
     public function checkLineLiff(Request $request)
@@ -102,8 +114,10 @@ class SocialController extends Controller
             }
         }
 
+        $randomRank = \DB::table('badminton_ranks')->inRandomOrder()->value('id');
+
         // Create a new user if none exists
-        return User::create([
+        $newUser = User::create([
             'name' => $displayName,
             'email' => $email ?? Str::random(10) . '@example.com', // Provide a fallback for missing email
             'provider' => $provider,
@@ -112,13 +126,23 @@ class SocialController extends Controller
             'profile_picture' => $pictureUrl,
             'provider_name' => $displayName,
             'password' => Hash::make(Str::random(10)), // Securely hashing a random password
+            'badminton_rank_id' => $randomRank, // Assign a random rank
         ]);
+
+        \DB::table('party_members')->insert([
+            'user_id' => $newUser->id,
+            'party_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $newUser;
     }
 
     public function handleLineLiffLogin(Request $request)
     {
         $authUser = $this->checkLineLiff($request);
         Auth::login($authUser, true); // Login the user and "remember" them
-        return redirect()->route('home'); // Redirect to the home route
+        return redirect()->route('party'); // Redirect to the home route
     }
 }

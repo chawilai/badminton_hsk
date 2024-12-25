@@ -2,20 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Game;
 use App\Models\Party;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PartyController extends Controller
 {
+    public function index(Request $request)
+    {
+        $games = Game::with(['gamePlayers.user', 'shuttlecocks']) // Added 'shuttlecocks' to the eager loading array
+            ->withCount('gamePlayers') // Continue counting the number of game players
+            ->orderBy('id', 'desc') // Keep the order by id in descending order
+            ->get();
+
+        $parties = Party::withCount('members')->get();
+
+        return Inertia::render('Party', [
+            'parties' => $parties,
+            'games' => $games,
+        ]);
+    }
+
     public function setInitialShuttlecocks(Request $request, Party $party)
-{
-    $request->validate([
-        'initial_shuttlecocks' => 'required|integer|min:0'
-    ]);
+    {
+        $request->validate([
+            'initial_shuttlecocks' => 'required|integer|min:0'
+        ]);
 
-    $party->default_initial_shuttlecocks = $request->initial_shuttlecocks;
-    $party->save();
+        $party->default_initial_shuttlecocks = $request->initial_shuttlecocks;
+        $party->save();
 
-    return back()->with('success', 'Initial shuttlecocks set successfully.');
-}
+        return back()->with('success', 'Initial shuttlecocks set successfully.');
+    }
 }
