@@ -130,7 +130,7 @@ const onSidebarButtonClick = () => {
           >
             <img
               class="border-round-xl"
-              :src="avatar"
+              :src="$page.props.auth.user.avatar"
               alt="Profile"
             />
           </a>
@@ -171,7 +171,7 @@ const onSidebarButtonClick = () => {
             </li> -->
             <li role="menuitem" class="m-0 mb-3">
               <a
-                href="#"
+                href="/profile"
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"
                 v-styleclass="{
                   selector: '@grandparent',
