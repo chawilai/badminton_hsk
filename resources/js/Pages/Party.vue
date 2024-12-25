@@ -523,35 +523,39 @@ onMounted(() => {});
             ></li>
           </ul>
 
-          <table v-if="visibleGameId" class="tw-mx-auto tw-mb-3 tw-mt-2">
-            <thead class="tw-bg-green-700 tw-text-white">
+          <table v-if="visibleGameId" class="border-1 border-gray-300 mx-auto mb-3 mt-2">
+            <thead class="bg-green-700 text-white">
               <tr>
-                <th class="tw-px-2 tw-py-1">Player ID</th>
-                <th class="tw-px-2 tw-py-1">Name</th>
-                <th class="tw-px-2 tw-py-1">Team</th>
-                <th class="tw-px-2 tw-py-1">Gender</th>
-                <th class="tw-px-2 tw-py-1">Range</th>
-                <th class="tw-px-2 tw-py-1">Action</th>
+                <th class="px-3 py-2 text-center">Player ID</th>
+                <th class="px-3 py-2 text-center">Name</th>
+                <th class="px-3 py-2 text-center">Pic</th>
+                <th class="px-3 py-2 text-center">Team</th>
+                <th class="px-3 py-2 text-center">Gender</th>
+                <th class="px-3 py-2 text-center">Range</th>
+                <th class="px-3 py-2 text-center">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="player in game_players" :key="player.id">
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
                   {{ player.user.id }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
                   {{ player.user.name }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
+                  <img :src="player.user.avatar" class="w-4rem border-round-xl" alt="">
+                </td>
+                <td class="px-3 py-2 text-center">
                   {{ player.team }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
                   {{ player.user.gender }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
                   {{ player.user.badminton_rank_id }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-3 py-2 text-center">
                   <button @click="deletePlayer(visibleGameId, player.user.id)">
                     Delete
                   </button>
@@ -565,77 +569,77 @@ onMounted(() => {});
               <tr>
                 <th class="py-1 px-3 text-md text-center bg-green-500 text-white">ID</th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Party ID
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Game Type
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Players Count
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Status
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   List At
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Played At
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Finished At
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Duration
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Players Lists
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Init
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Total
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   +
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   List
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Start
                 </th>
                 <th
-                  class="tw-py-1 tw-px-3 tw-text-md tw-text-center tw-bg-green-500 tw-text-white"
+                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
                 >
                   Finish
                 </th>
@@ -643,50 +647,50 @@ onMounted(() => {});
             </thead>
             <tbody>
               <tr v-for="game in games" :key="game.id">
-                <td class="tw-px-2 tw-py-1">{{ game.id }}</td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">{{ game.id }}</td>
+                <td class="px-2 py-1">
                   {{ game.party_id }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ game.game_type }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ game.game_players_count }}
                   <button type="button" @click="autoAddPlayers(game.id)">+</button>
                 </td>
-                <td class="tw-px-2 tw-py-1" v-html="gameStatus(game.status)"></td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
+                <td class="px-2 py-1">
                   {{ showTime(game.game_list_date) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ showTime(game.game_start_date) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ showTime(game.game_end_date) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ playTime(game.game_start_date, game.game_end_date) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   <button @click="togglePlayers(game.id)">Game Detail</button>
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ shuttlecocksInit(game) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   {{ shuttlecocksTotal(game) }}
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   <button @click="addShuttlecock(game.id)">Add</button>
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   <ConfirmPopup></ConfirmPopup>
                   <button @click="listGame(game.id, $event)">List</button>
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   <button @click="startGame(game.id)">Start</button>
                 </td>
-                <td class="tw-px-2 tw-py-1">
+                <td class="px-2 py-1">
                   <button @click="finishGame(game.id)">Finish</button>
                 </td>
               </tr>

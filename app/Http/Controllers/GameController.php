@@ -471,9 +471,9 @@ class GameController extends Controller
     {
 
         // Check if the game is finished
-        if ($game->status === 'finished') {
-            return back()->with('error', 'Cannot add shuttlecocks to a finished game');
-        }
+        // if ($game->status === 'finished') {
+        //     return back()->with('error', 'Cannot add shuttlecocks to a finished game');
+        // }
 
         $quantity = $request->input('quantity', 1);
 
