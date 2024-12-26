@@ -24,11 +24,16 @@ const selectedParty = ref({});
 const games = ref([]);
 const isSidebar = ref(true);
 
+const game_data = reactive({
+    game_id: "",
+    party_member_id: "",
+    ready_players: [],
+});
+
 parties.value = page.props.parties;
 games.value = page.props.games;
 
-const settingGame =
-    page.props.games.find((sc) => sc.status === "setting") ?? null;
+const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null;
 
 const visibleGameId = ref(settingGame ? settingGame.id : null);
 const game_players = ref(settingGame ? settingGame.game_players : []);
@@ -36,11 +41,7 @@ const game_players = ref(settingGame ? settingGame.game_players : []);
 const team1Side = ref(null);
 const initial_shuttlecock_party = ref(0);
 
-const game_data = reactive({
-    game_id: "",
-    party_member_id: "",
-    ready_players: [],
-});
+const thisGame = ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
 
 const fetchReadyPlayer = (gameId) => {
     router.post(
@@ -62,6 +63,12 @@ const fetchReadyPlayer = (gameId) => {
     );
 };
 
+const gamePlayerSummary = () => {
+    if(thisGame.value) {
+        return ` (${game_players.value.length}/${thisGame.value.game_type == 'quadruple'? 4 : 2})`
+    }
+}
+
 const addPlayer = () => {
     if (game_data.game_id) {
         router.post(`/games/${game_data.game_id}/add-player`, game_data, {
@@ -73,9 +80,9 @@ const addPlayer = () => {
                 game_data.party_member_id = "";
                 games.value = res.props.games;
                 fetchReadyPlayer(game_data.game_id);
-                game_players.value = games.value.find(
-                    (sc) => sc.id == game_data.game_id
-                ).game_players;
+
+                thisGame.value = games.value.find((sc) => sc.id == game_data.game_id);
+                game_players.value = thisGame.value.game_players;
             },
         });
     }
@@ -93,12 +100,11 @@ const autoAddPlayers = (gameId) => {
             onSuccess: (res) => {
                 game_data.game_id = gameId;
                 games.value = res.props.games;
-                visibleGameId.value = gameId
+                visibleGameId.value = gameId;
                 fetchReadyPlayer(gameId);
 
-                game_players.value = games.value.find(
-                    (sc) => sc.id == gameId
-                ).game_players;
+                thisGame.value = games.value.find((sc) => sc.id == gameId);
+                game_players.value = thisGame.value.game_players;
             },
         }
     );
@@ -111,7 +117,8 @@ const togglePlayers = (gameId) => {
     }
 
     visibleGameId.value = gameId;
-    game_players.value = games.value.find((sc) => sc.id == gameId).game_players;
+    thisGame.value = games.value.find((sc) => sc.id == gameId);
+    game_players.value = thisGame.value.game_players;
 };
 
 const showTime = (dateString) => {
@@ -166,6 +173,8 @@ const listGame = (gameId, event) => {
                             game_data.game_id = gameId;
                             games.value = res.props.games;
                             fetchReadyPlayer(gameId);
+                            thisGame.value = games.value.find((sc) => sc.id == gameId);
+                            game_players.value = thisGame.value.game_players;
 
                             toast.add({
                                 severity: "success",
@@ -198,15 +207,15 @@ const createGame = () => {
         onSuccess: (res) => {
             games.value = res.props.games;
 
-             let newGame = res.props.games.find(
-                (sc) => sc.status === "setting"
-            );
+            let newGame = res.props.games.find((sc) => sc.status === "setting");
 
-            visibleGameId.value = newGame.id
+            visibleGameId.value = newGame.id;
 
-            game_players.value = newGame.game_players
+            game_players.value = newGame.game_players;
 
-            fetchReadyPlayer(visibleGameId.value)
+            fetchReadyPlayer(visibleGameId.value);
+            thisGame.value = games.value.find((sc) => sc.id == newGame.id);
+            game_players.value = thisGame.value.game_players;
 
             toast.add({
                 severity: "success",
@@ -236,6 +245,8 @@ const startGame = (gameId) => {
                         game_data.game_id = gameId;
                         games.value = res.props.games;
                         fetchReadyPlayer(gameId);
+                        thisGame.value = games.value.find((sc) => sc.id == gameId);
+                        game_players.value = thisGame.value.game_players;
 
                         toast.add({
                             severity: "success",
@@ -276,6 +287,8 @@ const finishGame = (gameId) => {
                         game_data.game_id = gameId;
                         games.value = res.props.games;
                         fetchReadyPlayer(gameId);
+                        thisGame.value = games.value.find((sc) => sc.id == gameId);
+                        game_players.value = thisGame.value.game_players;
 
                         toast.add({
                             severity: "success",
@@ -350,9 +363,8 @@ const deletePlayer = (gameId, playerId) => {
                 game_data.game_id = gameId;
                 games.value = res.props.games;
                 fetchReadyPlayer(gameId);
-                game_players.value = games.value.find(
-                    (sc) => sc.id == gameId
-                ).game_players;
+                thisGame.value = games.value.find((sc) => sc.id == gameId);
+                game_players.value = thisGame.value.game_players;
             },
         }
     );
@@ -641,7 +653,7 @@ onMounted(() => {});
                         <thead class="bg-green-700 text-white">
                             <tr>
                                 <th colspan="6" class="px-3 py-2 text-center">
-                                    Game ID : {{ visibleGameId }}
+                                    Game ID : {{ visibleGameId }} {{ gamePlayerSummary() }} <span v-html="gameStatus(thisGame.status)"></span>
                                 </th>
                             </tr>
                         </thead>

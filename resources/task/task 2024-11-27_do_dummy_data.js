@@ -229,5 +229,42 @@ table
                 - initial price 50
                 - game price 25
                 - join party button
+                    -> one player can join many party (maybe difference time)
+                    -> joined party will how in profile
+                        -> my parties table
+                        -> up coming party card
                 - share party button
 
+    - the profile page
+        -> personal info
+        -> config -> show age, show profile to friend, show to public
+            -> public info card example
+                -> avatar
+                -> name
+                -> age
+                -> gender
+                -> badminton level
+                -> badminton style ->
+                    'Attacking/Offensive',
+                    'Defensive',
+                    'Control/Placement',
+                    'Counter-Attacking',
+                    'Deceptive',
+                    'All-Rounder',
+                    'Net-Dominant',
+                    'Power-Based',
+                    'Tactical',
+                    'Slow-Paced/Patient',
+                    'Speed Play'
+                -> match played summary
+                    -> double/quadruple
+                    -> win/lose
+                    -> most 10 play with and score -> have add friend button
+                    -> most 10 play againt and score -> have add friend button
+                    -> most 10 play with and win -> have add friend button
+                    -> most 10 play againt and lose -> have add friend button
+                -> motto
+                -> game history
+                -> friend list
+        -> my parties table
+        -> up coming party card
