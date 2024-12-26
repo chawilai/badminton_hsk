@@ -48,7 +48,7 @@ onMounted(() => {
 
   if (isGuest.value) {
     liff
-      .init({ liffId: "2001165902-JR5Z95AG" })
+      .init({ liffId: "2001165902-9zoxvoY1" })
       .then(() => {
         console.log("LIFF initialization successful");
 

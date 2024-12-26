@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- facebook --}}
-    <meta property="og:image" content="{{ Vite::asset('resources/images/warrior_exam.png') }}" />
+    <meta property="og:image" content="{{ Vite::asset('resources/assets/images/badminton_party_no_bg.png') }}" />
     {{-- <meta property="og:image:width" content="1200" /> <!-- Optional: Width of image in pixels --> --}}
     {{-- <meta property="og:image:height" content="630" /> <!-- Optional: Height of image in pixels --> --}}
     <meta property="og:url" content="https://badmintonparty.com/party" />
