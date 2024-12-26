@@ -30,6 +30,11 @@ class PartyController extends Controller
             'initial_shuttlecocks' => 'required|integer|min:0'
         ]);
 
+        // Check if the new value is the same as the existing value
+        if ($party->default_initial_shuttlecocks == $request->initial_shuttlecocks) {
+            return back()->with('info', 'No changes were made as the value is already set.');
+        }
+
         $party->default_initial_shuttlecocks = $request->initial_shuttlecocks;
         $party->save();
 

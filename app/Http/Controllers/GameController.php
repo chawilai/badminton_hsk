@@ -430,11 +430,17 @@ class GameController extends Controller
                 $team1Count = $game->gamePlayers()->where('team', 'team1')->count();
                 $team2Count = $game->gamePlayers()->where('team', 'team2')->count();
 
-                if ($team1Count < $maxPlayersPerTeam || $team2Count < $maxPlayersPerTeam) {
-                    $teamToAssign = $team1Count < $team2Count ? 'team1' : 'team2';
-                    $this->addPlayerToGame($game, $member, $teamToAssign);
-                } else {
-                    // All teams are full
+                // Assign to team1 if it's not full
+                if ($team1Count < $maxPlayersPerTeam) {
+                    $this->addPlayerToGame($game, $member, 'team1');
+                }
+                // Otherwise, assign to team2 if it's not full
+                elseif ($team2Count < $maxPlayersPerTeam) {
+                    $this->addPlayerToGame($game, $member, 'team2');
+                }
+
+                // Break if both teams are full
+                if ($team1Count >= $maxPlayersPerTeam && $team2Count >= $maxPlayersPerTeam) {
                     break;
                 }
             }
@@ -489,5 +495,18 @@ class GameController extends Controller
             'type' => 'returned',
             'quantity' => -$quantity // Negative to indicate returns
         ]);
+    }
+
+    public function deleteGame(Game $game)
+    {
+        // Check if the game status is 'setting' or 'listing'
+        if (!in_array($game->status, ['setting', 'listing'])) {
+            return back()->with('error', 'The game can only be deleted when its status is "setting" or "listing".');
+        }
+
+        // Delete the game
+        $game->delete();
+
+        return back()->with('success', 'The game has been successfully deleted.');
     }
 }

@@ -93,6 +93,7 @@ Route::post('/games/{game}/finish', [GameController::class, 'finishGame'])->name
 Route::post('/games/{game}/auto-add-players', [GameController::class, 'autoAddPlayers'])->name('games.auto-add-players');
 Route::post('/games/{game}/set-game-initial-shuttlecocks', [GameController::class, 'setInitialShuttlecocks'])->name('games.set-game-initial-shuttlecocks');
 Route::post('/games/{game}/add-shuttlecock', [GameController::class, 'addAdditionalShuttlecocks'])->name('games.add-shuttlecock');
+Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
 Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
 // game
 
@@ -110,8 +111,8 @@ Route::get('login/{provider}/callback', [SocialController::class, 'handleProvide
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return redirect('/party');
+})->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

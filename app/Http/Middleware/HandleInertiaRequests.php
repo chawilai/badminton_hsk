@@ -45,7 +45,8 @@ class HandleInertiaRequests extends Middleware
 
         // Retrieve flash error messages from the session
 
-        if ($request->session()->has('success')) $flash['success'] = $request->session()->get('success');
+        if ($request->session()->has('success')) $flash['success'][] = $request->session()->get('success');
+        if ($request->session()->has('info')) $flash['info'][] = $request->session()->get('info');
 
         if ($request->session()->has('response')) {
             $response = $request->session()->get('response');
