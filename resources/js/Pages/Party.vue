@@ -411,7 +411,7 @@ const shuttlecocksTotal = (game) => {
 const addShuttlecock = (gameId) => {
     confirmPopup.require({
         target: event.target,
-        message: "Are you sure you want to add 1 Shuttlecock ?",
+        message: "Are you sure you want to add 1 shuttlecock ?",
         icon: "pi pi-plus-circle",
         accept: () => {
             router.post(
@@ -428,7 +428,7 @@ const addShuttlecock = (gameId) => {
                         toast.add({
                             severity: "success",
                             summary: "Confirmed",
-                            detail: "1 Shuttlecock has been added to the game",
+                            detail: "1 shuttlecock has been added to the game",
                             life: 3000,
                         });
                     },
@@ -440,6 +440,44 @@ const addShuttlecock = (gameId) => {
                 severity: "error",
                 summary: "Rejected",
                 detail: "You have rejected adding shuttlecock",
+                life: 3000,
+            });
+        },
+    });
+};
+
+const returnShuttlecock = (gameId) => {
+    confirmPopup.require({
+        target: event.target,
+        message: "Are you sure you want to return 1 shuttlecock ?",
+        icon: "pi pi-history",
+        accept: () => {
+            router.post(
+                `/games/${gameId}/return-shuttlecocks`,
+                { quantity: 1 },
+                {
+                    preserveScroll: true,
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    onSuccess: (res) => {
+                        games.value = res.props.games;
+
+                        toast.add({
+                            severity: "success",
+                            summary: "Confirmed",
+                            detail: "1 shuttlecock has been returned",
+                            life: 3000,
+                        });
+                    },
+                }
+            );
+        },
+        reject: () => {
+            toast.add({
+                severity: "error",
+                summary: "Rejected",
+                detail: "You have rejected returning shuttlecock",
                 life: 3000,
             });
         },
@@ -459,7 +497,7 @@ onMounted(() => {});
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Party" />
 
     <AppLayout>
         <template #header>
@@ -776,7 +814,14 @@ onMounted(() => {});
                                     {{ shuttlecocksTotal(game) }}
 
                                     <button
-                                        class="absolute z-3 right-0 top-0 bg-green-100 border-1 border-gray-400 border-round-xl"
+                                        class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
+                                        type="button"
+                                        @click="returnShuttlecock(game.id)"
+                                    >
+                                        -
+                                    </button>
+                                    <button
+                                        class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
                                         type="button"
                                         @click="addShuttlecock(game.id)"
                                     >

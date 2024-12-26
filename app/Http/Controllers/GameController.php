@@ -489,8 +489,19 @@ class GameController extends Controller
         ]);
     }
 
-    public function returnShuttlecocks(Game $game, $quantity)
+    public function returnShuttlecocks(Game $game, Request $request)
     {
+
+        $quantity = $request->input('quantity', 1);
+
+        // Calculate the current total of shuttlecocks
+        $currentTotalShuttlecocks = $game->shuttlecocks()->sum('quantity');
+
+        // Check if the return would result in a negative total
+        if ($currentTotalShuttlecocks - $quantity < 0) {
+            return back()->with('error', 'Cannot return shuttlecocks. Total would be below zero.');
+        }
+
         $game->shuttlecocks()->create([
             'type' => 'returned',
             'quantity' => -$quantity // Negative to indicate returns

@@ -93,6 +93,7 @@ Route::post('/games/{game}/finish', [GameController::class, 'finishGame'])->name
 Route::post('/games/{game}/auto-add-players', [GameController::class, 'autoAddPlayers'])->name('games.auto-add-players');
 Route::post('/games/{game}/set-game-initial-shuttlecocks', [GameController::class, 'setInitialShuttlecocks'])->name('games.set-game-initial-shuttlecocks');
 Route::post('/games/{game}/add-shuttlecock', [GameController::class, 'addAdditionalShuttlecocks'])->name('games.add-shuttlecock');
+Route::post('/games/{game}/return-shuttlecocks', [GameController::class, 'returnShuttlecocks'])->name('games.returnShuttlecocks');
 Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
 Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
 // game
