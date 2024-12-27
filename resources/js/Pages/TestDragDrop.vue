@@ -5,8 +5,8 @@
       class="ready-area"
       :class="{ highlight: isHoveringOverReady }"
       @dragover.prevent
-      @dragenter="hoverReadyArea(true)"
-      @dragleave="hoverReadyArea(false)"
+      @dragenter="hoverReadyArea(true, $event)"
+      @dragleave="hoverReadyArea(false, $event)"
       @drop="dropToReadyArea"
     >
       <h3>Ready Area</h3>
@@ -18,6 +18,29 @@
           draggable="true"
           @dragstart="dragStart(player, index, 'ready')"
           @dblclick="addPlayerToFirstAvailableSlot(index)"
+        >
+          {{ player.label }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Break Area -->
+    <div
+      class="break-area"
+      :class="{ highlight: isHoveringOverBreak }"
+      @dragover.prevent
+      @dragenter="hoverBreakArea(true, $event)"
+      @dragleave="hoverBreakArea(false, $event)"
+      @drop="dropToBreakArea"
+    >
+      <h3>Break Area</h3>
+      <div class="area">
+        <div
+          v-for="(player, index) in breakPlayers"
+          :key="player.id"
+          class="box"
+          draggable="true"
+          @dragstart="dragStart(player, index, 'break')"
         >
           {{ player.label }}
         </div>
@@ -64,6 +87,9 @@ const readyPlayers = ref(
   }))
 );
 
+// Players in the break area
+const breakPlayers = ref([]);
+
 // Slots in the game area (initially empty)
 const gameSlots = ref([null, null, null, null]);
 
@@ -75,6 +101,7 @@ const draggedFrom = ref(null);
 // Hover states
 const hoveredSlot = ref(null);
 const isHoveringOverReady = ref(false);
+const isHoveringOverBreak = ref(false);
 
 // Handle drag start
 function dragStart(player, index, from) {
@@ -89,12 +116,16 @@ function hoverSlot(index) {
 }
 
 // Handle hover over the ready area
-function hoverReadyArea(isHovering) {
+function hoverReadyArea(isHovering, event) {
+  if (!isHovering) {
+    const related = event.relatedTarget;
+    if (related && event.currentTarget.contains(related)) {
+      return;
+    }
+  }
   isHoveringOverReady.value = isHovering;
-  console.log(isHoveringOverReady.value);
 }
 
-// Handle drop into game slots
 function drop(slotIndex) {
   if (!draggedPlayer.value) return;
 
@@ -104,7 +135,7 @@ function drop(slotIndex) {
     gameSlots.value[slotIndex] = draggedPlayer.value;
     readyPlayers.value.splice(draggedIndex.value, 1);
 
-    // Move existing player back to the ready area if the slot was occupied
+    // Move the existing player (if any) back to the Ready Area
     if (previousPlayer) {
       readyPlayers.value.push(previousPlayer);
     }
@@ -115,21 +146,52 @@ function drop(slotIndex) {
     gameSlots.value[draggedIndex.value] = previousPlayer;
   }
 
-  // Clear dragging state
+  // Clear dragging state and reset hover
   clearDragState();
   hoverSlot(null);
 }
 
-// Handle drop back to the ready area
+// Handle hover over the break area
+function hoverBreakArea(isHovering, event) {
+  if (!isHovering) {
+    const related = event.relatedTarget;
+    if (related && event.currentTarget.contains(related)) {
+      return;
+    }
+  }
+  isHoveringOverBreak.value = isHovering;
+}
+
+// Handle drop into ready area
 function dropToReadyArea() {
-  if (!draggedPlayer.value || draggedFrom.value !== "slot") return;
+  if (!draggedPlayer.value) return;
 
-  readyPlayers.value.push(draggedPlayer.value);
-  gameSlots.value[draggedIndex.value] = null;
+  if (draggedFrom.value === "break") {
+    breakPlayers.value.splice(draggedIndex.value, 1);
+    readyPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "slot") {
+    gameSlots.value[draggedIndex.value] = null;
+    readyPlayers.value.push(draggedPlayer.value);
+  }
 
-  // Clear dragging state
   clearDragState();
-  hoverReadyArea(false);
+  isHoveringOverReady.value = false;
+}
+
+// Handle drop into break area
+function dropToBreakArea() {
+  if (!draggedPlayer.value || draggedFrom.value === "break") return;
+
+  if (draggedFrom.value === "ready") {
+    readyPlayers.value.splice(draggedIndex.value, 1);
+    breakPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "slot") {
+    gameSlots.value[draggedIndex.value] = null;
+    breakPlayers.value.push(draggedPlayer.value);
+  }
+
+  clearDragState();
+  isHoveringOverBreak.value = false;
 }
 
 // Add player to the first available slot via double-click
@@ -171,8 +233,9 @@ function clearDragState() {
 }
 
 .ready-area,
+.break-area,
 .game-area {
-  width: 45%;
+  width: 30%;
 }
 
 .area,
@@ -196,7 +259,11 @@ function clearDragState() {
 }
 
 .ready-area .box {
-  background-color: #007bff; /* Ensures boxes in the ready area have a blue background */
+  background-color: #007bff;
+}
+
+.break-area .box {
+  background-color: #dc3545; /* Red background for break area boxes */
 }
 
 .slot {
@@ -211,21 +278,26 @@ function clearDragState() {
 }
 
 .slot .box {
-  background-color: #28a745;
+  background-color: #28a745; /* Green background for slot boxes */
   cursor: grab;
 }
 
 .highlight {
-  background-color: #ffeeba;
+  background-color: #ffeeba; /* Light yellow for highlight */
 }
 
-.ready-area {
+.ready-area,
+.break-area {
   padding: 10px;
   border: 2px dashed #ccc;
   border-radius: 5px;
 }
 
 .ready-area.highlight {
-  background-color: #d1ecf1;
+  background-color: #d1ecf1; /* Light blue for ready area highlight */
+}
+
+.break-area.highlight {
+  background-color: #f8d7da; /* Light red for break area highlight */
 }
 </style>
