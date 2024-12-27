@@ -255,11 +255,73 @@ function getAreaByName(areaName) {
   }
 }
 
+let touchMoveTimer = null;
+
+// Handle touch start
+function touchStart(player, index, from, event) {
+  event.preventDefault(); // Prevent scrolling or context menu
+  dragStart(player, index, from);
+}
+
+// Handle touch move
+function touchMove(event) {
+  if (touchMoveTimer) {
+    clearTimeout(touchMoveTimer);
+  }
+  touchMoveTimer = setTimeout(() => {
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+
+    // Highlight areas or slots being hovered
+    if (element.classList.contains("ready-area")) {
+      isHoveringOverReady.value = true;
+      isHoveringOverBreak.value = false;
+      isHoveringOverPlaying.value = false;
+    } else if (element.classList.contains("break-area")) {
+      isHoveringOverReady.value = false;
+      isHoveringOverBreak.value = true;
+      isHoveringOverPlaying.value = false;
+    } else if (element.classList.contains("playing-area")) {
+      isHoveringOverReady.value = false;
+      isHoveringOverBreak.value = false;
+      isHoveringOverPlaying.value = true;
+    } else {
+      isHoveringOverReady.value = false;
+      isHoveringOverBreak.value = false;
+      isHoveringOverPlaying.value = false;
+    }
+  }, 10);
+}
+
+// Handle touch end
+function touchEnd(slotIndex, areaName = null) {
+  if (slotIndex !== null) {
+    drop(slotIndex);
+  } else if (areaName === "ready") {
+    dropToReadyArea();
+  } else if (areaName === "break") {
+    dropToBreakArea();
+  } else if (areaName === "playing") {
+    dropToPlayingArea();
+  }
+  clearDragState();
+  resetHoverStates();
+}
+
+// Reset hover states
+function resetHoverStates() {
+  isHoveringOverReady.value = false;
+  isHoveringOverBreak.value = false;
+  isHoveringOverPlaying.value = false;
+}
+
 // Clear drag state
 function clearDragState() {
   draggedPlayer.value = null;
   draggedIndex.value = null;
   draggedFrom.value = null;
+  hoveredSlot.value = null;
 }
 
 // Empty game slots
@@ -310,7 +372,6 @@ function removePlayerFromSlot(slotIndex) {
   // Clear the slot
   gameSlots.value[slotIndex] = null;
 }
-
 </script>
 
 <style>
