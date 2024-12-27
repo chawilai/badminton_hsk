@@ -126,27 +126,24 @@ function hoverReadyArea(isHovering, event) {
   isHoveringOverReady.value = isHovering;
 }
 
+// Handle drop into game slots
 function drop(slotIndex) {
   if (!draggedPlayer.value) return;
 
-  // If dragging from the ready area
   if (draggedFrom.value === "ready") {
     const previousPlayer = gameSlots.value[slotIndex];
     gameSlots.value[slotIndex] = draggedPlayer.value;
     readyPlayers.value.splice(draggedIndex.value, 1);
 
-    // Move the existing player (if any) back to the Ready Area
     if (previousPlayer) {
       readyPlayers.value.push(previousPlayer);
     }
   } else if (draggedFrom.value === "slot") {
-    // Swap players if dragging from another slot
     const previousPlayer = gameSlots.value[slotIndex];
     gameSlots.value[slotIndex] = draggedPlayer.value;
     gameSlots.value[draggedIndex.value] = previousPlayer;
   }
 
-  // Clear dragging state and reset hover
   clearDragState();
   hoverSlot(null);
 }
@@ -202,7 +199,6 @@ function addPlayerToFirstAvailableSlot(readyIndex) {
     return;
   }
 
-  // Add the player to the first available slot
   gameSlots.value[firstEmptySlotIndex] = readyPlayers.value[readyIndex];
   readyPlayers.value.splice(readyIndex, 1);
 }
@@ -212,7 +208,6 @@ function removePlayerFromSlot(slotIndex) {
   const playerInSlot = gameSlots.value[slotIndex];
   if (!playerInSlot) return;
 
-  // Move the player back to the ready area and clear the slot
   readyPlayers.value.push(playerInSlot);
   gameSlots.value[slotIndex] = null;
 }
@@ -248,7 +243,7 @@ function clearDragState() {
 .box {
   width: 100px;
   height: 50px;
-  background-color: #007bff; /* Blue background for ready area boxes */
+  background-color: #007bff;
   color: white;
   display: flex;
   justify-content: center;
@@ -258,12 +253,8 @@ function clearDragState() {
   user-select: none;
 }
 
-.ready-area .box {
-  background-color: #007bff;
-}
-
 .break-area .box {
-  background-color: #dc3545; /* Red background for break area boxes */
+  background-color: #dc3545;
 }
 
 .slot {
@@ -278,12 +269,11 @@ function clearDragState() {
 }
 
 .slot .box {
-  background-color: #28a745; /* Green background for slot boxes */
-  cursor: grab;
+  background-color: #28a745;
 }
 
 .highlight {
-  background-color: #ffeeba; /* Light yellow for highlight */
+  background-color: #ffeeba;
 }
 
 .ready-area,
@@ -294,10 +284,10 @@ function clearDragState() {
 }
 
 .ready-area.highlight {
-  background-color: #d1ecf1; /* Light blue for ready area highlight */
+  background-color: #d1ecf1;
 }
 
 .break-area.highlight {
-  background-color: #f8d7da; /* Light red for break area highlight */
+  background-color: #f8d7da;
 }
 </style>
