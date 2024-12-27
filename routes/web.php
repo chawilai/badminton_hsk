@@ -56,6 +56,16 @@ Route::get('/test', function () {
     return Inertia::render('Test');
 });
 
+Route::get('/primevue3', function () {
+
+    return Inertia::render('TestPrimeVue3');
+});
+
+Route::get('/dragdrop', function () {
+
+    return Inertia::render('TestDragDrop');
+});
+
 Route::get('/test2', function () {
 
     return Inertia::render('Test2');

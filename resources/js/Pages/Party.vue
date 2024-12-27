@@ -64,10 +64,12 @@ const fetchReadyPlayer = (gameId) => {
 };
 
 const gamePlayerSummary = () => {
-    if(thisGame.value) {
-        return ` (${game_players.value.length}/${thisGame.value.game_type == 'quadruple'? 4 : 2})`
+    if (thisGame.value) {
+        return ` (${game_players.value.length}/${
+            thisGame.value.game_type == "quadruple" ? 4 : 2
+        })`;
     }
-}
+};
 
 const addPlayer = () => {
     if (game_data.game_id) {
@@ -81,7 +83,9 @@ const addPlayer = () => {
                 games.value = res.props.games;
                 fetchReadyPlayer(game_data.game_id);
 
-                thisGame.value = games.value.find((sc) => sc.id == game_data.game_id);
+                thisGame.value = games.value.find(
+                    (sc) => sc.id == game_data.game_id
+                );
                 game_players.value = thisGame.value.game_players;
             },
         });
@@ -173,7 +177,9 @@ const listGame = (gameId, event) => {
                             game_data.game_id = gameId;
                             games.value = res.props.games;
                             fetchReadyPlayer(gameId);
-                            thisGame.value = games.value.find((sc) => sc.id == gameId);
+                            thisGame.value = games.value.find(
+                                (sc) => sc.id == gameId
+                            );
                             game_players.value = thisGame.value.game_players;
 
                             toast.add({
@@ -245,7 +251,9 @@ const startGame = (gameId) => {
                         game_data.game_id = gameId;
                         games.value = res.props.games;
                         fetchReadyPlayer(gameId);
-                        thisGame.value = games.value.find((sc) => sc.id == gameId);
+                        thisGame.value = games.value.find(
+                            (sc) => sc.id == gameId
+                        );
                         game_players.value = thisGame.value.game_players;
 
                         toast.add({
@@ -287,7 +295,9 @@ const finishGame = (gameId) => {
                         game_data.game_id = gameId;
                         games.value = res.props.games;
                         fetchReadyPlayer(gameId);
-                        thisGame.value = games.value.find((sc) => sc.id == gameId);
+                        thisGame.value = games.value.find(
+                            (sc) => sc.id == gameId
+                        );
                         game_players.value = thisGame.value.game_players;
 
                         toast.add({
@@ -379,6 +389,13 @@ const gameStatus = (status) => {
         return `<span class='px-2 py-1 bg-green-400 text-white border-round-md'>${status}</span>`;
     if (status === "finished")
         return `<span class='px-2 py-1 bg-blue-400 text-white border-round-md'>${status}</span>`;
+};
+
+const teamLabel = (team) => {
+    if (team === "team1")
+        return `<span class='px-2 py-1 bg-pink-400 text-white border-round-md'>${team}</span>`;
+    if (team === "team2")
+        return `<span class='px-2 py-1 bg-teal-400 text-white border-round-md'>${team}</span>`;
 };
 
 const addPartyInitShuttleCock = (partyId) => {
@@ -653,7 +670,11 @@ onMounted(() => {});
                         <thead class="bg-green-700 text-white">
                             <tr>
                                 <th colspan="6" class="px-3 py-2 text-center">
-                                    Game ID : {{ visibleGameId }} {{ gamePlayerSummary() }} <span v-html="gameStatus(thisGame.status)"></span>
+                                    Game ID : {{ visibleGameId }}
+                                    <span
+                                        v-html="gameStatus(thisGame.status)"
+                                    ></span>
+                                    {{ gamePlayerSummary() }}
                                 </th>
                             </tr>
                         </thead>
@@ -683,9 +704,10 @@ onMounted(() => {});
                                         alt=""
                                     />
                                 </td>
-                                <td class="px-3 py-2 text-center">
-                                    {{ player.team }}
-                                </td>
+                                <td
+                                    class="px-3 py-2 text-center"
+                                    v-html="teamLabel(player.team)"
+                                ></td>
                                 <!-- <td class="px-3 py-2 text-center">
                                     {{ player.user.gender }}
                                 </td> -->
@@ -694,6 +716,7 @@ onMounted(() => {});
                                 </td>
                                 <td class="px-3 py-2 text-center">
                                     <button
+                                        class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
                                         @click="
                                             deletePlayer(
                                                 visibleGameId,
