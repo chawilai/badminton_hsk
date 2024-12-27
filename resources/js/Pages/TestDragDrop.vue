@@ -9,7 +9,7 @@
       @dragleave="hoverReadyArea(false, $event)"
       @drop="dropToReadyArea"
     >
-      <h3>Ready Area</h3>
+      <h3>Ready Area ({{ readyPlayers.length }})</h3>
       <div class="area">
         <div
           v-for="(player, index) in readyPlayers"
@@ -33,7 +33,7 @@
       @dragleave="hoverBreakArea(false, $event)"
       @drop="dropToBreakArea"
     >
-      <h3>Break Area</h3>
+      <h3>Break Area ({{ breakPlayers.length }})</h3>
       <div class="area">
         <div
           v-for="(player, index) in breakPlayers"
@@ -50,7 +50,11 @@
 
     <!-- Game Slots -->
     <div class="game-area">
-      <h3>Game Slots</h3>
+      <h3>
+        Game Slots ({{ gameSlots.filter((slot) => slot !== null).length }}/
+        {{ gameSlots.length }})
+        <button @click="emptyGameSlots" class="empty-button">Empty Game</button>
+      </h3>
       <div class="slots">
         <div
           v-for="(slot, index) in gameSlots"
@@ -233,6 +237,20 @@ function dropToBreakArea() {
   isHoveringOverBreak.value = false;
 }
 
+// Empty all game slots and return players to their original areas
+function emptyGameSlots() {
+  gameSlots.value.forEach((player, index) => {
+    if (player) {
+      if (player.origin === "ready") {
+        readyPlayers.value.push(player);
+      } else if (player.origin === "break") {
+        breakPlayers.value.push(player);
+      }
+      gameSlots.value[index] = null;
+    }
+  });
+}
+
 // Clear dragging state
 function clearDragState() {
   draggedPlayer.value = null;
@@ -310,5 +328,19 @@ function clearDragState() {
 
 .break-area.highlight {
   background-color: #f8d7da;
+}
+
+.empty-button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.empty-button:hover {
+  background-color: #c82333;
 }
 </style>
