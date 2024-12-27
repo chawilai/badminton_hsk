@@ -17,7 +17,7 @@
           class="box"
           draggable="true"
           @dragstart="dragStart(player, index, 'ready')"
-          @dblclick="addPlayerToFirstAvailableSlot(index)"
+          @dblclick="addPlayerToFirstAvailableSlot(player, 'ready', index)"
         >
           {{ player.label }}
         </div>
@@ -41,6 +41,7 @@
           class="box"
           draggable="true"
           @dragstart="dragStart(player, index, 'break')"
+          @dblclick="addPlayerToFirstAvailableSlot(player, 'break', index)"
         >
           {{ player.label }}
         </div>
@@ -84,6 +85,7 @@ const readyPlayers = ref(
   Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
     label: `Player ${i + 1}`,
+    origin: "ready", // Track the origin for returning players
   }))
 );
 
@@ -126,28 +128,6 @@ function hoverReadyArea(isHovering, event) {
   isHoveringOverReady.value = isHovering;
 }
 
-// Handle drop into game slots
-function drop(slotIndex) {
-  if (!draggedPlayer.value) return;
-
-  if (draggedFrom.value === "ready") {
-    const previousPlayer = gameSlots.value[slotIndex];
-    gameSlots.value[slotIndex] = draggedPlayer.value;
-    readyPlayers.value.splice(draggedIndex.value, 1);
-
-    if (previousPlayer) {
-      readyPlayers.value.push(previousPlayer);
-    }
-  } else if (draggedFrom.value === "slot") {
-    const previousPlayer = gameSlots.value[slotIndex];
-    gameSlots.value[slotIndex] = draggedPlayer.value;
-    gameSlots.value[draggedIndex.value] = previousPlayer;
-  }
-
-  clearDragState();
-  hoverSlot(null);
-}
-
 // Handle hover over the break area
 function hoverBreakArea(isHovering, event) {
   if (!isHovering) {
@@ -157,6 +137,68 @@ function hoverBreakArea(isHovering, event) {
     }
   }
   isHoveringOverBreak.value = isHovering;
+}
+
+// Add player to the first available game slot
+function addPlayerToFirstAvailableSlot(player, fromArea, index) {
+  const firstEmptySlotIndex = gameSlots.value.findIndex((slot) => !slot);
+  if (firstEmptySlotIndex === -1) {
+    alert("All game slots are full.");
+    return;
+  }
+
+  // Add player to the first empty slot
+  gameSlots.value[firstEmptySlotIndex] = { ...player, origin: fromArea };
+
+  // Remove player from the original area
+  if (fromArea === "ready") {
+    readyPlayers.value.splice(index, 1);
+  } else if (fromArea === "break") {
+    breakPlayers.value.splice(index, 1);
+  }
+}
+
+// Remove player from a game slot and return to the original area
+function removePlayerFromSlot(slotIndex) {
+  const playerInSlot = gameSlots.value[slotIndex];
+  if (!playerInSlot) return;
+
+  if (playerInSlot.origin === "ready") {
+    readyPlayers.value.push(playerInSlot);
+  } else if (playerInSlot.origin === "break") {
+    breakPlayers.value.push(playerInSlot);
+  }
+
+  // Clear the slot
+  gameSlots.value[slotIndex] = null;
+}
+
+// Handle drop into game slots
+function drop(slotIndex) {
+  if (!draggedPlayer.value) return;
+
+  const previousPlayer = gameSlots.value[slotIndex];
+  if (draggedFrom.value === "ready") {
+    gameSlots.value[slotIndex] = draggedPlayer.value;
+    readyPlayers.value.splice(draggedIndex.value, 1);
+  } else if (draggedFrom.value === "break") {
+    gameSlots.value[slotIndex] = draggedPlayer.value;
+    breakPlayers.value.splice(draggedIndex.value, 1);
+  } else if (draggedFrom.value === "slot") {
+    gameSlots.value[slotIndex] = draggedPlayer.value;
+    gameSlots.value[draggedIndex.value] = previousPlayer;
+  }
+
+  if (previousPlayer) {
+    if (previousPlayer.origin === "ready") {
+      readyPlayers.value.push(previousPlayer);
+    } else if (previousPlayer.origin === "break") {
+      breakPlayers.value.push(previousPlayer);
+    }
+  }
+
+  clearDragState();
+  hoverSlot(null);
 }
 
 // Handle drop into ready area
@@ -189,27 +231,6 @@ function dropToBreakArea() {
 
   clearDragState();
   isHoveringOverBreak.value = false;
-}
-
-// Add player to the first available slot via double-click
-function addPlayerToFirstAvailableSlot(readyIndex) {
-  const firstEmptySlotIndex = gameSlots.value.findIndex((slot) => !slot);
-  if (firstEmptySlotIndex === -1) {
-    alert("All slots are full.");
-    return;
-  }
-
-  gameSlots.value[firstEmptySlotIndex] = readyPlayers.value[readyIndex];
-  readyPlayers.value.splice(readyIndex, 1);
-}
-
-// Remove player from slot via double-click
-function removePlayerFromSlot(slotIndex) {
-  const playerInSlot = gameSlots.value[slotIndex];
-  if (!playerInSlot) return;
-
-  readyPlayers.value.push(playerInSlot);
-  gameSlots.value[slotIndex] = null;
 }
 
 // Clear dragging state
