@@ -48,9 +48,11 @@
         <div
           v-for="(player, index) in readyPlayers"
           :key="player.id"
+          :data-id="'player-' + player.id"
           class="box"
           draggable="true"
           @dragstart="dragStart(player, index, 'ready')"
+          @dragend="dragEnd($event)"
           @touchstart="touchStart(player, index, 'ready', $event)"
           @touchmove="touchMove($event)"
           @touchend="touchEnd(null, 'ready')"
@@ -150,6 +152,21 @@ function dragStart(player, index, from) {
   draggedPlayer.value = player;
   draggedIndex.value = index;
   draggedFrom.value = from;
+
+  // Add visual feedback
+  const element = document.querySelector(`[data-id='player-${player.id}']`);
+  if (element) element.classList.add("dragging");
+}
+
+function dragEnd(event) {
+  // Remove the dragging class
+  const draggedElement = event.target;
+  if (draggedElement && draggedElement.classList.contains("dragging")) {
+    draggedElement.classList.remove("dragging");
+  }
+
+  // Clear dragging state
+  clearDragState();
 }
 
 // Handle drag hover for areas
@@ -318,10 +335,18 @@ function resetHoverStates() {
 
 // Clear drag state
 function clearDragState() {
+  // Clear dragging state variables
   draggedPlayer.value = null;
   draggedIndex.value = null;
   draggedFrom.value = null;
-  hoveredSlot.value = null;
+
+  // Remove any lingering dragging classes
+  document.querySelectorAll(".dragging").forEach((el) => {
+    el.classList.remove("dragging");
+  });
+
+  // Reset hover states
+  resetHoverStates();
 }
 
 // Empty game slots
@@ -430,7 +455,8 @@ function removePlayerFromSlot(slotIndex) {
 }
 
 .dragging {
-  opacity: 0.6;
+  border: 2px solid #ff6347; /* Add a red border */
+  opacity: 0.2; /* Make it semi-transparent */
 }
 
 .break-area .box {
