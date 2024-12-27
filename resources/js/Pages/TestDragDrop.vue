@@ -48,6 +48,30 @@
       </div>
     </div>
 
+    <!-- Playing Area -->
+    <div
+      class="playing-area"
+      :class="{ highlight: isHoveringOverPlaying }"
+      @dragover.prevent
+      @dragenter="hoverPlayingArea(true, $event)"
+      @dragleave="hoverPlayingArea(false, $event)"
+      @drop="dropToPlayingArea"
+    >
+      <h3>Playing Area ({{ playingPlayers.length }})</h3>
+      <div class="area">
+        <div
+          v-for="(player, index) in playingPlayers"
+          :key="player.id"
+          class="box"
+          draggable="true"
+          @dragstart="dragStart(player, index, 'playing')"
+          @dblclick="addPlayerToFirstAvailableSlot(player, 'playing', index)"
+        >
+          {{ player.label }}
+        </div>
+      </div>
+    </div>
+
     <!-- Game Slots -->
     <div class="game-area">
       <h3>
@@ -96,6 +120,9 @@ const readyPlayers = ref(
 // Players in the break area
 const breakPlayers = ref([]);
 
+// Players in the playing area
+const playingPlayers = ref([]);
+
 // Slots in the game area (initially empty)
 const gameSlots = ref([null, null, null, null]);
 
@@ -108,6 +135,7 @@ const draggedFrom = ref(null);
 const hoveredSlot = ref(null);
 const isHoveringOverReady = ref(false);
 const isHoveringOverBreak = ref(false);
+const isHoveringOverPlaying = ref(false);
 
 // Handle drag start
 function dragStart(player, index, from) {
@@ -143,6 +171,17 @@ function hoverBreakArea(isHovering, event) {
   isHoveringOverBreak.value = isHovering;
 }
 
+// Handle hover over the playing area
+function hoverPlayingArea(isHovering, event) {
+  if (!isHovering) {
+    const related = event.relatedTarget;
+    if (related && event.currentTarget.contains(related)) {
+      return;
+    }
+  }
+  isHoveringOverPlaying.value = isHovering;
+}
+
 // Add player to the first available game slot
 function addPlayerToFirstAvailableSlot(player, fromArea, index) {
   const firstEmptySlotIndex = gameSlots.value.findIndex((slot) => !slot);
@@ -159,6 +198,8 @@ function addPlayerToFirstAvailableSlot(player, fromArea, index) {
     readyPlayers.value.splice(index, 1);
   } else if (fromArea === "break") {
     breakPlayers.value.splice(index, 1);
+  } else if (fromArea === "playing") {
+    playingPlayers.value.splice(index, 1);
   }
 }
 
@@ -171,6 +212,8 @@ function removePlayerFromSlot(slotIndex) {
     readyPlayers.value.push(playerInSlot);
   } else if (playerInSlot.origin === "break") {
     breakPlayers.value.push(playerInSlot);
+  } else if (playerInSlot.origin === "playing") {
+    playingPlayers.value.push(playerInSlot);
   }
 
   // Clear the slot
@@ -188,6 +231,9 @@ function drop(slotIndex) {
   } else if (draggedFrom.value === "break") {
     gameSlots.value[slotIndex] = draggedPlayer.value;
     breakPlayers.value.splice(draggedIndex.value, 1);
+  } else if (draggedFrom.value === "playing") {
+    gameSlots.value[slotIndex] = draggedPlayer.value;
+    playingPlayers.value.splice(draggedIndex.value, 1);
   } else if (draggedFrom.value === "slot") {
     gameSlots.value[slotIndex] = draggedPlayer.value;
     gameSlots.value[draggedIndex.value] = previousPlayer;
@@ -198,6 +244,8 @@ function drop(slotIndex) {
       readyPlayers.value.push(previousPlayer);
     } else if (previousPlayer.origin === "break") {
       breakPlayers.value.push(previousPlayer);
+    } else if (previousPlayer.origin === "playing") {
+      playingPlayers.value.push(previousPlayer);
     }
   }
 
@@ -212,6 +260,9 @@ function dropToReadyArea() {
   if (draggedFrom.value === "break") {
     breakPlayers.value.splice(draggedIndex.value, 1);
     readyPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "playing") {
+    playingPlayers.value.splice(draggedIndex.value, 1);
+    readyPlayers.value.push(draggedPlayer.value);
   } else if (draggedFrom.value === "slot") {
     gameSlots.value[draggedIndex.value] = null;
     readyPlayers.value.push(draggedPlayer.value);
@@ -223,10 +274,13 @@ function dropToReadyArea() {
 
 // Handle drop into break area
 function dropToBreakArea() {
-  if (!draggedPlayer.value || draggedFrom.value === "break") return;
+  if (!draggedPlayer.value) return;
 
   if (draggedFrom.value === "ready") {
     readyPlayers.value.splice(draggedIndex.value, 1);
+    breakPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "playing") {
+    playingPlayers.value.splice(draggedIndex.value, 1);
     breakPlayers.value.push(draggedPlayer.value);
   } else if (draggedFrom.value === "slot") {
     gameSlots.value[draggedIndex.value] = null;
@@ -237,6 +291,25 @@ function dropToBreakArea() {
   isHoveringOverBreak.value = false;
 }
 
+// Handle drop into playing area
+function dropToPlayingArea() {
+  if (!draggedPlayer.value) return;
+
+  if (draggedFrom.value === "ready") {
+    readyPlayers.value.splice(draggedIndex.value, 1);
+    playingPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "break") {
+    breakPlayers.value.splice(draggedIndex.value, 1);
+    playingPlayers.value.push(draggedPlayer.value);
+  } else if (draggedFrom.value === "slot") {
+    gameSlots.value[draggedIndex.value] = null;
+    playingPlayers.value.push(draggedPlayer.value);
+  }
+
+  clearDragState();
+  isHoveringOverPlaying.value = false;
+}
+
 // Empty all game slots and return players to their original areas
 function emptyGameSlots() {
   gameSlots.value.forEach((player, index) => {
@@ -245,6 +318,8 @@ function emptyGameSlots() {
         readyPlayers.value.push(player);
       } else if (player.origin === "break") {
         breakPlayers.value.push(player);
+      } else if (player.origin === "playing") {
+        playingPlayers.value.push(player);
       }
       gameSlots.value[index] = null;
     }
@@ -268,6 +343,7 @@ function clearDragState() {
 
 .ready-area,
 .break-area,
+.playing-area,
 .game-area {
   width: 30%;
 }
@@ -296,6 +372,10 @@ function clearDragState() {
   background-color: #dc3545;
 }
 
+.playing-area .box {
+  background-color: #ffc107; /* Yellow for playing area */
+}
+
 .slot {
   width: 100px;
   height: 50px;
@@ -316,7 +396,8 @@ function clearDragState() {
 }
 
 .ready-area,
-.break-area {
+.break-area,
+.playing-area {
   padding: 10px;
   border: 2px dashed #ccc;
   border-radius: 5px;
@@ -328,6 +409,10 @@ function clearDragState() {
 
 .break-area.highlight {
   background-color: #f8d7da;
+}
+
+.playing-area.highlight {
+  background-color: #fff3cd; /* Light yellow for highlight */
 }
 
 .empty-button {
