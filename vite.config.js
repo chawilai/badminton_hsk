@@ -21,6 +21,9 @@ export default defineConfig({
         }),
         // svgLoader(),
     ],
+    optimizeDeps: {
+        include: ['@braks/revue-draggable'],
+    },
     // resolve: {
     //     alias: {
     //         "@": path.resolve(__dirname, "resources/js"),
