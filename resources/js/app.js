@@ -6,7 +6,8 @@ import { createPinia } from "pinia";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
-import { DraggablePlugin } from '@braks/revue-draggable';
+import { Draggable, DraggablePlugin, DraggableDirective } from '@braks/revue-draggable';
+
 // Prime Vue
 
 import PrimeVue from "primevue/config";
@@ -157,17 +158,13 @@ createInertiaApp({
         app.use(pinia);
         app.use(ZiggyVue);
 
+        app.use(DraggablePlugin);
+
         // primevue
         app.use(PrimeVue, { ripple: true });
         app.use(ToastService);
         app.use(DialogService);
         app.use(ConfirmationService);
-
-        // Use as Plugin (registers directives and components)
-        app.use(DraggablePlugin);
-        // or
-        // app.directive('draggable', DraggableDirective)
-        // app.component('Draggable', Draggable);
 
         app.directive("tooltip", Tooltip);
         app.directive("badge", BadgeDirective);

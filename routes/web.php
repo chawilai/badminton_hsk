@@ -71,6 +71,20 @@ Route::get('/dragable', function () {
     return Inertia::render('TestDragAble');
 });
 
+Route::get('/dragable2', function () {
+
+    return Inertia::render('TestDragAble2');
+});
+
+Route::get('/dragable3', function () {
+
+    return Inertia::render('TestDragAble3');
+});
+Route::get('/dragable4', function () {
+
+    return Inertia::render('TestDragAble4');
+});
+
 Route::get('/test2', function () {
 
     return Inertia::render('Test2');

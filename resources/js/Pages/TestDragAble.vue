@@ -1,134 +1,333 @@
+<script setup>
+import { ref } from "vue";
+import { Container, Draggable } from "vue-dndrop";
+import { applyDrag, generateItems } from "../utils/helpers";
+
+let itemId = 0;
+
+const lastTap = ref(0);
+const clickTimeout = ref(null);
+
+function generateId() {
+  return `item-${++itemId}`;
+}
+
+function generate(num) {
+  return generateItems(5, (i) => ({
+    id: generateId(),
+    data: `Draggable ${num} - ${i + 1}`,
+  }));
+}
+
+const groups = ref([]);
+const flags = ref([]);
+const logs = ref({
+  "get-child-payload": true,
+  "should-accept-drop": true,
+  "should-animate-drop": true,
+  "drag-start": true,
+  "drag-end": true,
+  "drag-enter": true,
+  "drag-leave": true,
+  "drop-not-allowed": true,
+  drop: true,
+});
+const logPayload = ref(false);
+
+function getChildPayload(groupIndex, itemIndex) {
+  log("get-child-payload", groupIndex, itemIndex);
+  return groups.value[groupIndex][itemIndex];
+}
+
+function getShouldAcceptDrop(index, sourceContainerOptions, payload) {
+  log("should-accept-drop", sourceContainerOptions, payload);
+  return flags.value[index].drop;
+}
+
+function getShouldAnimateDrop(index, sourceContainerOptions, payload) {
+  log("should-animate-drop", sourceContainerOptions, payload);
+  return flags.value[index].animate;
+}
+
+function onDragStart(...args) {
+  log("drag-start", ...args);
+}
+
+function onDragEnd(...args) {
+  log("drag-end", ...args);
+}
+
+function onDragEnter(...args) {
+  log("drag-enter", ...args);
+}
+
+function onDragLeave(...args) {
+  log("drag-leave", ...args);
+}
+
+function onDrop(groupIndex, dropResult) {
+  groups.value[groupIndex] = applyDrag(groups.value[groupIndex], dropResult);
+  log("drop", dropResult);
+}
+
+function dropNotAllowed(...args) {
+  log("drop-not-allowed", ...args);
+}
+
+function addColumn() {
+  groups.value.push(generate(groups.value.length + 1));
+  flags.value.push({ drop: true, animate: true });
+
+  //   console.log(groups.value)
+}
+
+function removeColumn() {
+  if (groups.value.length > 1) {
+    groups.value.pop();
+    flags.value.pop();
+  }
+}
+
+function log(name, ...args) {
+  if (logs.value[name]) {
+    logPayload.value ? console.log(name, ...args) : console.log(name);
+  }
+}
+
+const handleInteraction = (event, item, index) => {
+  const currentTime = new Date().getTime();
+  const tapInterval = currentTime - lastTap.value;
+
+  console.log(event);
+
+  if (tapInterval < 300 && tapInterval > 0) {
+    // Double tap or double click detected
+    if (event.type === "touchstart") {
+      console.log("Double Tap Detected");
+    } else if (event.type === "click") {
+      console.log("Double Click Detected");
+
+      if (index === 0) {
+        console.log(groups.value[1]);
+        groups.value[1].push(item);
+
+        let findIndex = groups.value[0].findIndex((itemtemp) => itemtemp.id === item.id);
+
+        // Remove the item if it exists
+        if (findIndex !== -1) {
+          groups.value[0].splice(findIndex, 1);
+        }
+      } else {
+        console.log(groups.value[0]);
+        groups.value[0].push(item);
+
+        let findIndex = groups.value[1].findIndex((itemtemp) => itemtemp.id === item.id);
+
+        // Remove the item if it exists
+        if (findIndex !== -1) {
+          groups.value[1].splice(findIndex, 1);
+        }
+      }
+    }
+    lastTap.value = 0; // Reset
+  } else {
+    lastTap.value = currentTime;
+    // Single tap or click detection
+    if (event.type === "touchstart") {
+      console.log("Single Tap Detected");
+    } else if (event.type === "click") {
+      console.log("Single Click Detected");
+    }
+
+    // Clear previous timeout for click
+    clearTimeout(clickTimeout.value);
+    clickTimeout.value = setTimeout(() => {
+      lastTap.value = 0; // Reset after timeout
+    }, 300); // Timeout to differentiate single and double interaction
+  }
+};
+
+// Initialize with one column
+addColumn();
+addColumn();
+</script>
+
 <template>
-    <div class="drag-drop-container">
-      <h1 class="header">Drag & Drop Example</h1>
-
-      <!-- Area 1 -->
-      <div class="drop-area" data-area="areaOne">
-        <h3>Area 1 ({{ areaOne.length }})</h3>
-        <div
-          v-for="(item, index) in areaOne"
-          :key="item.id"
-          class="draggable-item"
-          v-draggable="{ axis: 'both' }"
-          @start="onDragStart"
-          @stop="onDragStop"
-          @transformed="onTransformed(item, 'areaOne', index, $event)"
-        >
-          {{ item.label }}
+  <div class="demo">
+    <div class="columns">
+      <div v-for="(items, index) in groups" :key="index" class="column">
+        <div class="column-actions">
+          <label>
+            <input type="checkbox" v-model="flags[index].drop" /> Accept drop
+          </label>
+          <label>
+            <input type="checkbox" v-model="flags[index].animate" /> Animate drop
+          </label>
         </div>
-      </div>
-
-      <!-- Area 2 -->
-      <div class="drop-area" data-area="areaTwo">
-        <h3>Area 2 ({{ areaTwo.length }})</h3>
-        <div
-          v-for="(item, index) in areaTwo"
-          :key="item.id"
-          class="draggable-item"
-          v-draggable="{ axis: 'both' }"
-          @start="onDragStart"
-          @stop="onDragStop"
-          @transformed="onTransformed(item, 'areaTwo', index, $event)"
+        <Container
+          :data-index="index"
+          group-name="column"
+          :get-child-payload="(itemIndex) => getChildPayload(index, itemIndex)"
+          :should-accept-drop="(src, payload) => getShouldAcceptDrop(index, src, payload)"
+          :should-animate-drop="
+            (src, payload) => getShouldAnimateDrop(index, src, payload)
+          "
+          @drag-start="onDragStart"
+          @drag-enter="onDragEnter"
+          @drag-leave="onDragLeave"
+          @drag-end="onDragEnd"
+          @drop-not-allowed="dropNotAllowed"
+          @drop="(event) => onDrop(index, event)"
         >
-          {{ item.label }}
-        </div>
+          <Draggable v-for="item in items" :key="item.id">
+            <div class="draggable-item relative">
+              {{ item.data }}
+              <div
+                class="absolute top-0 right-0 px-1 bg-green-200 border-round-xl"
+                @touchstart="handleInteraction($event, item, index)"
+                @click="handleInteraction($event, item, index)"
+              >
+                +
+              </div>
+            </div>
+          </Draggable>
+        </Container>
       </div>
     </div>
-  </template>
 
-  <script setup>
-  import { ref } from "vue";
+    <div class="controls">
+      <h4 class="title">Fired events</h4>
+      <hr />
+      <small class="title">Choose which events will be used in the columns</small>
+      <div class="actions">
+        <label v-for="(key, name) in logs" :key="name">
+          <input type="checkbox" v-model="logs[name]" /> {{ name }}
+        </label>
+        <hr />
+        <label> <input type="checkbox" v-model="logPayload" /> Log payload </label>
+      </div>
+      <hr />
+      <div class="buttons">
+        <button
+          class="button-column remove"
+          @click="removeColumn"
+          :disabled="groups.length === 1"
+        >
+          Remove Column
+        </button>
+        <button class="button-column add" @click="addColumn">Add Column</button>
+      </div>
+    </div>
+  </div>
+</template>
 
-  const areaOne = ref([
-    { id: 1, label: "Item 1" },
-    { id: 2, label: "Item 2" },
-  ]);
+<style scoped>
+.controls {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1em;
+}
+.controls .title {
+  align-self: flex-start;
+  margin: 0 1rem;
+}
+.controls .buttons {
+  align-self: flex-end;
+  margin: 1rem;
+}
 
-  const areaTwo = ref([
-    { id: 3, label: "Item 3" },
-    { id: 4, label: "Item 4" },
-  ]);
+.controls .actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 0 1rem;
+}
 
-  // Stores the last known position of the draggable item
-  let lastValidArea = null;
+.hdrag-enter {
+  background: red;
+}
 
-  function onDragStart(event) {
-    const dragItem = event.target;
-    lastValidArea = dragItem.closest(".drop-area");
-  }
+.controls > div {
+  padding-top: 1em;
+}
 
-  function onDragStop(event) {
-    const dragItem = event.target;
-    const dropArea = dragItem.closest(".drop-area");
+.buttons,
+.column-actions {
+  display: flex;
+  gap: 1rem;
+}
 
-    // Revert item to last valid position if dropped outside
-    if (!dropArea) {
-      if (lastValidArea) {
-        lastValidArea.appendChild(dragItem);
-      }
-    }
-  }
+.column-actions {
+  justify-content: space-evenly;
+}
 
-  function onTransformed(item, areaName, index, event) {
-    const dropAreas = document.querySelectorAll(".drop-area");
-    const dropArea = Array.from(dropAreas).find((area) =>
-      area.contains(event.target)
-    );
+.buttons .button-column {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-left: 5px solid #c4ebaf;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s linear;
+  font-family: inherit;
+}
 
-    if (!dropArea) {
-      console.log("Dropped outside a valid drop area, reverting.");
-      return;
-    }
+.buttons .button-column.remove {
+  border-left: 5px solid #dc3545;
+}
 
-    const targetAreaName = dropArea.getAttribute("data-area");
+.buttons .button-column.remove:disabled {
+  border-left: 5px solid #e0e0e0;
+}
 
-    if (areaName !== targetAreaName) {
-      // Move the item to the target area
-      if (targetAreaName === "areaTwo") {
-        areaOne.value.splice(index, 1);
-        areaTwo.value.push(item);
-      } else if (targetAreaName === "areaOne") {
-        areaTwo.value.splice(index, 1);
-        areaOne.value.push(item);
-      }
-    }
-  }
-  </script>
+.buttons .button-column.add {
+  border-left: 5px solid #c4ebaf;
+}
 
-  <style>
-  .drag-drop-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding: 20px;
-    justify-content: space-around;
-  }
+label {
+  display: block;
+  line-height: 1.6em;
+}
 
-  .header {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
+.columns {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: stretch;
+}
 
-  .drop-area {
-    width: 40%;
-    min-height: 200px;
-    border: 2px dashed #ccc;
-    padding: 10px;
-    border-radius: 10px;
-    background: #f9f9f9;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+.column {
+  flex: 1;
+  border-radius: 6px;
+}
 
-  .draggable-item {
-    padding: 10px;
-    background: lightblue;
-    border: 1px solid #007bff;
-    border-radius: 5px;
-    cursor: grab;
-    text-align: center;
-    user-select: none;
-  }
-  </style>
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.column .dndrop-container.vertical {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
+.draggable-item {
+  padding: 10px;
+  margin-bottom: 5px;
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+  cursor: grab;
+  transition: transform 0.2s;
+}
+
+.draggable-item:hover {
+  transform: scale(1.02);
+}
+
+.drag-over {
+  background-color: #ffe0b2; /* Highlight color */
+  transition: background-color 0.3s ease;
+}
+</style>
