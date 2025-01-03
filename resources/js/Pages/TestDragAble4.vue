@@ -1,23 +1,31 @@
 <script setup>
-import { ref } from "vue";
+import { ref, reactive, onBeforeUnmount } from "vue";
 
 const draggedItem = ref(null); // Currently dragged item
 const dropZoneActive = ref(false); // Hover state for drop zone
 const isDragging = ref(false); // Tracks whether dragging is in progress
+const dragPosition = reactive({ x: 0, y: 0 }); // Position of the dragging feedback
 
 // Handles the start of drag (touch or mouse)
 const handleDragStart = (event, item) => {
   draggedItem.value = item;
   isDragging.value = true;
 
-  // Add global listeners for mouse movement and release
+  updateDragPosition(event);
+
+  // Add global listeners for mouse and touch movement and release
   document.addEventListener("mousemove", handleDragMove);
   document.addEventListener("mouseup", handleDragEnd);
+  document.addEventListener("touchmove", handleDragMove, { passive: false });
+  document.addEventListener("touchend", handleDragEnd);
 };
 
 // Handles the drag move (touch or mouse)
 const handleDragMove = (event) => {
   if (!isDragging.value) return;
+
+  event.preventDefault(); // Prevent default scrolling on touch devices
+  updateDragPosition(event);
 
   let clientX, clientY;
 
@@ -54,7 +62,29 @@ const handleDragEnd = () => {
   // Remove global listeners after drag ends
   document.removeEventListener("mousemove", handleDragMove);
   document.removeEventListener("mouseup", handleDragEnd);
+  document.removeEventListener("touchmove", handleDragMove);
+  document.removeEventListener("touchend", handleDragEnd);
 };
+
+// Updates the position of the drag feedback element
+const updateDragPosition = (event) => {
+  if (event.touches) {
+    const touch = event.touches[0];
+    dragPosition.x = touch.clientX;
+    dragPosition.y = touch.clientY;
+  } else {
+    dragPosition.x = event.clientX;
+    dragPosition.y = event.clientY;
+  }
+};
+
+// Clean up listeners when the component unmounts
+onBeforeUnmount(() => {
+  document.removeEventListener("mousemove", handleDragMove);
+  document.removeEventListener("mouseup", handleDragEnd);
+  document.removeEventListener("touchmove", handleDragMove);
+  document.removeEventListener("touchend", handleDragEnd);
+});
 </script>
 
 <template>
@@ -66,8 +96,6 @@ const handleDragEnd = () => {
       :key="item.id"
       @mousedown.prevent="handleDragStart($event, item)"
       @touchstart.prevent="handleDragStart($event, item)"
-      @touchmove.prevent="handleDragMove"
-      @touchend="handleDragEnd"
     >
       {{ item.title }}
     </div>
@@ -75,6 +103,15 @@ const handleDragEnd = () => {
     <!-- Drop Zone -->
     <div :class="['drop-zone', { active: dropZoneActive }]">
       Drop Zone
+    </div>
+
+    <!-- Dragging Feedback -->
+    <div
+      v-if="isDragging"
+      class="drag-feedback"
+      :style="{ left: `${dragPosition.x}px`, top: `${dragPosition.y}px` }"
+    >
+      {{ draggedItem?.value?.title }}
     </div>
   </div>
 </template>
@@ -106,5 +143,17 @@ const handleDragEnd = () => {
 
 .drop-zone.active {
   background-color: #d0f0c0; /* Highlight when active */
+}
+
+.drag-feedback {
+  position: fixed;
+  pointer-events: none; /* Prevent interfering with mouse/touch events */
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 </style>
