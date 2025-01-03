@@ -20,6 +20,8 @@ const originalZones = reactive({}); // Store original zones for items
 
 const MAX_PLAYING_ITEMS = 4;
 
+const errorMessage = ref("");
+
 const draggedItem = ref(null); // Currently dragged item
 const hoveredItem = ref(null); // Currently hovered item
 const draggedFrom = ref(""); // Tracks the drop zone where the item was dragged from
@@ -41,6 +43,8 @@ const handleClick = (event) => {
 };
 
 const handleDoubleClick = (item, currentZone) => {
+  console.log("Double Clicked!");
+  errorMessage.value = 'Double Clicked!'
   moveItem(item, currentZone);
 };
 
@@ -50,23 +54,39 @@ const handleMouseUp = (event) => {
     // Prevent mouse events after touch
     return;
   }
-  console.log("Mouse Up!");
 };
 
 const handleTouchStart = (event) => {
   lastTouchTime = new Date().getTime(); // Record touch time
 };
 
+const isDoubleTapProcessing = ref(false); // Prevent multiple executions during double-tap
+
 const handleTouchEnd = (item, currentZone) => {
+  if (isDoubleTapProcessing.value) return; // Prevent re-entry during double-tap processing
+
   tapCount++;
   if (tapCount === 1) {
     tapTimeout = setTimeout(() => {
       tapCount = 0; // Reset after single tap
     }, 300); // Timeout for detecting double tap
   } else if (tapCount === 2) {
+
+    console.log('Double Tab')
+    errorMessage.value = 'Double Tab'
+
     clearTimeout(tapTimeout);
+    isDoubleTapProcessing.value = true; // Set the flag
+
+    // Process double-tap action
     moveItem(item, currentZone);
-    tapCount = 0; // Reset after double tap
+
+    tapCount = 0; // Reset tap count
+
+    // Delay resetting the flag to ensure no overlap
+    setTimeout(() => {
+      isDoubleTapProcessing.value = false;
+    }, 300); // Match the double-tap timeout
   }
 };
 
@@ -85,14 +105,18 @@ const moveItem = (item, currentZone) => {
   } else {
     // Check if the Playing drop zone has reached its limit
     if (playingZone.length >= MAX_PLAYING_ITEMS) {
-      alert("The Playing zone can only hold up to 4 items.");
+      if (isDoubleTapProcessing.value) {
+        alert("The Playing zone can only hold up to 4 items.");
+      }
       return; // Prevent adding more items
     }
 
-    // Move to Playing zone
+    // Only set the original zone if it has not been set
     if (!originalZones[item.id]) {
       originalZones[item.id] = currentZone; // Store original zone
+      console.log(`Set original zone for item ${item.title}: ${currentZone}`);
     }
+
     fromZone.splice(fromZone.indexOf(item), 1);
     playingZone.push(item);
     console.log(`Moved item ${item.title} to Playing zone`);
@@ -143,6 +167,12 @@ const handleDragStart = (event, item, zone) => {
   draggedItem.value = item;
   draggedFrom.value = zone;
   isDragging.value = true;
+
+  // Only set the original zone if it has not been set
+  if (!originalZones[item.id]) {
+    originalZones[item.id] = zone; // Store original zone
+    console.log(`Set original zone for item ${item.title}: ${zone}`);
+  }
 
   updateDragPosition(event);
 
@@ -223,6 +253,16 @@ const handleDragEnd = () => {
   if (!fromZone || !toZone) {
     resetDragState();
     return;
+  }
+
+  // Capacity check for Playing zone
+  if (
+    dropZoneActive.value === "Playing" &&
+    dropZones["Playing"].length >= MAX_PLAYING_ITEMS
+  ) {
+    alert("The Playing zone is full. Cannot add more items.");
+    resetDragState();
+    return; // Prevent adding the item
   }
 
   // Locate indices of dragged and hovered items
@@ -311,6 +351,7 @@ const updateDragPosition = (event) => {
 <template>
   <div class="p-fluid grid grid-nogutter justify-content-center gap-4">
     <!-- Playing Zone -->
+    {{ errorMessage }}
     <div
       class="col-12 md:col-3 drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
       data-zone="Playing"
@@ -336,16 +377,21 @@ const updateDragPosition = (event) => {
           @mousedown.prevent="handleDragStart($event, item, 'Playing')"
           @touchstart.prevent="handleDragStart($event, item, 'Playing')"
         >
-          <!-- Add Button -->
+          <!-- Subtract Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
             @touchstart.stop="handleTouchStart"
             @touchend.stop="handleTouchEnd(item, 'Playing')"
             @dblclick.stop="handleDoubleClick(item, 'Playing')"
-            class="add-button"
+            :class="{
+              'add-button': dropZones.Playing.includes(item),
+              'subtract-button': dropZones.Playing.includes(item),
+            }"
           >
-            <i class="pi pi-plus"></i>
+            <i
+              :class="dropZones.Playing.includes(item) ? 'pi pi-minus' : 'pi pi-plus'"
+            ></i>
           </button>
 
           <!-- Avatar -->
@@ -579,9 +625,9 @@ const updateDragPosition = (event) => {
 
 .add-button {
   position: absolute;
-  top: -10px; /* Adjust spacing */
+  top: -10px;
   right: -10px;
-  width: 20px; /* Slightly larger for better visibility */
+  width: 20px;
   height: 20px;
   border-radius: 50%;
   background-color: var(--blue-500);
@@ -589,11 +635,31 @@ const updateDragPosition = (event) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2; /* Ensure it appears on top of content */
+  z-index: 2;
 }
 
 .add-button:hover {
   background-color: var(--blue-600);
+  transform: scale(1.1);
+}
+
+.subtract-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--red-500); /* Red color for subtract */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.subtract-button:hover {
+  background-color: var(--red-600); /* Darker red on hover */
   transform: scale(1.1);
 }
 
