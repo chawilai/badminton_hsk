@@ -3,14 +3,36 @@ import { ref } from "vue";
 
 const draggedItem = ref(null); // Currently dragged item
 const dropZoneActive = ref(false); // Hover state for drop zone
+const isDragging = ref(false); // Tracks whether dragging is in progress
 
-const handleTouchStart = (event, item) => {
+// Handles the start of drag (touch or mouse)
+const handleDragStart = (event, item) => {
   draggedItem.value = item;
+  isDragging.value = true;
+
+  // Add global listeners for mouse movement and release
+  document.addEventListener("mousemove", handleDragMove);
+  document.addEventListener("mouseup", handleDragEnd);
 };
 
-const handleTouchMove = (event) => {
-  const touch = event.touches[0];
-  const element = document.elementFromPoint(touch.clientX, touch.clientY);
+// Handles the drag move (touch or mouse)
+const handleDragMove = (event) => {
+  if (!isDragging.value) return;
+
+  let clientX, clientY;
+
+  if (event.touches) {
+    // Touch event
+    const touch = event.touches[0];
+    clientX = touch.clientX;
+    clientY = touch.clientY;
+  } else {
+    // Mouse event
+    clientX = event.clientX;
+    clientY = event.clientY;
+  }
+
+  const element = document.elementFromPoint(clientX, clientY);
 
   if (element?.classList.contains("drop-zone")) {
     dropZoneActive.value = true;
@@ -19,12 +41,19 @@ const handleTouchMove = (event) => {
   }
 };
 
-const handleTouchEnd = () => {
-  if (dropZoneActive.value) {
+// Handles the end of drag (touch or mouse)
+const handleDragEnd = () => {
+  if (dropZoneActive.value && draggedItem.value) {
     console.log(`Dropped item: ${draggedItem.value.title}`);
   }
+
+  isDragging.value = false;
   dropZoneActive.value = false;
   draggedItem.value = null;
+
+  // Remove global listeners after drag ends
+  document.removeEventListener("mousemove", handleDragMove);
+  document.removeEventListener("mouseup", handleDragEnd);
 };
 </script>
 
@@ -35,9 +64,10 @@ const handleTouchEnd = () => {
       class="draggable-item"
       v-for="item in [{ id: 1, title: 'Item A' }, { id: 2, title: 'Item B' }]"
       :key="item.id"
-      @touchstart.prevent="handleTouchStart($event, item)"
-      @touchmove.prevent="handleTouchMove"
-      @touchend="handleTouchEnd"
+      @mousedown.prevent="handleDragStart($event, item)"
+      @touchstart.prevent="handleDragStart($event, item)"
+      @touchmove.prevent="handleDragMove"
+      @touchend="handleDragEnd"
     >
       {{ item.title }}
     </div>
