@@ -1,3 +1,4 @@
+// only example not use
 import { ref, reactive } from "vue";
 
 export function useDragDrop() {

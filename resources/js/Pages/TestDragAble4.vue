@@ -2,14 +2,26 @@
 import { ref, reactive, onBeforeUnmount, nextTick } from "vue";
 
 const dropZones = reactive({
-  Playing: [{ id: 1, title: "Item A" }],
+  Playing: [], // Start empty
   Ready: [
+    { id: 1, title: "Item A" },
     { id: 2, title: "Item B" },
     { id: 3, title: "Item C" },
   ],
-  Break: [{ id: 4, title: "Item D" }],
-  Finish: [],
+  Break: [
+    { id: 4, title: "Item D" },
+    { id: 5, title: "Item E" },
+    { id: 6, title: "Item F" },
+
+],
+Finish: [
+      { id: 7, title: "Item G" },
+  ],
 });
+
+const originalZones = reactive({}); // Store original zones for items
+
+const MAX_PLAYING_ITEMS = 4;
 
 const draggedItem = ref(null); // Currently dragged item
 const hoveredItem = ref(null); // Currently hovered item
@@ -21,6 +33,91 @@ const dragContent = ref(""); // Stores the text content of the original draggabl
 const dragStyles = ref({}); // Stores the styles of the original draggable item
 const returnToOriginal = ref(false); // Tracks whether the item should return to its original position
 const originalPosition = reactive({ x: 0, y: 0 }); // Stores the original position of the dragged item
+
+// check click/tab
+let tapCount = 0; // To track the number of taps
+let tapTimeout = null; // Timeout for detecting double taps
+let lastTouchTime = 0; // To differentiate between touch and click events
+
+const handleClick = (event) => {
+  console.log("Clicked!");
+};
+
+const handleDoubleClick = (item, currentZone) => {
+  moveItem(item, currentZone);
+};
+
+const handleMouseUp = (event) => {
+  const currentTime = new Date().getTime();
+  if (currentTime - lastTouchTime < 300) {
+    // Prevent mouse events after touch
+    return;
+  }
+  console.log("Mouse Up!");
+};
+
+const handleTouchStart = (event) => {
+  lastTouchTime = new Date().getTime(); // Record touch time
+};
+
+const handleTouchEnd = (item, currentZone) => {
+  tapCount++;
+  if (tapCount === 1) {
+    tapTimeout = setTimeout(() => {
+      tapCount = 0; // Reset after single tap
+    }, 300); // Timeout for detecting double tap
+  } else if (tapCount === 2) {
+    clearTimeout(tapTimeout);
+    moveItem(item, currentZone);
+    tapCount = 0; // Reset after double tap
+  }
+};
+
+const moveItem = (item, currentZone) => {
+  const fromZone = dropZones[currentZone];
+  const playingZone = dropZones["Playing"];
+
+  if (currentZone === "Playing") {
+    // Return to original zone
+    const originalZone = originalZones[item.id];
+    if (originalZone) {
+      fromZone.splice(fromZone.indexOf(item), 1);
+      dropZones[originalZone].push(item);
+      console.log(`Moved item ${item.title} back to ${originalZone}`);
+    }
+  } else {
+    // Check if the Playing drop zone has reached its limit
+    if (playingZone.length >= MAX_PLAYING_ITEMS) {
+      alert("The Playing zone can only hold up to 4 items.");
+      return; // Prevent adding more items
+    }
+
+    // Move to Playing zone
+    if (!originalZones[item.id]) {
+      originalZones[item.id] = currentZone; // Store original zone
+    }
+    fromZone.splice(fromZone.indexOf(item), 1);
+    playingZone.push(item);
+    console.log(`Moved item ${item.title} to Playing zone`);
+  }
+};
+
+const releaseAllItems = () => {
+  const playingZone = dropZones["Playing"];
+  playingZone.forEach((item) => {
+    const originalZone = originalZones[item.id];
+    if (originalZone) {
+      dropZones[originalZone].push(item); // Move the item back to its original zone
+    }
+  });
+
+  // Clear the Playing drop zone
+  playingZone.splice(0, playingZone.length);
+
+  console.log("All items released back to their original zones");
+};
+
+// check click/tab
 
 // Handles the start of drag (PC: mousedown, Mobile: touchstart)
 const handleDragStart = (event, item, zone) => {
@@ -127,61 +224,62 @@ const handleDragEnd = () => {
   const fromZone = dropZones[draggedFrom.value];
   const toZone = dropZoneActive.value ? dropZones[dropZoneActive.value] : null;
 
-  if (!dropZoneActive.value) {
-    // Case 4: Dropped outside any drop zone
-    returnToOriginal.value = true;
-
-    // Adjust the position to account for the transform offset
-    dragPosition.x = originalPosition.x + parseFloat(dragStyles.value.width) / 2;
-    dragPosition.y = originalPosition.y + parseFloat(dragStyles.value.height) / 2;
-
-    // Ensure Vue updates DOM before starting animation
-    nextTick(() => {
-      setTimeout(() => {
-        resetDragState();
-      }, 300); // Match the CSS transition duration
-    });
-
+  // Ensure both fromZone and toZone are valid
+  if (!fromZone || !toZone) {
+    resetDragState();
     return;
   }
 
-  // Case 1: Swapping within the same drop zone
-  if (hoveredItem.value && draggedFrom.value === dropZoneActive.value) {
-    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
-    const hoveredIndex = fromZone.findIndex((item) => item.id === hoveredItem.value.id);
+  // Locate indices of dragged and hovered items
+  const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
+  const hoveredIndex = hoveredItem.value
+    ? toZone.findIndex((item) => item.id === hoveredItem.value.id)
+    : -1;
 
-    if (draggedIndex > -1 && hoveredIndex > -1) {
-      // Swap items
-      [fromZone[draggedIndex], fromZone[hoveredIndex]] = [
-        fromZone[hoveredIndex],
-        fromZone[draggedIndex],
-      ];
-    }
-  }
+  if (draggedIndex > -1) {
+    // Case 1: Swap within the same zone or between zones
+    if (hoveredIndex > -1) {
+      // Step 1: Remove dragged item from original zone
+      const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
 
-  // Case 2: Swapping between different drop zones
-  else if (hoveredItem.value && draggedFrom.value !== dropZoneActive.value) {
-    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
-    const hoveredIndex = toZone.findIndex((item) => item.id === hoveredItem.value.id);
+      // Step 2: Replace hovered item with dragged item in the target zone
+      const [removedHoveredItem] = toZone.splice(hoveredIndex, 1, removedDraggedItem);
 
-    if (draggedIndex > -1 && hoveredIndex > -1) {
-      // Swap items between zones
-      const temp = fromZone[draggedIndex];
-      fromZone[draggedIndex] = toZone[hoveredIndex];
-      toZone[hoveredIndex] = temp;
-    }
-  }
+      // Step 3: Add hovered item to the original position in the original zone
+      if (fromZone === toZone) {
+        // If same zone, maintain swapping
+        fromZone.splice(draggedIndex, 0, removedHoveredItem);
+      } else {
+        // If different zones, add hovered item to original zone
+        fromZone.splice(draggedIndex, 0, removedHoveredItem);
 
-  // Case 3: Dropped on drop zone area (no hovered item)
-  else if (dropZoneActive.value) {
-    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
+        // Store original zones for both items if needed
+        if (!originalZones[removedDraggedItem.id]) {
+          originalZones[removedDraggedItem.id] = draggedFrom.value;
+        }
+        if (!originalZones[removedHoveredItem.id]) {
+          originalZones[removedHoveredItem.id] = dropZoneActive.value;
+        }
+      }
 
-    if (draggedIndex > -1) {
-      // Remove from original zone
+      console.log(
+        `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} between ${
+          draggedFrom.value
+        } and ${dropZoneActive.value}`
+      );
+    } else {
+      // Case 2: Move to a new position in the same or different zone without swapping
       const [removedItem] = fromZone.splice(draggedIndex, 1);
-
-      // Append to the end of the target drop zone
       toZone.push(removedItem);
+
+      // Store original zone if moving to a different zone
+      if (fromZone !== toZone && !originalZones[removedItem.id]) {
+        originalZones[removedItem.id] = draggedFrom.value;
+      }
+
+      console.log(
+        `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
+      );
     }
   }
 
@@ -227,17 +325,33 @@ const updateDragPosition = (event) => {
       :data-zone="zone"
       :class="{ active: dropZoneActive === zone }"
     >
-      <h3>{{ zone }}</h3>
+      <h3>
+        {{ zone }}
+        <button v-if="zone === 'Playing'" @click="releaseAllItems" class="release-button">
+          Release All
+        </button>
+      </h3>
       <div
         v-for="item in items"
         :key="item.id"
-        class="draggable-item"
+        class="draggable-item relative"
         :class="{ 'hovered-item': hoveredItem?.id === item.id }"
         :data-id="item.id"
         @mousedown.prevent="handleDragStart($event, item, zone)"
         @touchstart.prevent="handleDragStart($event, item, zone)"
       >
         {{ item.title }}
+
+        <button
+          @mousedown.stop
+          @mouseup.stop="handleMouseUp"
+          @touchstart.stop="handleTouchStart"
+          @touchend.stop="handleTouchEnd(item, zone)"
+          @dblclick.stop="handleDoubleClick(item, zone)"
+          class="absolute top-0 right-0 p-2 w-2 h-2 bg-green-200 border-round-xl"
+        >
+          +
+        </button>
       </div>
     </div>
 
@@ -297,5 +411,20 @@ const updateDragPosition = (event) => {
   pointer-events: none; /* Prevent interfering with mouse/touch events */
   transform: translate(-50%, -50%);
   z-index: 1000;
+}
+
+.release-button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: #ff6961;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.release-button:hover {
+  background-color: #ff5c5c;
 }
 </style>
