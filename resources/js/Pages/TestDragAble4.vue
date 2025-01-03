@@ -7,13 +7,14 @@ const dropZones = reactive({
     { id: 1, title: "Item A" },
     { id: 2, title: "Item B" },
     { id: 3, title: "Item C" },
+    { id: 4, title: "Item D" },
   ],
   Break: [
-    { id: 4, title: "Item D" },
     { id: 5, title: "Item E" },
     { id: 6, title: "Item F" },
+    { id: 7, title: "Item G" },
   ],
-  Finish: [{ id: 7, title: "Item G" }],
+  Finish: [{ id: 8, title: "Item H" }],
 });
 
 const originalZones = reactive({}); // Store original zones for items
@@ -21,6 +22,8 @@ const originalZones = reactive({}); // Store original zones for items
 const MAX_PLAYING_ITEMS = 4;
 
 const errorMessage = ref("");
+
+const isActionProcessed = ref(false); // Flag to avoid duplicate actions
 
 const draggedItem = ref(null); // Currently dragged item
 const hoveredItem = ref(null); // Currently hovered item
@@ -43,9 +46,14 @@ const handleClick = (event) => {
 };
 
 const handleDoubleClick = (item, currentZone) => {
+  if (isActionProcessed.value) return; // Prevent duplicate processing
+  isActionProcessed.value = true;
+
   console.log("Double Clicked!");
-  errorMessage.value = 'Double Clicked!'
   moveItem(item, currentZone);
+
+  // Reset the flag after the action is processed
+  setTimeout(() => (isActionProcessed.value = false), 300);
 };
 
 const handleMouseUp = (event) => {
@@ -63,31 +71,14 @@ const handleTouchStart = (event) => {
 const isDoubleTapProcessing = ref(false); // Prevent multiple executions during double-tap
 
 const handleTouchEnd = (item, currentZone) => {
-  if (isDoubleTapProcessing.value) return; // Prevent re-entry during double-tap processing
+  if (isActionProcessed.value) return; // Prevent duplicate processing
+  isActionProcessed.value = true;
 
-  tapCount++;
-  if (tapCount === 1) {
-    tapTimeout = setTimeout(() => {
-      tapCount = 0; // Reset after single tap
-    }, 300); // Timeout for detecting double tap
-  } else if (tapCount === 2) {
+  console.log("Double Tap!");
+  moveItem(item, currentZone);
 
-    console.log('Double Tab')
-    errorMessage.value = 'Double Tab'
-
-    clearTimeout(tapTimeout);
-    isDoubleTapProcessing.value = true; // Set the flag
-
-    // Process double-tap action
-    moveItem(item, currentZone);
-
-    tapCount = 0; // Reset tap count
-
-    // Delay resetting the flag to ensure no overlap
-    setTimeout(() => {
-      isDoubleTapProcessing.value = false;
-    }, 300); // Match the double-tap timeout
-  }
+  // Reset the flag after the action is processed
+  setTimeout(() => (isActionProcessed.value = false), 300);
 };
 
 const moveItem = (item, currentZone) => {
@@ -105,16 +96,13 @@ const moveItem = (item, currentZone) => {
   } else {
     // Check if the Playing drop zone has reached its limit
     if (playingZone.length >= MAX_PLAYING_ITEMS) {
-      if (isDoubleTapProcessing.value) {
-        alert("The Playing zone can only hold up to 4 items.");
-      }
-      return; // Prevent adding more items
+      alert("The Playing zone can only hold up to 4 items.");
+      return;
     }
 
-    // Only set the original zone if it has not been set
+    // Store the original zone if not already stored
     if (!originalZones[item.id]) {
-      originalZones[item.id] = currentZone; // Store original zone
-      console.log(`Set original zone for item ${item.title}: ${currentZone}`);
+      originalZones[item.id] = currentZone;
     }
 
     fromZone.splice(fromZone.indexOf(item), 1);
@@ -255,16 +243,6 @@ const handleDragEnd = () => {
     return;
   }
 
-  // Capacity check for Playing zone
-  if (
-    dropZoneActive.value === "Playing" &&
-    dropZones["Playing"].length >= MAX_PLAYING_ITEMS
-  ) {
-    alert("The Playing zone is full. Cannot add more items.");
-    resetDragState();
-    return; // Prevent adding the item
-  }
-
   // Locate indices of dragged and hovered items
   const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
   const hoveredIndex = hoveredItem.value
@@ -305,6 +283,17 @@ const handleDragEnd = () => {
         );
       } else {
         // Move to the new zone if not hovered over an item
+
+        // Capacity check for Playing zone
+        if (
+          dropZoneActive.value === "Playing" &&
+          dropZones["Playing"].length >= MAX_PLAYING_ITEMS
+        ) {
+          alert("The Playing zone is full. Cannot add more items.");
+          resetDragState();
+          return; // Prevent adding the item
+        }
+
         const [removedItem] = fromZone.splice(draggedIndex, 1);
         toZone.push(removedItem);
 
@@ -353,7 +342,7 @@ const updateDragPosition = (event) => {
     <!-- Playing Zone -->
     {{ errorMessage }}
     <div
-      class="col-12 md:col-3 drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
+      class="col-12 lg:col-3 drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
       data-zone="Playing"
       :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
     >
@@ -385,7 +374,6 @@ const updateDragPosition = (event) => {
             @touchend.stop="handleTouchEnd(item, 'Playing')"
             @dblclick.stop="handleDoubleClick(item, 'Playing')"
             :class="{
-              'add-button': dropZones.Playing.includes(item),
               'subtract-button': dropZones.Playing.includes(item),
             }"
           >
@@ -409,7 +397,7 @@ const updateDragPosition = (event) => {
 
     <!-- Ready Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-ready p-card flex flex-column gap-3 shadow-md"
+      class="col-12 lg:col-3 drop-zone-ready p-card flex flex-column gap-3 shadow-md"
       data-zone="Ready"
       :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
     >
@@ -451,7 +439,7 @@ const updateDragPosition = (event) => {
 
     <!-- Break Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-break p-card flex flex-column gap-3 shadow-md"
+      class="col-12 lg:col-3 drop-zone-break p-card flex flex-column gap-3 shadow-md"
       data-zone="Break"
       :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
     >
@@ -493,7 +481,7 @@ const updateDragPosition = (event) => {
 
     <!-- Finish Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-finish p-card flex flex-column gap-3 shadow-md"
+      class="col-12 lg:col-3 drop-zone-finish p-card flex flex-column gap-3 shadow-md"
       data-zone="Finish"
       :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
     >
