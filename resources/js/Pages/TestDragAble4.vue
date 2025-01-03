@@ -5,28 +5,42 @@ const draggedItem = ref(null); // Currently dragged item
 const dropZoneActive = ref(false); // Hover state for drop zone
 const isDragging = ref(false); // Tracks whether dragging is in progress
 const dragPosition = reactive({ x: 0, y: 0 }); // Position of the dragging feedback
+const dragContent = ref(""); // Stores the text content of the original draggable item
 const dragStyles = ref({}); // Stores the styles of the original draggable item
+const returnToOriginal = ref(false); // Tracks whether the item should return to its original position
+const originalPosition = reactive({ x: 0, y: 0 }); // Stores the original position of the dragged item
 
 // Handles the start of drag (touch or mouse)
 const handleDragStart = (event, item) => {
   const originalElement = event.target;
+  const rect = originalElement.getBoundingClientRect();
 
-  // Clone the original element's styles
+  // Store the original position of the item
+  originalPosition.x = rect.left;
+  originalPosition.y = rect.top;
+
+  // Clone the original element's computed styles
+  const computedStyles = window.getComputedStyle(originalElement);
   dragStyles.value = {
     width: `${originalElement.offsetWidth}px`,
     height: `${originalElement.offsetHeight}px`,
-    backgroundColor: window.getComputedStyle(originalElement).backgroundColor,
-    color: window.getComputedStyle(originalElement).color,
-    border: window.getComputedStyle(originalElement).border,
-    padding: window.getComputedStyle(originalElement).padding,
-    borderRadius: window.getComputedStyle(originalElement).borderRadius,
-    fontSize: window.getComputedStyle(originalElement).fontSize,
-    textAlign: window.getComputedStyle(originalElement).textAlign,
-    lineHeight: window.getComputedStyle(originalElement).lineHeight,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: computedStyles.backgroundColor,
+    color: computedStyles.color,
+    border: computedStyles.border,
+    padding: computedStyles.padding,
+    borderRadius: computedStyles.borderRadius,
+    fontSize: computedStyles.fontSize,
+    textAlign: computedStyles.textAlign,
+    lineHeight: computedStyles.lineHeight,
+    verticalAlign: computedStyles.verticalAlign,
+    whiteSpace: computedStyles.whiteSpace || "normal",
+    overflow: computedStyles.overflow || "visible",
+    display: computedStyles.display,
+    position: "fixed",
   };
+
+  // Clone the text content of the original element
+  dragContent.value = originalElement.textContent;
 
   draggedItem.value = item;
   isDragging.value = true;
@@ -71,17 +85,31 @@ const handleDragMove = (event) => {
 const handleDragEnd = () => {
   if (dropZoneActive.value && draggedItem.value) {
     console.log(`Dropped item: ${draggedItem.value.title}`);
+  } else {
+    // Trigger return animation
+    returnToOriginal.value = true;
+
+    // Adjust the position to account for the transform offset
+    dragPosition.x = originalPosition.x + parseFloat(dragStyles.value.width) / 2;
+    dragPosition.y = originalPosition.y + parseFloat(dragStyles.value.height) / 2;
+
+    // Remove drag feedback after animation ends
+    setTimeout(() => {
+      resetDragState();
+    }, 300); // Match the CSS transition duration
+    return;
   }
 
+  resetDragState();
+};
+
+// Resets the drag state
+const resetDragState = () => {
   isDragging.value = false;
   dropZoneActive.value = false;
   draggedItem.value = null;
-
-  // Remove global listeners after drag ends
-  document.removeEventListener("mousemove", handleDragMove);
-  document.removeEventListener("mouseup", handleDragEnd);
-  document.removeEventListener("touchmove", handleDragMove);
-  document.removeEventListener("touchend", handleDragEnd);
+  dragContent.value = "";
+  returnToOriginal.value = false;
 };
 
 // Updates the position of the drag feedback element
@@ -128,12 +156,13 @@ onBeforeUnmount(() => {
       v-if="isDragging"
       class="drag-feedback"
       :style="{
-        ...dragStyles,
         left: `${dragPosition.x}px`,
         top: `${dragPosition.y}px`,
+        ...dragStyles,
+        transition: returnToOriginal ? 'all 0.3s ease' : 'none',
       }"
     >
-      {{ draggedItem?.value?.title }}
+      {{ dragContent }}
     </div>
   </div>
 </template>
