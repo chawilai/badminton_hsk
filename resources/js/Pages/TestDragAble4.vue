@@ -12,11 +12,8 @@ const dropZones = reactive({
     { id: 4, title: "Item D" },
     { id: 5, title: "Item E" },
     { id: 6, title: "Item F" },
-
-],
-Finish: [
-      { id: 7, title: "Item G" },
   ],
+  Finish: [{ id: 7, title: "Item G" }],
 });
 
 const originalZones = reactive({}); // Store original zones for items
@@ -237,51 +234,47 @@ const handleDragEnd = () => {
     : -1;
 
   if (draggedIndex > -1) {
-    // Case 1: Swap within the same zone or between zones
-    if (hoveredIndex > -1) {
-      // Step 1: Remove dragged item from original zone
+    // Case 1: Reordering within the same drop zone
+    if (draggedFrom.value === dropZoneActive.value) {
+      const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
+      fromZone.push(removedDraggedItem); // Move dragged item to the end of the same zone
+
+      console.log(`Reordered ${draggedItem.value.title} within ${draggedFrom.value}`);
+    } else if (hoveredIndex > -1) {
+      // Case 2: Swap within different zones
       const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
 
-      // Step 2: Adjust hovered index for same-zone swaps if dragging to a later index
+      // Step 1: Adjust hovered index for same-zone swaps if dragging to a later index
       const adjustedHoveredIndex =
         draggedFrom.value === dropZoneActive.value && hoveredIndex > draggedIndex
           ? hoveredIndex - 1
           : hoveredIndex;
 
-      // Step 3: Replace hovered item with dragged item in the target zone
-      const [removedHoveredItem] = toZone.splice(adjustedHoveredIndex, 1, removedDraggedItem);
+      // Step 2: Replace hovered item with dragged item in the target zone
+      const [removedHoveredItem] = toZone.splice(
+        adjustedHoveredIndex,
+        1,
+        removedDraggedItem
+      );
 
-      // Step 4: Add hovered item to the original position in the original zone
-      if (fromZone === toZone) {
-        // For same-zone swaps, maintain order
-        fromZone.splice(draggedIndex, 0, removedHoveredItem);
-      } else {
-        // For cross-zone swaps, add hovered item back to the original zone
-        fromZone.splice(draggedIndex, 0, removedHoveredItem);
-
-        // Store original zones for both items if needed
-        if (!originalZones[removedDraggedItem.id]) {
-          originalZones[removedDraggedItem.id] = draggedFrom.value;
-        }
-        if (!originalZones[removedHoveredItem.id]) {
-          originalZones[removedHoveredItem.id] = dropZoneActive.value;
-        }
-      }
+      // Step 3: Add hovered item to the original position in the original zone
+      fromZone.splice(draggedIndex, 0, removedHoveredItem);
 
       console.log(
-        `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} between ${
-          draggedFrom.value
-        } and ${dropZoneActive.value}`
+        `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} between ${draggedFrom.value} and ${dropZoneActive.value}`
       );
     } else {
-      // Case 2: Prevent adding more items to the Playing drop zone if it's full
-      if (dropZoneActive.value === "Playing" && dropZones["Playing"].length >= MAX_PLAYING_ITEMS) {
+      // Case 3: Prevent adding more items to the Playing drop zone if it's full
+      if (
+        dropZoneActive.value === "Playing" &&
+        dropZones["Playing"].length >= MAX_PLAYING_ITEMS
+      ) {
         alert("The Playing zone is full. Cannot add more items.");
         resetDragState();
         return;
       }
 
-      // Case 3: Move to a new position in the same or different zone without swapping
+      // Case 4: Move to a new position in the same or different zone without swapping
       const [removedItem] = fromZone.splice(draggedIndex, 1);
       toZone.push(removedItem);
 
@@ -330,41 +323,60 @@ const updateDragPosition = (event) => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="p-fluid grid grid-nogutter justify-content-center gap-2">
+    <!-- Drop Zones -->
     <div
       v-for="(items, zone) in dropZones"
       :key="zone"
-      class="drop-zone"
+      class="col-12 md:col-3 drop-zone p-card flex flex-column gap-3"
       :data-zone="zone"
-      :class="{ active: dropZoneActive === zone }"
+      :class="{ 'drop-zone-active': dropZoneActive === zone }"
     >
-      <h3>
-        {{ zone }}
-        <button v-if="zone === 'Playing'" @click="releaseAllItems" class="release-button">
-          Release All
-        </button>
-      </h3>
-      <div
-        v-for="item in items"
-        :key="item.id"
-        class="draggable-item relative"
-        :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-        :data-id="item.id"
-        @mousedown.prevent="handleDragStart($event, item, zone)"
-        @touchstart.prevent="handleDragStart($event, item, zone)"
-      >
-        {{ item.title }}
-
+      <!-- Drop Zone Header -->
+      <div class="flex align-items-center justify-content-between">
+        <h3 class="text-lg font-bold text-primary">{{ zone }}</h3>
         <button
-          @mousedown.stop
-          @mouseup.stop="handleMouseUp"
-          @touchstart.stop="handleTouchStart"
-          @touchend.stop="handleTouchEnd(item, zone)"
-          @dblclick.stop="handleDoubleClick(item, zone)"
-          class="absolute top-0 right-0 p-2 w-2 h-2 bg-green-200 border-round-xl"
+          v-if="zone === 'Playing'"
+          @click="releaseAllItems"
+          class="w-8rem p-button p-button-danger p-button-sm"
         >
-          +
+          <i class="pi pi-refresh"></i>
+          <span class="ml-2">Release All</span>
         </button>
+      </div>
+
+      <!-- Draggable Items Container -->
+      <div class="flex flex-wrap gap-3 justify-content-start">
+        <!-- Draggable Item -->
+        <div
+          v-for="item in items"
+          :key="item.id"
+          class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+          :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+          :data-id="item.id"
+          @mousedown.prevent="handleDragStart($event, item, zone)"
+          @touchstart.prevent="handleDragStart($event, item, zone)"
+        >
+          <!-- Add Button -->
+          <button
+            @mousedown.stop
+            @mouseup.stop="handleMouseUp"
+            @touchstart.stop="handleTouchStart"
+            @touchend.stop="handleTouchEnd(item, zone)"
+            @dblclick.stop="handleDoubleClick(item, zone)"
+            class="add-button"
+          >
+            <i class="pi pi-plus"></i>
+          </button>
+
+          <!-- Avatar and Title -->
+          <img
+            :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
+            alt="Avatar"
+            class="avatar"
+          />
+          <span class="text-center font-medium">{{ item.title }}</span>
+        </div>
       </div>
     </div>
 
@@ -385,59 +397,81 @@ const updateDragPosition = (event) => {
 </template>
 
 <style scoped>
-.container {
-  display: flex;
-  gap: 20px;
-  justify-content: space-around;
-  padding: 20px;
-}
-
 .drop-zone {
-  flex: 1;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--surface-border);
   padding: 10px;
-  background-color: #f9f9f9;
-  min-height: 150px;
-  transition: background-color 0.3s ease;
+  background-color: var(--surface-b);
+  min-height: 200px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.drop-zone.active {
-  background-color: #d0f0c0; /* Highlight when active */
+.drop-zone-active {
+  background-color: var(--green-50);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .draggable-item {
-  padding: 10px;
-  background-color: #eee;
-  border: 1px solid #ddd;
-  margin-bottom: 10px;
+  width: calc(33.33% - 12px); /* 1/3 width with gap accounted */
+  border: 1px solid var(--surface-border);
+  background-color: var(--surface-a);
+  border-radius: 6px;
   cursor: grab;
-  user-select: none;
-  transition: background-color 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative; /* To position the add button */
+  padding: 8px;
 }
 
-.draggable-item.hovered-item {
-  background-color: #ffd700; /* Highlight hovered item */
+.draggable-item:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.hovered-item {
+  background-color: var(--yellow-100);
+}
+
+.add-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--blue-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-button:hover {
+  background-color: var(--blue-600);
+  transform: scale(1.1);
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+  background-color: var(--surface-b);
 }
 
 .drag-feedback {
   position: fixed;
-  pointer-events: none; /* Prevent interfering with mouse/touch events */
+  pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 1000;
-}
-
-.release-button {
-  margin-left: 10px;
-  padding: 5px 10px;
-  background-color: #ff6961;
-  color: white;
-  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: var(--surface-a);
+  padding: 8px 12px;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.release-button:hover {
-  background-color: #ff5c5c;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>
