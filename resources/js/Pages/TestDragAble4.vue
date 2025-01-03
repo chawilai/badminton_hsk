@@ -242,15 +242,20 @@ const handleDragEnd = () => {
       // Step 1: Remove dragged item from original zone
       const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
 
-      // Step 2: Replace hovered item with dragged item in the target zone
-      const [removedHoveredItem] = toZone.splice(hoveredIndex, 1, removedDraggedItem);
+      // Step 2: Adjust hovered index for same-zone swaps if dragging to a later index
+      const adjustedHoveredIndex = draggedFrom.value === dropZoneActive.value && hoveredIndex > draggedIndex
+        ? hoveredIndex - 1
+        : hoveredIndex;
 
-      // Step 3: Add hovered item to the original position in the original zone
+      // Step 3: Replace hovered item with dragged item in the target zone
+      const [removedHoveredItem] = toZone.splice(adjustedHoveredIndex, 1, removedDraggedItem);
+
+      // Step 4: Add hovered item to the original position in the original zone
       if (fromZone === toZone) {
-        // If same zone, maintain swapping
+        // For same-zone swaps, maintain order
         fromZone.splice(draggedIndex, 0, removedHoveredItem);
       } else {
-        // If different zones, add hovered item to original zone
+        // For cross-zone swaps, add hovered item back to the original zone
         fromZone.splice(draggedIndex, 0, removedHoveredItem);
 
         // Store original zones for both items if needed
