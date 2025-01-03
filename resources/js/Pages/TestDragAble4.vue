@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onBeforeUnmount } from "vue";
+import { ref, reactive, onBeforeUnmount, nextTick } from "vue";
 
 const draggedItem = ref(null); // Currently dragged item
 const dropZoneActive = ref(false); // Hover state for drop zone
@@ -93,10 +93,14 @@ const handleDragEnd = () => {
     dragPosition.x = originalPosition.x + parseFloat(dragStyles.value.width) / 2;
     dragPosition.y = originalPosition.y + parseFloat(dragStyles.value.height) / 2;
 
-    // Remove drag feedback after animation ends
-    setTimeout(() => {
-      resetDragState();
-    }, 300); // Match the CSS transition duration
+    // Ensure Vue updates DOM before starting animation
+    nextTick(() => {
+      // Remove drag feedback after animation ends
+      setTimeout(() => {
+        resetDragState();
+      }, 300); // Match the CSS transition duration
+    });
+
     return;
   }
 
