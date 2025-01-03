@@ -16,6 +16,25 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
+
+    public function index(Request $request)
+    {
+        $games = Game::with(['gamePlayers.user', 'shuttlecocks']) // Added 'shuttlecocks' to the eager loading array
+            ->withCount('gamePlayers') // Continue counting the number of game players
+            ->orderBy('id', 'desc') // Keep the order by id in descending order
+            ->get();
+
+        $parties = Party::withCount('members')->get();
+
+        $readyPlayers = $this->fetchReadyPlayersByPartyID(1);
+
+        return Inertia::render('Game', [
+            'parties' => $parties,
+            'games' => $games,
+            'readyPlayers' => $readyPlayers
+        ]);
+    }
+
     /**
      * Store a new game.
      *
@@ -230,8 +249,10 @@ class GameController extends Controller
                 'party_member_id' => $player->id,
                 'name' => $player->user->name,
                 'gender' => $player->user->gender,
+                'avatar' => $player->user->avatar,
                 'age' => $player->user->age,
                 'date_of_birth' => $player->user->date_of_birth,
+                'badminton_level' => $player->user->badmintonRank->id,
                 'badminton_rank' => $player->user->badmintonRank->education_rank,
                 'game_status' => $player->game_status,
                 'finished_games_count' => $finishedGamesCount,
@@ -241,6 +262,72 @@ class GameController extends Controller
         });
 
         return back()->with(['response' => $mappedPlayers]);
+    }
+
+    public function fetchReadyPlayersByPartyID($partyId)
+    {
+        $party = Party::find($partyId);
+
+        if (!$party) {
+            return []; // Return an empty array if the party doesn't exist
+        }
+
+        $currentDateTime = now();
+
+        $query = PartyMember::with([
+            'user.badmintonRank',
+            'user',
+            'user.gamePlayers.game',
+            'user.gamePlayers.game.gameSets'
+        ])
+            ->where('party_id', $party->id)
+            ->where('game_status', 'ready')
+            ->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
+                $subQuery->whereIn('status', ['setting', 'listing']);
+            });
+
+        if (!$party->is_inc_playing) {
+            $query->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
+                $subQuery->whereIn('status', ['playing']);
+            });
+        }
+
+        $readyPlayers = $query->get();
+
+        return $readyPlayers->map(function ($player) use ($party, $currentDateTime) {
+            $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
+                ->whereHas('game', function ($query) use ($party) {
+                    $query->where('status', 'finished')
+                        ->where('party_id', $party->id);
+                })
+                ->count();
+
+            $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
+                ->join('games', 'game_players.game_id', '=', 'games.id')
+                ->where('games.status', 'finished')
+                ->latest('games.game_end_date')
+                ->select('game_players.*', 'games.game_end_date as game_end_date')
+                ->first();
+
+            $waitingTime = $lastGameEndTime
+                ? abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game_end_date, false)))
+                : abs(round($currentDateTime->diffInSeconds($party->party_start_date, false)));
+
+            return [
+                'user_id' => $player->user->id,
+                'party_member_id' => $player->id,
+                'name' => $player->user->name,
+                'gender' => $player->user->gender,
+                'avatar' => $player->user->avatar,
+                'age' => $player->user->age,
+                'date_of_birth' => $player->user->date_of_birth,
+                'badminton_level' => $player->user->badmintonRank->id,
+                'badminton_rank' => $player->user->badmintonRank->education_rank,
+                'game_status' => $player->game_status,
+                'finished_games_count' => $finishedGamesCount,
+                'waiting_time' => $waitingTime,
+            ];
+        });
     }
 
     public function removePlayer(Request $request)

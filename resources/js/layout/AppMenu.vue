@@ -481,6 +481,11 @@ const model = ref([
                 to: '/profile'
             },
             {
+                label: 'Game',
+                icon: 'pi pi-play',
+                to: '/games'
+            },
+            {
                 label: 'Party Lists',
                 icon: 'pi pi-list',
                 to: '/party'

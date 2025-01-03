@@ -157,8 +157,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 
+    Route::get('/games', [GameController::class, 'index'])->name('games');
+
     Route::get('/party', [PartyController::class, 'index'])->name('party');
-    Route::get('/party', [PartyController::class, 'index'])->name('party')->middleware(CheckUserSetup::class);
+    // Route::get('/party', [PartyController::class, 'index'])->name('party')->middleware(CheckUserSetup::class);
 });
 
 Route::get('/setup', [UserController::class, 'showSetupForm'])->name('user.setup');
