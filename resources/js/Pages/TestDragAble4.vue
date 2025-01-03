@@ -324,19 +324,15 @@ const updateDragPosition = (event) => {
 
 <template>
   <div class="p-fluid grid grid-nogutter justify-content-center gap-2">
-    <!-- Drop Zones -->
+    <!-- Playing Zone -->
     <div
-      v-for="(items, zone) in dropZones"
-      :key="zone"
-      class="col-12 md:col-3 drop-zone p-card flex flex-column gap-3"
-      :data-zone="zone"
-      :class="{ 'drop-zone-active': dropZoneActive === zone }"
+      class="col-12 md:col-6 drop-zone-playing p-card flex flex-column gap-3"
+      data-zone="Playing"
+      :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
     >
-      <!-- Drop Zone Header -->
       <div class="flex align-items-center justify-content-between">
-        <h3 class="text-lg font-bold text-primary">{{ zone }}</h3>
+        <h3 class="text-lg font-bold text-primary">Playing</h3>
         <button
-          v-if="zone === 'Playing'"
           @click="releaseAllItems"
           class="w-8rem p-button p-button-danger p-button-sm"
         >
@@ -344,32 +340,26 @@ const updateDragPosition = (event) => {
           <span class="ml-2">Release All</span>
         </button>
       </div>
-
-      <!-- Draggable Items Container -->
       <div class="flex flex-wrap gap-3 justify-content-start">
-        <!-- Draggable Item -->
         <div
-          v-for="item in items"
+          v-for="item in dropZones.Playing"
           :key="item.id"
           class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
           :class="{ 'hovered-item': hoveredItem?.id === item.id }"
           :data-id="item.id"
-          @mousedown.prevent="handleDragStart($event, item, zone)"
-          @touchstart.prevent="handleDragStart($event, item, zone)"
+          @mousedown.prevent="handleDragStart($event, item, 'Playing')"
+          @touchstart.prevent="handleDragStart($event, item, 'Playing')"
         >
-          <!-- Add Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
             @touchstart.stop="handleTouchStart"
-            @touchend.stop="handleTouchEnd(item, zone)"
-            @dblclick.stop="handleDoubleClick(item, zone)"
+            @touchend.stop="handleTouchEnd(item, 'Playing')"
+            @dblclick.stop="handleDoubleClick(item, 'Playing')"
             class="add-button"
           >
             <i class="pi pi-plus"></i>
           </button>
-
-          <!-- Avatar and Title -->
           <img
             :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
             alt="Avatar"
@@ -380,98 +370,146 @@ const updateDragPosition = (event) => {
       </div>
     </div>
 
-    <!-- Dragging Feedback -->
+    <!-- Ready Zone -->
     <div
-      v-if="isDragging"
-      class="drag-feedback"
-      :style="{
-        left: `${dragPosition.x}px`,
-        top: `${dragPosition.y}px`,
-        ...dragStyles,
-        transition: returnToOriginal ? 'all 0.3s ease' : 'none',
-      }"
+      class="col-12 md:col-3 drop-zone-ready p-card flex flex-column gap-3"
+      data-zone="Ready"
+      :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
     >
-      {{ dragContent }}
+      <h3 class="text-lg font-bold text-primary">Ready</h3>
+      <div class="flex flex-wrap gap-3 justify-content-start">
+        <div
+          v-for="item in dropZones.Ready"
+          :key="item.id"
+          class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+          :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+          :data-id="item.id"
+          @mousedown.prevent="handleDragStart($event, item, 'Ready')"
+          @touchstart.prevent="handleDragStart($event, item, 'Ready')"
+        >
+          <button
+            @mousedown.stop
+            @mouseup.stop="handleMouseUp"
+            @touchstart.stop="handleTouchStart"
+            @touchend.stop="handleTouchEnd(item, 'Ready')"
+            @dblclick.stop="handleDoubleClick(item, 'Ready')"
+            class="add-button"
+          >
+            <i class="pi pi-plus"></i>
+          </button>
+          <img
+            :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
+            alt="Avatar"
+            class="avatar"
+          />
+          <span class="text-center font-medium">{{ item.title }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Break Zone -->
+    <div
+      class="col-12 md:col-3 drop-zone-break p-card flex flex-column gap-3"
+      data-zone="Break"
+      :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
+    >
+      <h3 class="text-lg font-bold text-primary">Break</h3>
+      <div class="flex flex-wrap gap-3 justify-content-start">
+        <div
+          v-for="item in dropZones.Break"
+          :key="item.id"
+          class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+          :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+          :data-id="item.id"
+          @mousedown.prevent="handleDragStart($event, item, 'Break')"
+          @touchstart.prevent="handleDragStart($event, item, 'Break')"
+        >
+          <button
+            @mousedown.stop
+            @mouseup.stop="handleMouseUp"
+            @touchstart.stop="handleTouchStart"
+            @touchend.stop="handleTouchEnd(item, 'Break')"
+            @dblclick.stop="handleDoubleClick(item, 'Break')"
+            class="add-button"
+          >
+            <i class="pi pi-plus"></i>
+          </button>
+          <img
+            :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
+            alt="Avatar"
+            class="avatar"
+          />
+          <span class="text-center font-medium">{{ item.title }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finish Zone -->
+    <div
+      class="col-12 md:col-3 drop-zone-finish p-card flex flex-column gap-3"
+      data-zone="Finish"
+      :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
+    >
+      <h3 class="text-lg font-bold text-primary">Finish</h3>
+      <div class="flex flex-wrap gap-3 justify-content-start">
+        <div
+          v-for="item in dropZones.Finish"
+          :key="item.id"
+          class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+          :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+          :data-id="item.id"
+          @mousedown.prevent="handleDragStart($event, item, 'Finish')"
+          @touchstart.prevent="handleDragStart($event, item, 'Finish')"
+        >
+          <button
+            @mousedown.stop
+            @mouseup.stop="handleMouseUp"
+            @touchstart.stop="handleTouchStart"
+            @touchend.stop="handleTouchEnd(item, 'Finish')"
+            @dblclick.stop="handleDoubleClick(item, 'Finish')"
+            class="add-button"
+          >
+            <i class="pi pi-plus"></i>
+          </button>
+          <img
+            :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
+            alt="Avatar"
+            class="avatar"
+          />
+          <span class="text-center font-medium">{{ item.title }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.drop-zone {
+.drop-zone-playing {
   border: 2px dashed var(--surface-border);
-  padding: 10px;
-  background-color: var(--surface-b);
-  min-height: 200px;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.drop-zone-active {
   background-color: var(--green-50);
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
+.drop-zone-ready {
+  border: 2px dashed var(--surface-border);
+  background-color: var(--blue-50);
+}
+
+.drop-zone-break {
+  border: 2px dashed var(--surface-border);
+  background-color: var(--yellow-50);
+}
+
+.drop-zone-finish {
+  border: 2px dashed var(--surface-border);
+  background-color: var(--purple-50);
+}
+
+/* Common Styles */
 .draggable-item {
-  width: calc(33.33% - 12px); /* 1/3 width with gap accounted */
+  width: calc(33.33% - 12px);
   border: 1px solid var(--surface-border);
   background-color: var(--surface-a);
   border-radius: 6px;
   cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative; /* To position the add button */
-  padding: 8px;
-}
-
-.draggable-item:hover {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.hovered-item {
-  background-color: var(--yellow-100);
-}
-
-.add-button {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: var(--blue-500);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.add-button:hover {
-  background-color: var(--blue-600);
-  transform: scale(1.1);
-}
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-bottom: 8px;
-  background-color: var(--surface-b);
-}
-
-.drag-feedback {
-  position: fixed;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-  font-size: 1rem;
-  font-weight: bold;
-  background-color: var(--surface-a);
-  padding: 8px 12px;
-  border: 1px solid var(--surface-border);
-  border-radius: 4px;
-  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>
