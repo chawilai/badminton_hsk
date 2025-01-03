@@ -118,51 +118,39 @@ const releaseAllItems = () => {
 
 // Handles the start of drag (PC: mousedown, Mobile: touchstart)
 const handleDragStart = (event, item, zone) => {
-  const originalElement = event.target;
+  if (event.target.closest(".add-button")) {
+    // Prevent drag when clicking the Add Button
+    return;
+  }
+
+  const originalElement = event.currentTarget; // Use the entire container
   const rect = originalElement.getBoundingClientRect();
 
-  // Store the original position of the item
+  // Store the original position and styles
   originalPosition.x = rect.left;
   originalPosition.y = rect.top;
 
-  // Clone the original element's computed styles
-  const computedStyles = window.getComputedStyle(originalElement);
   dragStyles.value = {
     width: `${originalElement.offsetWidth}px`,
     height: `${originalElement.offsetHeight}px`,
-    backgroundColor: computedStyles.backgroundColor,
-    color: computedStyles.color,
-    border: computedStyles.border,
-    padding: computedStyles.padding,
-    borderRadius: computedStyles.borderRadius,
-    fontSize: computedStyles.fontSize,
-    textAlign: computedStyles.textAlign,
-    lineHeight: computedStyles.lineHeight,
-    whiteSpace: computedStyles.whiteSpace || "normal",
-    overflow: computedStyles.overflow || "visible",
-    display: computedStyles.display,
-    position: "fixed",
+    backgroundColor: getComputedStyle(originalElement).backgroundColor,
+    color: getComputedStyle(originalElement).color,
+    border: getComputedStyle(originalElement).border,
+    borderRadius: getComputedStyle(originalElement).borderRadius,
   };
 
-  // Clone the text content of the original element
-  dragContent.value = originalElement.textContent;
-
+  dragContent.value = item.title; // Set content to item title
   draggedItem.value = item;
   draggedFrom.value = zone;
   isDragging.value = true;
 
   updateDragPosition(event);
 
-  // Add global listeners for mouse and touch movement and release
+  // Add listeners for drag move and end
   document.addEventListener("mousemove", handleDragMove);
   document.addEventListener("mouseup", handleDragEnd);
   document.addEventListener("touchmove", handleDragMove, { passive: false });
   document.addEventListener("touchend", handleDragEnd);
-
-  // Prevent default scrolling on touch devices
-  if (event.type === "touchstart") {
-    event.preventDefault();
-  }
 };
 
 // Handles the drag move (PC: mousemove, Mobile: touchmove)
@@ -323,24 +311,24 @@ const updateDragPosition = (event) => {
 </script>
 
 <template>
-  <div class="p-fluid grid grid-nogutter justify-content-center gap-2">
+  <div class="p-fluid grid grid-nogutter justify-content-center gap-4">
     <!-- Playing Zone -->
     <div
-      class="col-12 md:col-6 drop-zone-playing p-card flex flex-column gap-3"
+      class="col-12 md:col-3 drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
       data-zone="Playing"
       :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
     >
-      <div class="flex align-items-center justify-content-between">
+      <div class="flex align-items-center justify-content-between mb-3">
         <h3 class="text-lg font-bold text-primary">Playing</h3>
         <button
           @click="releaseAllItems"
-          class="w-8rem p-button p-button-danger p-button-sm"
+          class="w-8rem p-button p-button-danger p-button-sm rounded-full"
         >
           <i class="pi pi-refresh"></i>
           <span class="ml-2">Release All</span>
         </button>
       </div>
-      <div class="flex flex-wrap gap-3 justify-content-start">
+      <div class="playing-items-grid">
         <div
           v-for="item in dropZones.Playing"
           :key="item.id"
@@ -350,6 +338,7 @@ const updateDragPosition = (event) => {
           @mousedown.prevent="handleDragStart($event, item, 'Playing')"
           @touchstart.prevent="handleDragStart($event, item, 'Playing')"
         >
+          <!-- Add Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
@@ -360,11 +349,15 @@ const updateDragPosition = (event) => {
           >
             <i class="pi pi-plus"></i>
           </button>
+
+          <!-- Avatar -->
           <img
             :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
             alt="Avatar"
             class="avatar"
           />
+
+          <!-- Title -->
           <span class="text-center font-medium">{{ item.title }}</span>
         </div>
       </div>
@@ -372,12 +365,12 @@ const updateDragPosition = (event) => {
 
     <!-- Ready Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-ready p-card flex flex-column gap-3"
+      class="col-12 md:col-3 drop-zone-ready p-card flex flex-column gap-3 shadow-md"
       data-zone="Ready"
       :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
     >
-      <h3 class="text-lg font-bold text-primary">Ready</h3>
-      <div class="flex flex-wrap gap-3 justify-content-start">
+      <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
+      <div class="flex flex-wrap gap-3">
         <div
           v-for="item in dropZones.Ready"
           :key="item.id"
@@ -387,6 +380,7 @@ const updateDragPosition = (event) => {
           @mousedown.prevent="handleDragStart($event, item, 'Ready')"
           @touchstart.prevent="handleDragStart($event, item, 'Ready')"
         >
+          <!-- Add Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
@@ -397,11 +391,15 @@ const updateDragPosition = (event) => {
           >
             <i class="pi pi-plus"></i>
           </button>
+
+          <!-- Avatar -->
           <img
             :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
             alt="Avatar"
             class="avatar"
           />
+
+          <!-- Title -->
           <span class="text-center font-medium">{{ item.title }}</span>
         </div>
       </div>
@@ -409,12 +407,12 @@ const updateDragPosition = (event) => {
 
     <!-- Break Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-break p-card flex flex-column gap-3"
+      class="col-12 md:col-3 drop-zone-break p-card flex flex-column gap-3 shadow-md"
       data-zone="Break"
       :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
     >
-      <h3 class="text-lg font-bold text-primary">Break</h3>
-      <div class="flex flex-wrap gap-3 justify-content-start">
+      <h3 class="text-lg font-bold text-primary mb-3">Break</h3>
+      <div class="flex flex-wrap gap-3">
         <div
           v-for="item in dropZones.Break"
           :key="item.id"
@@ -424,6 +422,7 @@ const updateDragPosition = (event) => {
           @mousedown.prevent="handleDragStart($event, item, 'Break')"
           @touchstart.prevent="handleDragStart($event, item, 'Break')"
         >
+          <!-- Add Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
@@ -434,11 +433,15 @@ const updateDragPosition = (event) => {
           >
             <i class="pi pi-plus"></i>
           </button>
+
+          <!-- Avatar -->
           <img
             :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
             alt="Avatar"
             class="avatar"
           />
+
+          <!-- Title -->
           <span class="text-center font-medium">{{ item.title }}</span>
         </div>
       </div>
@@ -446,12 +449,12 @@ const updateDragPosition = (event) => {
 
     <!-- Finish Zone -->
     <div
-      class="col-12 md:col-3 drop-zone-finish p-card flex flex-column gap-3"
+      class="col-12 md:col-3 drop-zone-finish p-card flex flex-column gap-3 shadow-md"
       data-zone="Finish"
       :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
     >
-      <h3 class="text-lg font-bold text-primary">Finish</h3>
-      <div class="flex flex-wrap gap-3 justify-content-start">
+      <h3 class="text-lg font-bold text-primary mb-3">Finish</h3>
+      <div class="flex flex-wrap gap-3">
         <div
           v-for="item in dropZones.Finish"
           :key="item.id"
@@ -461,6 +464,7 @@ const updateDragPosition = (event) => {
           @mousedown.prevent="handleDragStart($event, item, 'Finish')"
           @touchstart.prevent="handleDragStart($event, item, 'Finish')"
         >
+          <!-- Add Button -->
           <button
             @mousedown.stop
             @mouseup.stop="handleMouseUp"
@@ -471,45 +475,155 @@ const updateDragPosition = (event) => {
           >
             <i class="pi pi-plus"></i>
           </button>
+
+          <!-- Avatar -->
           <img
             :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${item.title}`"
             alt="Avatar"
             class="avatar"
           />
+
+          <!-- Title -->
           <span class="text-center font-medium">{{ item.title }}</span>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Dragging Feedback -->
+  <div
+    v-if="isDragging"
+    class="drag-feedback"
+    :style="{
+      left: `${dragPosition.x}px`,
+      top: `${dragPosition.y}px`,
+      ...dragStyles,
+      transition: returnToOriginal ? 'all 0.3s ease' : 'none',
+    }"
+  >
+    <img
+      :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${dragContent}`"
+      alt="Dragging Avatar"
+      class="avatar drag-avatar"
+    />
+    <span class="text-center font-medium">{{ dragContent }}</span>
+  </div>
 </template>
 
 <style scoped>
+/* Drop Zone Styles */
 .drop-zone-playing {
-  border: 2px dashed var(--surface-border);
+  border: 3px dashed var(--green-300);
   background-color: var(--green-50);
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .drop-zone-ready {
-  border: 2px dashed var(--surface-border);
+  border: 3px dashed var(--blue-300);
   background-color: var(--blue-50);
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .drop-zone-break {
-  border: 2px dashed var(--surface-border);
+  border: 3px dashed var(--yellow-300);
   background-color: var(--yellow-50);
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .drop-zone-finish {
-  border: 2px dashed var(--surface-border);
+  border: 3px dashed var(--purple-300);
   background-color: var(--purple-50);
+  padding: 20px;
+  border-radius: 10px;
 }
 
-/* Common Styles */
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-border);
+}
+
+.playing-zone {
+  background-color: var(--surface-c); /* Different background for the playing zone */
+}
+
+.playing-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  grid-template-rows: repeat(2, 1fr); /* 2 rows */
+  gap: 16px; /* Adjust spacing between items */
+  padding: 8px; /* Padding inside the grid */
+  border: 2px dashed var(--surface-border);
+  border-radius: 8px;
+  min-height: 200px; /* Ensure minimum height */
+}
+
 .draggable-item {
-  width: calc(33.33% - 12px);
-  border: 1px solid var(--surface-border);
+  position: relative;
   background-color: var(--surface-a);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable-item:hover {
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.add-button {
+  position: absolute;
+  top: -10px; /* Adjust spacing */
+  right: -10px;
+  width: 20px; /* Slightly larger for better visibility */
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--blue-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2; /* Ensure it appears on top of content */
+}
+
+.add-button:hover {
+  background-color: var(--blue-600);
+  transform: scale(1.1);
+}
+
+.drop-zone-active {
+  background-color: var(--green-50);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.drag-feedback {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px; /* Space between avatar and text */
+  background-color: var(--surface-a);
+  padding: 8px 12px;
+  border: 2px solid var(--surface-border);
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.drag-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--blue-500);
 }
 </style>
