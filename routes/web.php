@@ -80,9 +80,15 @@ Route::get('/dragable3', function () {
 
     return Inertia::render('TestDragAble3');
 });
+
 Route::get('/dragable4', function () {
 
     return Inertia::render('TestDragAble4');
+});
+
+Route::get('/card', function () {
+
+    return Inertia::render('TestDragAbleCard');
 });
 
 Route::get('/test2', function () {

@@ -68,11 +68,12 @@ const onDragLeave = () => {
         @start="dragStart"
         @move="dragMove"
         @stop="dragEnd"
+        >
+        Drag me!
+        <strong
         @touchstart="handleInteraction"
         @click="handleInteraction"
-      >
-        Drag me!
-        <strong>Drag</strong>
+        >Drag</strong>
       </div>
 
       <div
