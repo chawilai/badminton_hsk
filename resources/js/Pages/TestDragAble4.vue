@@ -9,6 +9,7 @@ const dropZones = reactive({
 });
 
 const draggedItem = ref(null); // Currently dragged item
+const hoveredItem = ref(null); // Currently hovered item
 const draggedFrom = ref(""); // Tracks the drop zone where the item was dragged from
 const dropZoneActive = ref(""); // Tracks the currently active drop zone during drag
 const isDragging = ref(false); // Tracks whether dragging is in progress
@@ -86,11 +87,26 @@ const handleDragMove = (event) => {
   }
 
   const element = document.elementFromPoint(clientX, clientY);
+
+  // Detect hovered drop zone
   const zone = Object.keys(dropZones).find((key) =>
     element?.closest(`[data-zone="${key}"]`)
   );
-
   dropZoneActive.value = zone || "";
+
+  // Detect hovered item, excluding the dragged item
+  const itemElement = element?.closest(".draggable-item");
+  if (itemElement) {
+    const itemId = Number(itemElement.dataset.id);
+    if (draggedItem.value?.id !== itemId) {
+      const allItems = Object.values(dropZones).flat();
+      hoveredItem.value = allItems.find((item) => item.id === itemId);
+    } else {
+      hoveredItem.value = null;
+    }
+  } else {
+    hoveredItem.value = null;
+  }
 };
 
 // Handles the end of drag (PC: mouseup, Mobile: touchend)
@@ -134,6 +150,7 @@ const resetDragState = () => {
   draggedFrom.value = "";
   dropZoneActive.value = "";
   dragContent.value = "";
+  hoveredItem.value = null;
   returnToOriginal.value = false;
 
   // Remove global listeners
@@ -170,6 +187,8 @@ const updateDragPosition = (event) => {
         v-for="item in items"
         :key="item.id"
         class="draggable-item"
+        :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+        :data-id="item.id"
         @mousedown.prevent="handleDragStart($event, item, zone)"
         @touchstart.prevent="handleDragStart($event, item, zone)"
       >
@@ -221,6 +240,11 @@ const updateDragPosition = (event) => {
   margin-bottom: 10px;
   cursor: grab;
   user-select: none;
+  transition: background-color 0.3s ease;
+}
+
+.draggable-item.hovered-item {
+  background-color: #ffd700; /* Highlight hovered item */
 }
 
 .drag-feedback {
