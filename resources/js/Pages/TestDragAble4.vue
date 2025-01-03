@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onBeforeUnmount, nextTick } from "vue";
+import { ref, reactive } from "vue";
 
 const dropZones = reactive({
   Playing: [], // Start empty
@@ -243,9 +243,10 @@ const handleDragEnd = () => {
       const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
 
       // Step 2: Adjust hovered index for same-zone swaps if dragging to a later index
-      const adjustedHoveredIndex = draggedFrom.value === dropZoneActive.value && hoveredIndex > draggedIndex
-        ? hoveredIndex - 1
-        : hoveredIndex;
+      const adjustedHoveredIndex =
+        draggedFrom.value === dropZoneActive.value && hoveredIndex > draggedIndex
+          ? hoveredIndex - 1
+          : hoveredIndex;
 
       // Step 3: Replace hovered item with dragged item in the target zone
       const [removedHoveredItem] = toZone.splice(adjustedHoveredIndex, 1, removedDraggedItem);
@@ -273,7 +274,14 @@ const handleDragEnd = () => {
         } and ${dropZoneActive.value}`
       );
     } else {
-      // Case 2: Move to a new position in the same or different zone without swapping
+      // Case 2: Prevent adding more items to the Playing drop zone if it's full
+      if (dropZoneActive.value === "Playing" && dropZones["Playing"].length >= MAX_PLAYING_ITEMS) {
+        alert("The Playing zone is full. Cannot add more items.");
+        resetDragState();
+        return;
+      }
+
+      // Case 3: Move to a new position in the same or different zone without swapping
       const [removedItem] = fromZone.splice(draggedIndex, 1);
       toZone.push(removedItem);
 
