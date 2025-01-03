@@ -191,8 +191,18 @@ const handleDragMove = (event) => {
       // Log only if the hovered item changes
       if (hoveredItem.value?.id !== newHoveredItem?.id) {
         hoveredItem.value = newHoveredItem;
-        console.log("Dragged Item:", draggedItem.value);
-        console.log("Hovered Item:", hoveredItem.value);
+
+        // Find the zones for dragged and hovered items
+        const draggedZone = Object.keys(dropZones).find((key) =>
+          dropZones[key].some((item) => item.id === draggedItem.value?.id)
+        );
+
+        const hoveredZone = Object.keys(dropZones).find((key) =>
+          dropZones[key].some((item) => item.id === newHoveredItem?.id)
+        );
+
+        console.log("Dragged Item:", draggedItem.value, "in zone:", draggedZone);
+        console.log("Hovered Item:", hoveredItem.value, "in zone:", hoveredZone);
       }
     } else {
       hoveredItem.value = null;
@@ -222,58 +232,46 @@ const handleDragEnd = () => {
     : -1;
 
   if (draggedIndex > -1) {
-    // Case 1: Reordering within the same drop zone
     if (draggedFrom.value === dropZoneActive.value) {
-      const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
-      fromZone.push(removedDraggedItem); // Move dragged item to the end of the same zone
+      // Case 1: Reordering within the same zone
+      if (hoveredIndex > -1) {
+        // Swap items within the same zone
+        const temp = fromZone[draggedIndex];
+        fromZone[draggedIndex] = fromZone[hoveredIndex];
+        fromZone[hoveredIndex] = temp;
 
-      console.log(`Reordered ${draggedItem.value.title} within ${draggedFrom.value}`);
-    } else if (hoveredIndex > -1) {
-      // Case 2: Swap within different zones
-      const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
+        console.log(
+          `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} within ${draggedFrom.value}`
+        );
+      } else {
+        // Move to the end if not hovered over an item
+        const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
+        fromZone.push(removedDraggedItem);
 
-      // Step 1: Adjust hovered index for same-zone swaps if dragging to a later index
-      const adjustedHoveredIndex =
-        draggedFrom.value === dropZoneActive.value && hoveredIndex > draggedIndex
-          ? hoveredIndex - 1
-          : hoveredIndex;
-
-      // Step 2: Replace hovered item with dragged item in the target zone
-      const [removedHoveredItem] = toZone.splice(
-        adjustedHoveredIndex,
-        1,
-        removedDraggedItem
-      );
-
-      // Step 3: Add hovered item to the original position in the original zone
-      fromZone.splice(draggedIndex, 0, removedHoveredItem);
-
-      console.log(
-        `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} between ${draggedFrom.value} and ${dropZoneActive.value}`
-      );
+        console.log(
+          `Moved ${draggedItem.value.title} to the end of ${draggedFrom.value}`
+        );
+      }
     } else {
-      // Case 3: Prevent adding more items to the Playing drop zone if it's full
-      if (
-        dropZoneActive.value === "Playing" &&
-        dropZones["Playing"].length >= MAX_PLAYING_ITEMS
-      ) {
-        alert("The Playing zone is full. Cannot add more items.");
-        resetDragState();
-        return;
+      // Case 2: Moving to a different drop zone
+      if (hoveredIndex > -1) {
+        // Swap items between zones
+        const [removedDraggedItem] = fromZone.splice(draggedIndex, 1);
+        const [removedHoveredItem] = toZone.splice(hoveredIndex, 1, removedDraggedItem);
+        fromZone.splice(draggedIndex, 0, removedHoveredItem); // Place the hovered item back to the dragged item's original position
+
+        console.log(
+          `Swapped ${draggedItem.value.title} from ${draggedFrom.value} with ${hoveredItem.value.title} in ${dropZoneActive.value}`
+        );
+      } else {
+        // Move to the new zone if not hovered over an item
+        const [removedItem] = fromZone.splice(draggedIndex, 1);
+        toZone.push(removedItem);
+
+        console.log(
+          `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
+        );
       }
-
-      // Case 4: Move to a new position in the same or different zone without swapping
-      const [removedItem] = fromZone.splice(draggedIndex, 1);
-      toZone.push(removedItem);
-
-      // Store original zone if moving to a different zone
-      if (fromZone !== toZone && !originalZones[removedItem.id]) {
-        originalZones[removedItem.id] = draggedFrom.value;
-      }
-
-      console.log(
-        `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
-      );
     }
   }
 
