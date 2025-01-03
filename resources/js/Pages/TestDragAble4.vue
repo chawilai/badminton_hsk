@@ -1,20 +1,221 @@
 <script setup>
-import { useDragDrop } from "../composables/useDragDrop";
+import { ref, reactive, onBeforeUnmount, nextTick } from "vue";
 
-const {
-  dropZones,
-  draggedItem,
-  draggedFrom,
-  dropZoneActive,
-  isDragging,
-  hoveredItem,
-  handleDragStart,
-  handleDragOver,
-  handleItemHover,
-  handleItemLeave,
-  handleDrop,
-  resetDragState,
-} = useDragDrop();
+const dropZones = reactive({
+  Playing: [{ id: 1, title: "Item A" }],
+  Ready: [
+    { id: 2, title: "Item B" },
+    { id: 3, title: "Item C" },
+  ],
+  Break: [{ id: 4, title: "Item D" }],
+  Finish: [],
+});
+
+const draggedItem = ref(null); // Currently dragged item
+const hoveredItem = ref(null); // Currently hovered item
+const draggedFrom = ref(""); // Tracks the drop zone where the item was dragged from
+const dropZoneActive = ref(""); // Tracks the currently active drop zone during drag
+const isDragging = ref(false); // Tracks whether dragging is in progress
+const dragPosition = reactive({ x: 0, y: 0 }); // Position of the dragging feedback
+const dragContent = ref(""); // Stores the text content of the original draggable item
+const dragStyles = ref({}); // Stores the styles of the original draggable item
+const returnToOriginal = ref(false); // Tracks whether the item should return to its original position
+const originalPosition = reactive({ x: 0, y: 0 }); // Stores the original position of the dragged item
+
+// Handles the start of drag (PC: mousedown, Mobile: touchstart)
+const handleDragStart = (event, item, zone) => {
+  const originalElement = event.target;
+  const rect = originalElement.getBoundingClientRect();
+
+  // Store the original position of the item
+  originalPosition.x = rect.left;
+  originalPosition.y = rect.top;
+
+  // Clone the original element's computed styles
+  const computedStyles = window.getComputedStyle(originalElement);
+  dragStyles.value = {
+    width: `${originalElement.offsetWidth}px`,
+    height: `${originalElement.offsetHeight}px`,
+    backgroundColor: computedStyles.backgroundColor,
+    color: computedStyles.color,
+    border: computedStyles.border,
+    padding: computedStyles.padding,
+    borderRadius: computedStyles.borderRadius,
+    fontSize: computedStyles.fontSize,
+    textAlign: computedStyles.textAlign,
+    lineHeight: computedStyles.lineHeight,
+    whiteSpace: computedStyles.whiteSpace || "normal",
+    overflow: computedStyles.overflow || "visible",
+    display: computedStyles.display,
+    position: "fixed",
+  };
+
+  // Clone the text content of the original element
+  dragContent.value = originalElement.textContent;
+
+  draggedItem.value = item;
+  draggedFrom.value = zone;
+  isDragging.value = true;
+
+  updateDragPosition(event);
+
+  // Add global listeners for mouse and touch movement and release
+  document.addEventListener("mousemove", handleDragMove);
+  document.addEventListener("mouseup", handleDragEnd);
+  document.addEventListener("touchmove", handleDragMove, { passive: false });
+  document.addEventListener("touchend", handleDragEnd);
+
+  // Prevent default scrolling on touch devices
+  if (event.type === "touchstart") {
+    event.preventDefault();
+  }
+};
+
+// Handles the drag move (PC: mousemove, Mobile: touchmove)
+const handleDragMove = (event) => {
+  if (!isDragging.value) return;
+
+  event.preventDefault(); // Prevent default scrolling on touch devices
+  updateDragPosition(event);
+
+  let clientX, clientY;
+
+  if (event.touches) {
+    const touch = event.touches[0];
+    clientX = touch.clientX;
+    clientY = touch.clientY;
+  } else {
+    clientX = event.clientX;
+    clientY = event.clientY;
+  }
+
+  const element = document.elementFromPoint(clientX, clientY);
+
+  // Detect hovered drop zone
+  const zone = Object.keys(dropZones).find((key) =>
+    element?.closest(`[data-zone="${key}"]`)
+  );
+  dropZoneActive.value = zone || "";
+
+  // Detect hovered item, excluding the dragged item
+  const itemElement = element?.closest(".draggable-item");
+  if (itemElement) {
+    const itemId = Number(itemElement.dataset.id);
+
+    if (draggedItem.value?.id !== itemId) {
+      const allItems = Object.values(dropZones).flat();
+      const newHoveredItem = allItems.find((item) => item.id === itemId);
+
+      // Log only if the hovered item changes
+      if (hoveredItem.value?.id !== newHoveredItem?.id) {
+        hoveredItem.value = newHoveredItem;
+        console.log("Dragged Item:", draggedItem.value);
+        console.log("Hovered Item:", hoveredItem.value);
+      }
+    } else {
+      hoveredItem.value = null;
+    }
+  } else {
+    hoveredItem.value = null;
+  }
+};
+
+// Handles the end of drag (PC: mouseup, Mobile: touchend)
+const handleDragEnd = () => {
+  if (!draggedItem.value) return;
+
+  const fromZone = dropZones[draggedFrom.value];
+  const toZone = dropZoneActive.value ? dropZones[dropZoneActive.value] : null;
+
+  if (!dropZoneActive.value) {
+    // Case 4: Dropped outside any drop zone
+    returnToOriginal.value = true;
+
+    // Adjust the position to account for the transform offset
+    dragPosition.x = originalPosition.x + parseFloat(dragStyles.value.width) / 2;
+    dragPosition.y = originalPosition.y + parseFloat(dragStyles.value.height) / 2;
+
+    // Ensure Vue updates DOM before starting animation
+    nextTick(() => {
+      setTimeout(() => {
+        resetDragState();
+      }, 300); // Match the CSS transition duration
+    });
+
+    return;
+  }
+
+  // Case 1: Swapping within the same drop zone
+  if (hoveredItem.value && draggedFrom.value === dropZoneActive.value) {
+    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
+    const hoveredIndex = fromZone.findIndex((item) => item.id === hoveredItem.value.id);
+
+    if (draggedIndex > -1 && hoveredIndex > -1) {
+      // Swap items
+      [fromZone[draggedIndex], fromZone[hoveredIndex]] = [
+        fromZone[hoveredIndex],
+        fromZone[draggedIndex],
+      ];
+    }
+  }
+
+  // Case 2: Swapping between different drop zones
+  else if (hoveredItem.value && draggedFrom.value !== dropZoneActive.value) {
+    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
+    const hoveredIndex = toZone.findIndex((item) => item.id === hoveredItem.value.id);
+
+    if (draggedIndex > -1 && hoveredIndex > -1) {
+      // Swap items between zones
+      const temp = fromZone[draggedIndex];
+      fromZone[draggedIndex] = toZone[hoveredIndex];
+      toZone[hoveredIndex] = temp;
+    }
+  }
+
+  // Case 3: Dropped on drop zone area (no hovered item)
+  else if (dropZoneActive.value) {
+    const draggedIndex = fromZone.findIndex((item) => item.id === draggedItem.value.id);
+
+    if (draggedIndex > -1) {
+      // Remove from original zone
+      const [removedItem] = fromZone.splice(draggedIndex, 1);
+
+      // Append to the end of the target drop zone
+      toZone.push(removedItem);
+    }
+  }
+
+  resetDragState();
+};
+
+// Resets drag state
+const resetDragState = () => {
+  isDragging.value = false;
+  draggedItem.value = null;
+  draggedFrom.value = "";
+  dropZoneActive.value = "";
+  dragContent.value = "";
+  hoveredItem.value = null;
+  returnToOriginal.value = false;
+
+  // Remove global listeners
+  document.removeEventListener("mousemove", handleDragMove);
+  document.removeEventListener("mouseup", handleDragEnd);
+  document.removeEventListener("touchmove", handleDragMove);
+  document.removeEventListener("touchend", handleDragEnd);
+};
+
+// Updates the position of the drag feedback element
+const updateDragPosition = (event) => {
+  if (event.touches) {
+    const touch = event.touches[0];
+    dragPosition.x = touch.clientX;
+    dragPosition.y = touch.clientY;
+  } else {
+    dragPosition.x = event.clientX;
+    dragPosition.y = event.clientY;
+  }
+};
 </script>
 
 <template>
@@ -23,26 +224,35 @@ const {
       v-for="(items, zone) in dropZones"
       :key="zone"
       class="drop-zone"
+      :data-zone="zone"
       :class="{ active: dropZoneActive === zone }"
-      @dragover.prevent="handleDragOver($event, zone)"
-      @drop.prevent="handleDrop"
-      @touchmove="handleDragOver($event, zone)"
-      @touchend="handleDrop"
     >
       <h3>{{ zone }}</h3>
       <div
         v-for="item in items"
         :key="item.id"
         class="draggable-item"
-        :class="{ hovered: hoveredItem && hoveredItem.id === item.id }"
-        draggable="true"
-        @dragstart="handleDragStart($event, item, zone)"
-        @touchstart="handleDragStart($event, item, zone)"
-        @dragenter="handleItemHover(item)"
-        @dragleave="handleItemLeave"
+        :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+        :data-id="item.id"
+        @mousedown.prevent="handleDragStart($event, item, zone)"
+        @touchstart.prevent="handleDragStart($event, item, zone)"
       >
         {{ item.title }}
       </div>
+    </div>
+
+    <!-- Dragging Feedback -->
+    <div
+      v-if="isDragging"
+      class="drag-feedback"
+      :style="{
+        left: `${dragPosition.x}px`,
+        top: `${dragPosition.y}px`,
+        ...dragStyles,
+        transition: returnToOriginal ? 'all 0.3s ease' : 'none',
+      }"
+    >
+      {{ dragContent }}
     </div>
   </div>
 </template>
@@ -75,16 +285,17 @@ const {
   margin-bottom: 10px;
   cursor: grab;
   user-select: none;
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform */
+  transition: background-color 0.3s ease;
 }
 
-h3 {
-  text-align: center;
-  margin-bottom: 10px;
+.draggable-item.hovered-item {
+  background-color: #ffd700; /* Highlight hovered item */
 }
 
-.draggable-item.hovered {
-  background-color: #f0d0c0;
-  transform: scale(1.05); /* Slightly enlarge the item for feedback */
+.drag-feedback {
+  position: fixed;
+  pointer-events: none; /* Prevent interfering with mouse/touch events */
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 </style>
