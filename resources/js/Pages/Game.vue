@@ -249,11 +249,11 @@ dropZones.Ready = formattedData;
       }"
     >
       <img
-        :src="`https://api.dicebear.com/6.x/adventurer/svg?seed=${dragContent}`"
+        :src="draggedItem.avatar"
         alt="Dragging Avatar"
         class="avatar drag-avatar"
       />
-      <span class="text-center font-medium">{{ dragContent }}</span>
+      <span class="text-center font-medium" v-text="draggedItem.title"></span>
     </div>
   </AppLayout>
 </template>
