@@ -111,35 +111,34 @@ const handleDragMove = (event) => {
 
 // Handles the end of drag (PC: mouseup, Mobile: touchend)
 const handleDragEnd = () => {
-  if (dropZoneActive.value && draggedItem.value) {
-    // Remove item from the original drop zone
+  if (draggedItem.value) {
     const fromZone = dropZones[draggedFrom.value];
-    const itemIndex = fromZone.findIndex((i) => i.id === draggedItem.value.id);
-    if (itemIndex > -1) {
-      fromZone.splice(itemIndex, 1);
-    }
-
-    // Add item to the new drop zone
     const toZone = dropZones[dropZoneActive.value];
-    toZone.push(draggedItem.value);
-  } else {
-    // Trigger return animation
-    returnToOriginal.value = true;
 
-    // Adjust the position to account for the transform offset
-    dragPosition.x = originalPosition.x + parseFloat(dragStyles.value.width) / 2;
-    dragPosition.y = originalPosition.y + parseFloat(dragStyles.value.height) / 2;
+    if (fromZone && toZone) {
+      const draggedIndex = fromZone.findIndex((i) => i.id === draggedItem.value.id);
 
-    // Ensure Vue updates DOM before starting animation
-    nextTick(() => {
-      setTimeout(() => {
-        resetDragState();
-      }, 300); // Match the CSS transition duration
-    });
+      // Remove the dragged item from the original drop zone
+      if (draggedIndex > -1) {
+        fromZone.splice(draggedIndex, 1);
+      }
 
-    return;
+      if (hoveredItem.value) {
+        // Swap with the hovered item
+        const hoveredIndex = toZone.findIndex((i) => i.id === hoveredItem.value.id);
+        if (hoveredIndex > -1) {
+          const temp = toZone[hoveredIndex];
+          toZone[hoveredIndex] = draggedItem.value;
+          fromZone.push(temp);
+        }
+      } else if (dropZoneActive.value) {
+        // Add to the end of the drop zone if not hovering over an item
+        toZone.push(draggedItem.value);
+      }
+    }
   }
 
+  // Reset drag states
   resetDragState();
 };
 
@@ -147,11 +146,9 @@ const handleDragEnd = () => {
 const resetDragState = () => {
   isDragging.value = false;
   draggedItem.value = null;
+  hoveredItem.value = null;
   draggedFrom.value = "";
   dropZoneActive.value = "";
-  dragContent.value = "";
-  hoveredItem.value = null;
-  returnToOriginal.value = false;
 
   // Remove global listeners
   document.removeEventListener("mousemove", handleDragMove);
