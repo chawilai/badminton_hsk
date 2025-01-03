@@ -5,9 +5,29 @@ const draggedItem = ref(null); // Currently dragged item
 const dropZoneActive = ref(false); // Hover state for drop zone
 const isDragging = ref(false); // Tracks whether dragging is in progress
 const dragPosition = reactive({ x: 0, y: 0 }); // Position of the dragging feedback
+const dragStyles = ref({}); // Stores the styles of the original draggable item
 
 // Handles the start of drag (touch or mouse)
 const handleDragStart = (event, item) => {
+  const originalElement = event.target;
+
+  // Clone the original element's styles
+  dragStyles.value = {
+    width: `${originalElement.offsetWidth}px`,
+    height: `${originalElement.offsetHeight}px`,
+    backgroundColor: window.getComputedStyle(originalElement).backgroundColor,
+    color: window.getComputedStyle(originalElement).color,
+    border: window.getComputedStyle(originalElement).border,
+    padding: window.getComputedStyle(originalElement).padding,
+    borderRadius: window.getComputedStyle(originalElement).borderRadius,
+    fontSize: window.getComputedStyle(originalElement).fontSize,
+    textAlign: window.getComputedStyle(originalElement).textAlign,
+    lineHeight: window.getComputedStyle(originalElement).lineHeight,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  };
+
   draggedItem.value = item;
   isDragging.value = true;
 
@@ -30,12 +50,10 @@ const handleDragMove = (event) => {
   let clientX, clientY;
 
   if (event.touches) {
-    // Touch event
     const touch = event.touches[0];
     clientX = touch.clientX;
     clientY = touch.clientY;
   } else {
-    // Mouse event
     clientX = event.clientX;
     clientY = event.clientY;
   }
@@ -109,7 +127,11 @@ onBeforeUnmount(() => {
     <div
       v-if="isDragging"
       class="drag-feedback"
-      :style="{ left: `${dragPosition.x}px`, top: `${dragPosition.y}px` }"
+      :style="{
+        ...dragStyles,
+        left: `${dragPosition.x}px`,
+        top: `${dragPosition.y}px`,
+      }"
     >
       {{ draggedItem?.value?.title }}
     </div>
@@ -129,6 +151,7 @@ onBeforeUnmount(() => {
   border: 1px solid #ddd;
   cursor: grab;
   user-select: none;
+  text-align: center;
 }
 
 .drop-zone {
@@ -148,11 +171,6 @@ onBeforeUnmount(() => {
 .drag-feedback {
   position: fixed;
   pointer-events: none; /* Prevent interfering with mouse/touch events */
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ddd;
-  padding: 5px 10px;
-  border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transform: translate(-50%, -50%);
   z-index: 1000;
 }
