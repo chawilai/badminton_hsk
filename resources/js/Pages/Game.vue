@@ -71,7 +71,9 @@ dropZones.Ready = formattedData;
             <span class="ml-2">Release All</span>
           </button>
         </div>
-        <div class="playing-items-grid flex flex-wrap justify-content-evenly bg-green-100">
+        <div
+          class="playing-items-grid flex flex-wrap justify-content-evenly bg-green-100"
+        >
           <div
             v-for="item in dropZones.Playing"
             :key="item.id"
@@ -98,11 +100,7 @@ dropZones.Ready = formattedData;
             </button>
 
             <!-- Avatar -->
-            <img
-              :src="item.avatar"
-              alt="Avatar"
-              class="avatar"
-            />
+            <img :src="item.avatar" alt="Avatar" class="avatar" />
 
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
@@ -140,11 +138,7 @@ dropZones.Ready = formattedData;
             </button>
 
             <!-- Avatar -->
-            <img
-              :src="item.avatar"
-              alt="Avatar"
-              class="avatar"
-            />
+            <img :src="item.avatar" alt="Avatar" class="avatar" />
 
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
@@ -182,11 +176,7 @@ dropZones.Ready = formattedData;
             </button>
 
             <!-- Avatar -->
-            <img
-              :src="item.avatar"
-              alt="Avatar"
-              class="avatar"
-            />
+            <img :src="item.avatar" alt="Avatar" class="avatar" />
 
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
@@ -224,11 +214,7 @@ dropZones.Ready = formattedData;
             </button>
 
             <!-- Avatar -->
-            <img
-              :src="item.avatar"
-              alt="Avatar"
-              class="avatar"
-            />
+            <img :src="item.avatar" alt="Avatar" class="avatar" />
 
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
@@ -248,11 +234,7 @@ dropZones.Ready = formattedData;
         transition: returnToOriginal ? 'all 0.3s ease' : 'none',
       }"
     >
-      <img
-        :src="draggedItem.avatar"
-        alt="Dragging Avatar"
-        class="avatar drag-avatar"
-      />
+      <img :src="draggedItem.avatar" alt="Dragging Avatar" class="avatar drag-avatar" />
       <span class="text-center font-medium" v-text="draggedItem.title"></span>
     </div>
   </AppLayout>
@@ -393,5 +375,10 @@ dropZones.Ready = formattedData;
   height: 40px;
   border-radius: 50%;
   border: 2px solid var(--blue-500);
+}
+
+.hovered-item {
+  background-color: var(--yellow-200) !important; /* Change to your desired hover color */
+  transition: background-color 0.2s ease; /* Smooth transition */
 }
 </style>
