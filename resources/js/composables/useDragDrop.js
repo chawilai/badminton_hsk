@@ -1,20 +1,58 @@
 import { ref, reactive } from "vue";
 
+import { useToast } from "primevue/usetoast";
+
 export function useDragDrop() {
+    const toast = useToast();
+
     const dropZones = reactive({
         Playing: [], // Start empty
         Ready: [
-            { id: 1, title: "Item A", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item A" },
-            { id: 2, title: "Item B", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item B" },
-            { id: 3, title: "Item C", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item C" },
-            { id: 4, title: "Item D", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item D" },
+            {
+                id: 1,
+                title: "Item A",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item A",
+            },
+            {
+                id: 2,
+                title: "Item B",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item B",
+            },
+            {
+                id: 3,
+                title: "Item C",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item C",
+            },
+            {
+                id: 4,
+                title: "Item D",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item D",
+            },
         ],
         Break: [
-            { id: 5, title: "Item E", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E" },
-            { id: 6, title: "Item F", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F" },
-            { id: 7, title: "Item G", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G" },
+            {
+                id: 5,
+                title: "Item E",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E",
+            },
+            {
+                id: 6,
+                title: "Item F",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F",
+            },
+            {
+                id: 7,
+                title: "Item G",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G",
+            },
         ],
-        Finish: [{ id: 8, title: "Item H", avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item H" }],
+        Finish: [
+            {
+                id: 8,
+                title: "Item H",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item H",
+            },
+        ],
     });
 
     const originalZones = reactive({}); // Store original zones for items
@@ -40,14 +78,14 @@ export function useDragDrop() {
     let lastTouchTime = 0; // To differentiate between touch and click events
 
     const handleClick = (event) => {
-        console.log("Clicked!");
+        // console.log("Clicked!");
     };
 
     const handleDoubleClick = (item, currentZone) => {
         if (isActionProcessed.value) return; // Prevent duplicate processing
         isActionProcessed.value = true;
 
-        console.log("Double Clicked!");
+        // console.log("Double Clicked!");
         moveItem(item, currentZone);
 
         // Reset the flag after the action is processed
@@ -72,7 +110,7 @@ export function useDragDrop() {
         if (isActionProcessed.value) return; // Prevent duplicate processing
         isActionProcessed.value = true;
 
-        console.log("Double Tap!");
+        // console.log("Double Tap!");
         moveItem(item, currentZone);
 
         // Reset the flag after the action is processed
@@ -89,12 +127,28 @@ export function useDragDrop() {
             if (originalZone) {
                 fromZone.splice(fromZone.indexOf(item), 1);
                 dropZones[originalZone].push(item);
-                console.log(`Moved item ${item.title} back to ${originalZone}`);
+                // console.log(`Moved item ${item.title} back to ${originalZone}`);
+
+                toast.add({
+                    severity: "warn",
+                    summary: "ลบผู้เล่น",
+                    detail: `ลบ ${item.title} กลับไปยัง ${originalZone} แล้ว`,
+                    // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                    life: 1500,
+                });
             }
         } else {
             // Check if the Playing drop zone has reached its limit
             if (playingZone.length >= MAX_PLAYING_ITEMS) {
-                alert("The Playing zone can only hold up to 4 items.");
+
+                toast.add({
+                    severity: "error",
+                    summary: "เพิ่มผู้เล่นล้มเหลว",
+                    detail: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                    // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                    life: 1500,
+                });
+
                 return;
             }
 
@@ -105,7 +159,14 @@ export function useDragDrop() {
 
             fromZone.splice(fromZone.indexOf(item), 1);
             playingZone.push(item);
-            console.log(`Moved item ${item.title} to Playing zone`);
+
+            toast.add({
+                severity: "info",
+                summary: "เพิ่มผู้เล่น",
+                detail: `เพิ่ม ${item.title} เข้าตารางเกมแล้ว`,
+                // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                life: 1500,
+            });
         }
     };
 
@@ -121,7 +182,13 @@ export function useDragDrop() {
         // Clear the Playing drop zone
         playingZone.splice(0, playingZone.length);
 
-        console.log("All items released back to their original zones");
+        toast.add({
+            severity: "contrast",
+            summary: "ล้างตารางเกม",
+            detail: `ลบผู้เล่นทั้งหมดออกจากตารางเกม แล้ว`,
+            // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+            life: 1500,
+        });
     };
 
     // check click/tab
@@ -157,7 +224,7 @@ export function useDragDrop() {
         // Only set the original zone if it has not been set
         if (!originalZones[item.id]) {
             originalZones[item.id] = zone; // Store original zone
-            console.log(`Set original zone for item ${item.title}: ${zone}`);
+            // console.log(`Set original zone for item ${item.title}: ${zone}`);
         }
 
         updateDragPosition(event);
@@ -225,18 +292,18 @@ export function useDragDrop() {
                         )
                     );
 
-                    console.log(
-                        "Dragged Item:",
-                        draggedItem.value,
-                        "in zone:",
-                        draggedZone
-                    );
-                    console.log(
-                        "Hovered Item:",
-                        hoveredItem.value,
-                        "in zone:",
-                        hoveredZone
-                    );
+                    // console.log(
+                    //     "Dragged Item:",
+                    //     draggedItem.value,
+                    //     "in zone:",
+                    //     draggedZone
+                    // );
+                    // console.log(
+                    //     "Hovered Item:",
+                    //     hoveredItem.value,
+                    //     "in zone:",
+                    //     hoveredZone
+                    // );
                 }
             } else {
                 hoveredItem.value = null;
@@ -278,9 +345,17 @@ export function useDragDrop() {
                     fromZone[draggedIndex] = fromZone[hoveredIndex];
                     fromZone[hoveredIndex] = temp;
 
-                    console.log(
-                        `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} within ${draggedFrom.value}`
-                    );
+                    // console.log(
+                    //     `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} within ${draggedFrom.value}`
+                    // );
+
+                    toast.add({
+                        severity: "info",
+                        summary: "สลับผู้เล่น",
+                        detail: `สลับตำแหน่ง ${draggedItem.value.title} กับ ${hoveredItem.value.title} สำเร็จ`,
+                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                        life: 1500,
+                    });
                 } else {
                     // Move to the end if not hovered over an item
                     const [removedDraggedItem] = fromZone.splice(
@@ -289,9 +364,17 @@ export function useDragDrop() {
                     );
                     fromZone.push(removedDraggedItem);
 
-                    console.log(
-                        `Moved ${draggedItem.value.title} to the end of ${draggedFrom.value}`
-                    );
+                    // console.log(
+                    //     `Moved ${draggedItem.value.title} to the end of ${draggedFrom.value}`
+                    // );
+
+                    toast.add({
+                        severity: "info",
+                        summary: "ย้ายผู้เล่น",
+                        detail: `ย้าย ${draggedItem.value.title} ไปยัง ${draggedFrom.value} สำเร็จ`,
+                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                        life: 1500,
+                    });
                 }
             } else {
                 // Case 2: Moving to a different drop zone
@@ -308,9 +391,17 @@ export function useDragDrop() {
                     );
                     fromZone.splice(draggedIndex, 0, removedHoveredItem); // Place the hovered item back to the dragged item's original position
 
-                    console.log(
-                        `Swapped ${draggedItem.value.title} from ${draggedFrom.value} with ${hoveredItem.value.title} in ${dropZoneActive.value}`
-                    );
+                    // console.log(
+                    //     `Swapped ${draggedItem.value.title} from ${draggedFrom.value} with ${hoveredItem.value.title} in ${dropZoneActive.value}`
+                    // );
+
+                    toast.add({
+                        severity: "info",
+                        summary: "สลับผู้เล่น",
+                        detail: `สลับตำแหน่ง ${draggedItem.value.title} กับ ${hoveredItem.value.title} สำเร็จ`,
+                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                        life: 1500,
+                    });
                 } else {
                     // Move to the new zone if not hovered over an item
 
@@ -319,9 +410,15 @@ export function useDragDrop() {
                         dropZoneActive.value === "Playing" &&
                         dropZones["Playing"].length >= MAX_PLAYING_ITEMS
                     ) {
-                        alert(
-                            "The Playing zone is full. Cannot add more items."
-                        );
+
+                        toast.add({
+                            severity: "error",
+                            summary: "เพิ่มผู้เล่นล้มเหลว",
+                            detail: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                            // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                            life: 1500,
+                        });
+
                         resetDragState();
                         return; // Prevent adding the item
                     }
@@ -329,9 +426,17 @@ export function useDragDrop() {
                     const [removedItem] = fromZone.splice(draggedIndex, 1);
                     toZone.push(removedItem);
 
-                    console.log(
-                        `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
-                    );
+                    // console.log(
+                    //     `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
+                    // );
+
+                    toast.add({
+                        severity: "info",
+                        summary: "ย้ายผู้เล่น",
+                        detail: `ย้าย ${draggedItem.value.title} จาก ${draggedFrom.value} ไป ${dropZoneActive.value} สำเร็จ`,
+                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                        life: 1500,
+                    });
                 }
             }
         }

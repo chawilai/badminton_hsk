@@ -1,12 +1,16 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import AppLayout from "@/layout/AppLayout.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 
-const page = usePage();
+import { useToast } from "primevue/usetoast";
+import { useConfirm } from "primevue/useconfirm";
 
-console.log(page.props);
+const toast = useToast();
+const confirmPopup = useConfirm();
+
+const page = usePage();
 
 const {
   dropZones,
@@ -54,10 +58,10 @@ dropZones.Ready = formattedData;
 
 <template>
   <AppLayout>
-    <div class="p-fluid grid grid-nogutter justify-content-center gap-4">
+    <div class="flex flex-column sm:flex-row justify-content-center gap-4">
       <!-- Playing Zone -->
       <div
-        class="col-12 lg:col-3 drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
+        class="col-12 sm:w-24rem h-30rem drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
         data-zone="Playing"
         :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
       >
@@ -72,7 +76,7 @@ dropZones.Ready = formattedData;
           </button>
         </div>
         <div
-          class="playing-items-grid flex flex-wrap justify-content-evenly bg-green-100"
+          class="playing-items-gridxx flex flex-wrap justify-content-evenly bg-green-100 w-full max-w-20rem h-20rem mx-auto p-3 gap-3 border-round-xl"
         >
           <div
             v-for="item in dropZones.Playing"
@@ -109,115 +113,117 @@ dropZones.Ready = formattedData;
       </div>
 
       <!-- Ready Zone -->
-      <div
-        class="col-12 lg:col-3 drop-zone-ready p-card flex flex-column gap-3 shadow-md"
-        data-zone="Ready"
-        :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
-      >
-        <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
-        <div class="flex flex-wrap gap-2">
-          <div
-            v-for="item in dropZones.Ready"
-            :key="item.id"
-            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-            :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-            :data-id="item.id"
-            @mousedown.prevent="handleDragStart($event, item, 'Ready')"
-            @touchstart.prevent="handleDragStart($event, item, 'Ready')"
-          >
-            <!-- Add Button -->
-            <button
-              @mousedown.stop
-              @mouseup.stop="handleMouseUp"
-              @touchstart.stop="handleTouchStart"
-              @touchend.stop="handleTouchEnd(item, 'Ready')"
-              @dblclick.stop="handleDoubleClick(item, 'Ready')"
-              class="add-button"
+      <div class="flex-1 flex flex-column justify-content-center w-full gap-3">
+        <div
+          class="col-12 drop-zone-ready p-3 p-card flex flex-column gap-3 shadow-md"
+          data-zone="Ready"
+          :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
+        >
+          <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="item in dropZones.Ready"
+              :key="item.id"
+              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
+              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+              :data-id="item.id"
+              @mousedown.prevent="handleDragStart($event, item, 'Ready')"
+              @touchstart.prevent="handleDragStart($event, item, 'Ready')"
             >
-              <i class="pi pi-plus"></i>
-            </button>
+              <!-- Add Button -->
+              <button
+                @mousedown.stop
+                @mouseup.stop="handleMouseUp"
+                @touchstart.stop="handleTouchStart"
+                @touchend.stop="handleTouchEnd(item, 'Ready')"
+                @dblclick.stop="handleDoubleClick(item, 'Ready')"
+                class="add-button"
+              >
+                <i class="pi pi-plus"></i>
+              </button>
 
-            <!-- Avatar -->
-            <img :src="item.avatar" alt="Avatar" class="avatar" />
+              <!-- Avatar -->
+              <img :src="item.avatar" alt="Avatar" class="avatar" />
 
-            <!-- Title -->
-            <span class="text-center font-medium">{{ item.title }}</span>
+              <!-- Title -->
+              <span class="text-center font-medium">{{ item.title }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Break Zone -->
-      <div
-        class="col-12 lg:col-3 drop-zone-break p-card flex flex-column gap-3 shadow-md"
-        data-zone="Break"
-        :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
-      >
-        <h3 class="text-lg font-bold text-primary mb-3">Break</h3>
-        <div class="flex flex-wrap gap-2">
-          <div
-            v-for="item in dropZones.Break"
-            :key="item.id"
-            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-            :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-            :data-id="item.id"
-            @mousedown.prevent="handleDragStart($event, item, 'Break')"
-            @touchstart.prevent="handleDragStart($event, item, 'Break')"
-          >
-            <!-- Add Button -->
-            <button
-              @mousedown.stop
-              @mouseup.stop="handleMouseUp"
-              @touchstart.stop="handleTouchStart"
-              @touchend.stop="handleTouchEnd(item, 'Break')"
-              @dblclick.stop="handleDoubleClick(item, 'Break')"
-              class="add-button"
+        <!-- Break Zone -->
+        <div
+          class="col-12 drop-zone-break p-3 p-card flex flex-column gap-3 shadow-md"
+          data-zone="Break"
+          :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
+        >
+          <h3 class="text-lg font-bold text-primary mb-3">Break</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="item in dropZones.Break"
+              :key="item.id"
+              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
+              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+              :data-id="item.id"
+              @mousedown.prevent="handleDragStart($event, item, 'Break')"
+              @touchstart.prevent="handleDragStart($event, item, 'Break')"
             >
-              <i class="pi pi-plus"></i>
-            </button>
+              <!-- Add Button -->
+              <button
+                @mousedown.stop
+                @mouseup.stop="handleMouseUp"
+                @touchstart.stop="handleTouchStart"
+                @touchend.stop="handleTouchEnd(item, 'Break')"
+                @dblclick.stop="handleDoubleClick(item, 'Break')"
+                class="add-button"
+              >
+                <i class="pi pi-plus"></i>
+              </button>
 
-            <!-- Avatar -->
-            <img :src="item.avatar" alt="Avatar" class="avatar" />
+              <!-- Avatar -->
+              <img :src="item.avatar" alt="Avatar" class="avatar" />
 
-            <!-- Title -->
-            <span class="text-center font-medium">{{ item.title }}</span>
+              <!-- Title -->
+              <span class="text-center font-medium">{{ item.title }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Finish Zone -->
-      <div
-        class="col-12 lg:col-3 drop-zone-finish p-card flex flex-column gap-3 shadow-md"
-        data-zone="Finish"
-        :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
-      >
-        <h3 class="text-lg font-bold text-primary mb-3">Finish</h3>
-        <div class="flex flex-wrap gap-2">
-          <div
-            v-for="item in dropZones.Finish"
-            :key="item.id"
-            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-            :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-            :data-id="item.id"
-            @mousedown.prevent="handleDragStart($event, item, 'Finish')"
-            @touchstart.prevent="handleDragStart($event, item, 'Finish')"
-          >
-            <!-- Add Button -->
-            <button
-              @mousedown.stop
-              @mouseup.stop="handleMouseUp"
-              @touchstart.stop="handleTouchStart"
-              @touchend.stop="handleTouchEnd(item, 'Finish')"
-              @dblclick.stop="handleDoubleClick(item, 'Finish')"
-              class="add-button"
+        <!-- Finish Zone -->
+        <div
+          class="col-12 drop-zone-finish p-3 p-card flex flex-column gap-3 shadow-md"
+          data-zone="Finish"
+          :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
+        >
+          <h3 class="text-lg font-bold text-primary mb-3">Finish</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="item in dropZones.Finish"
+              :key="item.id"
+              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
+              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+              :data-id="item.id"
+              @mousedown.prevent="handleDragStart($event, item, 'Finish')"
+              @touchstart.prevent="handleDragStart($event, item, 'Finish')"
             >
-              <i class="pi pi-plus"></i>
-            </button>
+              <!-- Add Button -->
+              <button
+                @mousedown.stop
+                @mouseup.stop="handleMouseUp"
+                @touchstart.stop="handleTouchStart"
+                @touchend.stop="handleTouchEnd(item, 'Finish')"
+                @dblclick.stop="handleDoubleClick(item, 'Finish')"
+                class="add-button"
+              >
+                <i class="pi pi-plus"></i>
+              </button>
 
-            <!-- Avatar -->
-            <img :src="item.avatar" alt="Avatar" class="avatar" />
+              <!-- Avatar -->
+              <img :src="item.avatar" alt="Avatar" class="avatar" />
 
-            <!-- Title -->
-            <span class="text-center font-medium">{{ item.title }}</span>
+              <!-- Title -->
+              <span class="text-center font-medium">{{ item.title }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -252,21 +258,18 @@ dropZones.Ready = formattedData;
 .drop-zone-ready {
   border: 3px dashed var(--blue-300);
   background-color: var(--blue-50);
-  padding: 20px;
   border-radius: 10px;
 }
 
 .drop-zone-break {
   border: 3px dashed var(--yellow-300);
   background-color: var(--yellow-50);
-  padding: 20px;
   border-radius: 10px;
 }
 
 .drop-zone-finish {
   border: 3px dashed var(--purple-300);
   background-color: var(--purple-50);
-  padding: 20px;
   border-radius: 10px;
 }
 
@@ -321,7 +324,6 @@ dropZones.Ready = formattedData;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
 }
 
 .add-button:hover {
@@ -341,7 +343,6 @@ dropZones.Ready = formattedData;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
 }
 
 .subtract-button:hover {
@@ -350,8 +351,9 @@ dropZones.Ready = formattedData;
 }
 
 .drop-zone-active {
-  background-color: var(--green-50);
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--cyan-100);
+  border: 3px dashed var(--cyan-300);
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
 }
 
 .drag-feedback {

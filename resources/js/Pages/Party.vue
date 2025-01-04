@@ -433,7 +433,6 @@ const shuttlecocksInit = (game) => {
 };
 
 const shuttlecocksTotal = (game) => {
-    // console.log(game.shuttlecocks)
     return game.shuttlecocks.reduce((total, sc) => total + sc.quantity, 0);
 };
 
