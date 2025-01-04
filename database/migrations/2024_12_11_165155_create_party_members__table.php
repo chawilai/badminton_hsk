@@ -10,8 +10,8 @@ class CreatePartyMembersTable extends Migration
     {
         Schema::create('party_members', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('party_id')->constrained('parties')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('party_id');
+            $table->foreignId('user_id');
             $table->string('role')->nullable();  // Role can be 'owner', 'admin', 'member', etc., and can be null
             $table->string('status')->nullable();  // Status can be 'Host', 'Pending Confirmation', 'Cancelled', 'Waitlisted', 'Checked-in', 'No Show', 'Inviting', 'Requesting', 'Rejected', 'Accepted', 'Confirmed', etc., and can be null
             $table->string('game_status')->nullable()->default('ready');

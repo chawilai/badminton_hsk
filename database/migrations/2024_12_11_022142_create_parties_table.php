@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('parties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('creator_id')->constrained('users')->onDelete('restrict');
+            $table->foreignId('creator_id');
             $table->date('play_date');
-            $table->foreignId('court_id')->constrained('courts')->onDelete('restrict');
+            $table->foreignId('court_id');
             $table->integer('play_hours');
             $table->integer('max_players');
             $table->time('start_time');

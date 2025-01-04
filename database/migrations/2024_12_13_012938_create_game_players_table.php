@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('game_players', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('game_id')->constrained('games')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('game_id');
+            $table->foreignId('user_id');
             $table->enum('team', ['team1', 'team2']); // Indicates which team the player is on
             $table->timestamps();
         });

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('game_shuttlecocks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('game_id')->constrained('games')->onDelete('cascade');
+            $table->foreignId('game_id');
             $table->enum('type', ['initial', 'additional', 'returned']); // Type of shuttlecock request
             $table->integer('quantity'); // Positive for initial/additional, negative for returned
             $table->timestamp('request_time')->useCurrent(); // Time of request
