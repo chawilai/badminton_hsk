@@ -71,11 +71,11 @@ dropZones.Ready = formattedData;
             <span class="ml-2">Release All</span>
           </button>
         </div>
-        <div class="playing-items-grid">
+        <div class="playing-items-grid flex flex-wrap justify-content-evenly bg-green-100">
           <div
             v-for="item in dropZones.Playing"
             :key="item.id"
-            class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
             :class="{ 'hovered-item': hoveredItem?.id === item.id }"
             :data-id="item.id"
             @mousedown.prevent="handleDragStart($event, item, 'Playing')"
@@ -117,11 +117,11 @@ dropZones.Ready = formattedData;
         :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
       >
         <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-2">
           <div
             v-for="item in dropZones.Ready"
             :key="item.id"
-            class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
             :class="{ 'hovered-item': hoveredItem?.id === item.id }"
             :data-id="item.id"
             @mousedown.prevent="handleDragStart($event, item, 'Ready')"
@@ -159,11 +159,11 @@ dropZones.Ready = formattedData;
         :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
       >
         <h3 class="text-lg font-bold text-primary mb-3">Break</h3>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-2">
           <div
             v-for="item in dropZones.Break"
             :key="item.id"
-            class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
             :class="{ 'hovered-item': hoveredItem?.id === item.id }"
             :data-id="item.id"
             @mousedown.prevent="handleDragStart($event, item, 'Break')"
@@ -201,11 +201,11 @@ dropZones.Ready = formattedData;
         :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
       >
         <h3 class="text-lg font-bold text-primary mb-3">Finish</h3>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-2">
           <div
             v-for="item in dropZones.Finish"
             :key="item.id"
-            class="draggable-item flex flex-column align-items-center p-2 gap-2 bg-white"
+            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
             :class="{ 'hovered-item': hoveredItem?.id === item.id }"
             :data-id="item.id"
             @mousedown.prevent="handleDragStart($event, item, 'Finish')"
