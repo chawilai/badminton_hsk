@@ -57,6 +57,8 @@ dropZones.Ready = formattedData;
 </script>
 
 <template>
+  <Head title="Game" />
+
   <AppLayout>
     <div class="flex flex-column sm:flex-row justify-content-center gap-4">
       <!-- Playing Zone -->
@@ -115,12 +117,12 @@ dropZones.Ready = formattedData;
       <!-- Ready Zone -->
       <div class="flex-1 flex flex-column justify-content-center w-full gap-3">
         <div
-          class="col-12 drop-zone-ready p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-ready p-2 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Ready"
           :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
         >
           <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-wrap justify-content-center gap-3 sm:gap-4">
             <div
               v-for="item in dropZones.Ready"
               :key="item.id"

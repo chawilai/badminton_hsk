@@ -8,50 +8,50 @@ export function useDragDrop() {
     const dropZones = reactive({
         Playing: [], // Start empty
         Ready: [
-            {
-                id: 1,
-                title: "Item A",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item A",
-            },
-            {
-                id: 2,
-                title: "Item B",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item B",
-            },
-            {
-                id: 3,
-                title: "Item C",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item C",
-            },
-            {
-                id: 4,
-                title: "Item D",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item D",
-            },
+            // {
+            //     id: 1,
+            //     title: "Item A",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item A",
+            // },
+            // {
+            //     id: 2,
+            //     title: "Item B",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item B",
+            // },
+            // {
+            //     id: 3,
+            //     title: "Item C",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item C",
+            // },
+            // {
+            //     id: 4,
+            //     title: "Item D",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item D",
+            // },
         ],
         Break: [
-            {
-                id: 5,
-                title: "Item E",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E",
-            },
-            {
-                id: 6,
-                title: "Item F",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F",
-            },
-            {
-                id: 7,
-                title: "Item G",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G",
-            },
+            // {
+            //     id: 5,
+            //     title: "Item E",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E",
+            // },
+            // {
+            //     id: 6,
+            //     title: "Item F",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F",
+            // },
+            // {
+            //     id: 7,
+            //     title: "Item G",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G",
+            // },
         ],
         Finish: [
-            {
-                id: 8,
-                title: "Item H",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item H",
-            },
+            // {
+            //     id: 8,
+            //     title: "Item H",
+            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item H",
+            // },
         ],
     });
 

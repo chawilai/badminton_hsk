@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(1)->create();
+        User::factory(1)->create();
         $this->call(ThaiAddressSeeder::class);
         $this->call(BadmintonRanksTableSeeder::class);
 
