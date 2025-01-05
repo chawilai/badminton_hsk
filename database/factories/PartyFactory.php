@@ -71,6 +71,7 @@ class PartyFactory extends Factory
             'default_initial_shuttlecocks' => 0,
             'gender' => $this->faker->randomElement(['male', 'female', 'lgbt', null]),
             'badminton_level' => $badmintonLevel,
+            'party_start_date' => $currentDate,
             'court_booking_details' => $this->faker->sentence,
         ];
     }

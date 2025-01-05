@@ -6,28 +6,24 @@ export function useDragDrop() {
     const toast = useToast();
 
     const dropZones = reactive({
-        Playing: [], // Start empty
-        Ready: [
-            // {
-            //     id: 1,
-            //     title: "Item A",
-            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item A",
-            // },
-            // {
-            //     id: 2,
-            //     title: "Item B",
-            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item B",
-            // },
-            // {
-            //     id: 3,
-            //     title: "Item C",
-            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item C",
-            // },
-            // {
-            //     id: 4,
-            //     title: "Item D",
-            //     avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item D",
-            // },
+        Game: [], // Start empty
+        Ready: [],
+        Playing: [
+            {
+                id: 5,
+                title: "Item E",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E",
+            },
+            {
+                id: 6,
+                title: "Item F",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F",
+            },
+            {
+                id: 7,
+                title: "Item G",
+                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G",
+            },
         ],
         Break: [
             // {
@@ -119,9 +115,9 @@ export function useDragDrop() {
 
     const moveItem = (item, currentZone) => {
         const fromZone = dropZones[currentZone];
-        const playingZone = dropZones["Playing"];
+        const playingZone = dropZones["Game"];
 
-        if (currentZone === "Playing") {
+        if (currentZone === "Game") {
             // Return to original zone
             const originalZone = originalZones[item.id];
             if (originalZone) {
@@ -138,9 +134,8 @@ export function useDragDrop() {
                 });
             }
         } else {
-            // Check if the Playing drop zone has reached its limit
+            // Check if the Game drop zone has reached its limit
             if (playingZone.length >= MAX_PLAYING_ITEMS) {
-
                 toast.add({
                     severity: "error",
                     summary: "เพิ่มผู้เล่นล้มเหลว",
@@ -171,7 +166,7 @@ export function useDragDrop() {
     };
 
     const releaseAllItems = () => {
-        const playingZone = dropZones["Playing"];
+        const playingZone = dropZones["Game"];
         playingZone.forEach((item) => {
             const originalZone = originalZones[item.id];
             if (originalZone) {
@@ -179,7 +174,7 @@ export function useDragDrop() {
             }
         });
 
-        // Clear the Playing drop zone
+        // Clear the Game drop zone
         playingZone.splice(0, playingZone.length);
 
         toast.add({
@@ -405,12 +400,11 @@ export function useDragDrop() {
                 } else {
                     // Move to the new zone if not hovered over an item
 
-                    // Capacity check for Playing zone
+                    // Capacity check for Game zone
                     if (
-                        dropZoneActive.value === "Playing" &&
-                        dropZones["Playing"].length >= MAX_PLAYING_ITEMS
+                        dropZoneActive.value === "Game" &&
+                        dropZones["Game"].length >= MAX_PLAYING_ITEMS
                     ) {
-
                         toast.add({
                             severity: "error",
                             summary: "เพิ่มผู้เล่นล้มเหลว",
@@ -429,6 +423,8 @@ export function useDragDrop() {
                     // console.log(
                     //     `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
                     // );
+
+                    console.log(dropZones.Game)
 
                     toast.add({
                         severity: "info",
@@ -473,6 +469,10 @@ export function useDragDrop() {
         }
     };
 
+    const convertWaitingTimeToMinutes = (waitingTimeInSeconds) => {
+        return Math.round(waitingTimeInSeconds / 60);
+    };
+
     return {
         dropZones,
         draggedItem,
@@ -502,5 +502,6 @@ export function useDragDrop() {
         handleMouseUp,
         handleTouchStart,
         handleTouchEnd,
+        convertWaitingTimeToMinutes,
     };
 }

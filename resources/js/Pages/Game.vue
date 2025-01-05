@@ -41,19 +41,92 @@ const {
   handleMouseUp,
   handleTouchStart,
   handleTouchEnd,
+  convertWaitingTimeToMinutes,
 } = useDragDrop();
 
 const formattedData = computed(() =>
   page.props.readyPlayers.map((item) => ({
     id: item.user_id,
-    title: item.name,
+    title: shortenTitle(item.name),
     avatar: item.avatar,
     rank_title: item.badminton_rank,
     rank_level: item.badminton_level,
+    waiting_time: item.waiting_time,
+    played: item.finished_games_count,
   }))
 );
 
-dropZones.Ready = formattedData;
+const sortOrder = ref("DESC");
+
+const sortedPlayerByGamePlayed = computed(() => {
+  const players = [...formattedData.value]; // Clone to avoid modifying original array
+  return players.sort((a, b) => {
+    if (sortOrder.value === "ASC") {
+      return a.played - b.played;
+    } else {
+      return b.played - a.played;
+    }
+  });
+});
+
+// Toggle sort order and update dropZones.Ready
+const toggleSortOrder = () => {
+  sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
+  dropZones.Ready = [...sortedPlayerByGamePlayed.value]; // Ensure value is evaluated
+};
+
+const shortenTitle = (title, maxLength = 10) => {
+  if (title.length > maxLength) {
+    return `${title.slice(0, maxLength)}...`;
+  }
+  return title;
+};
+
+const startNewGame = () => {};
+
+const listNewGame = () => {
+  router.post(
+    `/games/create-list-game`,
+    {
+      party_id: 1, // Dummy party ID
+      game_type: "quadruple", // Game type: 'double' or 'quadruple'
+      players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
+      team1_start_side: "north", // Optional, defaults to 'north'
+      initial_shuttlecock_game: 1, // Optional, defaults to 0
+    },
+    {
+      preserveScroll: true,
+      headers: {
+        Accept: "application/json",
+      },
+      onSuccess: (res) => {
+        console.log(res.props);
+        // games.value = res.props.games;
+
+        toast.add({
+          severity: "success",
+          summary: "Game Created",
+          detail: "The game has been successfully created and listed.",
+          life: 3000,
+        });
+      },
+      onError: (err) => {
+        toast.add({
+          severity: "error",
+          summary: "Error",
+          detail:
+            err.response?.data?.message || "An error occurred while creating the game.",
+          life: 3000,
+        });
+      },
+    }
+  );
+};
+
+// Run toggleSortOrder on mount
+onMounted(() => {
+  toggleSortOrder();
+});
 </script>
 
 <template>
@@ -61,47 +134,60 @@ dropZones.Ready = formattedData;
 
   <AppLayout>
     <div class="flex flex-column sm:flex-row justify-content-center gap-4">
-      <!-- Playing Zone -->
+      <!-- Game Zone -->
       <div
-        class="col-12 sm:w-24rem h-30rem drop-zone-playing p-card flex flex-column gap-3 shadow-lg"
-        data-zone="Playing"
-        :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
+        class="col-12 sm:w-24rem h-30rem drop-zone-game p-card flex flex-column gap-3 shadow-lg"
+        data-zone="Game"
+        :class="{ 'drop-zone-active': dropZoneActive === 'Game' }"
       >
         <div class="flex align-items-center justify-content-between mb-3">
-          <h3 class="text-lg font-bold text-primary">Playing</h3>
-          <button
-            @click="releaseAllItems"
-            class="w-8rem p-button p-button-danger p-button-sm rounded-full"
-          >
-            <i class="pi pi-refresh"></i>
-            <span class="ml-2">Release All</span>
-          </button>
+          <h3 class="text-lg font-bold text-primary">Game</h3>
+          <div class="flex gap-1">
+            <button
+              @click="startNewGame"
+              class="p-button p-button-primary p-button-sm rounded-full"
+            >
+              <i class="pi pi-play"></i>
+            </button>
+            <button
+              @click="listNewGame"
+              class="p-button p-button-warning p-button-sm rounded-full"
+            >
+              <i class="pi pi-list"></i>
+            </button>
+            <button
+              @click="releaseAllItems"
+              class="p-button p-button-danger p-button-sm rounded-full"
+            >
+              <i class="pi pi-refresh"></i>
+            </button>
+          </div>
         </div>
         <div
-          class="playing-items-gridxx flex flex-wrap justify-content-evenly bg-green-100 w-full max-w-20rem h-20rem mx-auto p-3 gap-3 border-round-xl"
+          class="game-items-gridxx flex flex-wrap justify-content-evenly bg-green-100 w-full max-w-20rem h-20rem mx-auto p-3 gap-3 border-round-xl"
         >
           <div
-            v-for="item in dropZones.Playing"
+            v-for="item in dropZones.Game"
             :key="item.id"
             class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
             :class="{ 'hovered-item': hoveredItem?.id === item.id }"
             :data-id="item.id"
-            @mousedown.prevent="handleDragStart($event, item, 'Playing')"
-            @touchstart.prevent="handleDragStart($event, item, 'Playing')"
+            @mousedown.prevent="handleDragStart($event, item, 'Game')"
+            @touchstart.prevent="handleDragStart($event, item, 'Game')"
           >
             <!-- Subtract Button -->
             <button
               @mousedown.stop
               @mouseup.stop="handleMouseUp"
               @touchstart.stop="handleTouchStart"
-              @touchend.stop="handleTouchEnd(item, 'Playing')"
-              @dblclick.stop="handleDoubleClick(item, 'Playing')"
+              @touchend.stop="handleTouchEnd(item, 'Game')"
+              @dblclick.stop="handleDoubleClick(item, 'Game')"
               :class="{
-                'subtract-button': dropZones.Playing.includes(item),
+                'subtract-button': dropZones.Game.includes(item),
               }"
             >
               <i
-                :class="dropZones.Playing.includes(item) ? 'pi pi-minus' : 'pi pi-plus'"
+                :class="dropZones.Game.includes(item) ? 'pi pi-minus' : 'pi pi-plus'"
               ></i>
             </button>
 
@@ -110,6 +196,18 @@ dropZones.Ready = formattedData;
 
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
+            <span
+              class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+              v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+            ></span>
+            <span
+              class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+              v-text="`${item.played} เกม`"
+            ></span>
+            <span
+              class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+              v-text="`LV: ${item.rank_level}`"
+            ></span>
           </div>
         </div>
       </div>
@@ -149,6 +247,68 @@ dropZones.Ready = formattedData;
 
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
+              <span
+                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              ></span>
+              <span
+                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`${item.played} เกม`"
+              ></span>
+              <span
+                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`LV: ${item.rank_level}`"
+              ></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Playing Zone -->
+        <div
+          class="col-12 drop-zone-xxx p-3 p-card flex flex-column gap-3 shadow-md"
+          data-zone="Playing"
+          :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
+        >
+          <h3 class="text-lg font-bold text-primary mb-3">Playing</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="item in dropZones.Playing"
+              :key="item.id"
+              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
+              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+              :data-id="item.id"
+              @mousedown.prevent="handleDragStart($event, item, 'Playing')"
+              @touchstart.prevent="handleDragStart($event, item, 'Playing')"
+            >
+              <!-- Add Button -->
+              <button
+                @mousedown.stop
+                @mouseup.stop="handleMouseUp"
+                @touchstart.stop="handleTouchStart"
+                @touchend.stop="handleTouchEnd(item, 'Playing')"
+                @dblclick.stop="handleDoubleClick(item, 'Playing')"
+                class="add-button"
+              >
+                <i class="pi pi-plus"></i>
+              </button>
+
+              <!-- Avatar -->
+              <img :src="item.avatar" alt="Avatar" class="avatar" />
+
+              <!-- Title -->
+              <span class="text-center font-medium">{{ item.title }}</span>
+              <span
+                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              ></span>
+              <span
+                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`${item.played} เกม`"
+              ></span>
+              <span
+                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`LV: ${item.rank_level}`"
+              ></span>
             </div>
           </div>
         </div>
@@ -187,6 +347,18 @@ dropZones.Ready = formattedData;
 
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
+              <span
+                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              ></span>
+              <span
+                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`${item.played} เกม`"
+              ></span>
+              <span
+                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`LV: ${item.rank_level}`"
+              ></span>
             </div>
           </div>
         </div>
@@ -225,6 +397,18 @@ dropZones.Ready = formattedData;
 
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
+              <span
+                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              ></span>
+              <span
+                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`${item.played} เกม`"
+              ></span>
+              <span
+                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`LV: ${item.rank_level}`"
+              ></span>
             </div>
           </div>
         </div>
@@ -250,7 +434,7 @@ dropZones.Ready = formattedData;
 
 <style scoped>
 /* Drop Zone Styles */
-.drop-zone-playing {
+.drop-zone-game {
   border: 3px dashed var(--green-300);
   background-color: var(--green-50);
   padding: 20px;
@@ -260,6 +444,12 @@ dropZones.Ready = formattedData;
 .drop-zone-ready {
   border: 3px dashed var(--blue-300);
   background-color: var(--blue-50);
+  border-radius: 10px;
+}
+
+.drop-zone-xxx {
+  border: 3px dashed var(--teal-300);
+  background-color: var(--teal-50);
   border-radius: 10px;
 }
 
@@ -282,11 +472,11 @@ dropZones.Ready = formattedData;
   border: 2px solid var(--surface-border);
 }
 
-.playing-zone {
-  background-color: var(--surface-c); /* Different background for the playing zone */
+.game-zone {
+  background-color: var(--surface-c); /* Different background for the game zone */
 }
 
-.playing-items-grid {
+.game-items-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 columns */
   grid-template-rows: repeat(2, 1fr); /* 2 rows */

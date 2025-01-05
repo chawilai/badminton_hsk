@@ -48,9 +48,6 @@ class GameController extends Controller
             'party_id' => 'required|exists:parties,id',
             'game_type' => 'required|in:double,quadruple',
             'status' => 'required|in:setting,listing,playing,finished',
-            'game_list_date' => 'sometimes|date',
-            'game_start_date' => 'sometimes|date|after:game_list_date',
-            'game_end_date' => 'sometimes|date|after:game_start_date',
             'initial_shuttlecock_game' => 'sometimes|numeric|min:0'
         ]);
 
@@ -68,9 +65,6 @@ class GameController extends Controller
             'game_type' => $request->game_type,
             'status' => $request->status,
             'game_create_date' => now(),
-            'game_list_date' => $request->game_list_date,
-            'game_start_date' => $request->game_start_date,
-            'game_end_date' => $request->game_end_date
         ]);
 
         // Fetch default shuttlecocks from the party if not provided
@@ -313,6 +307,8 @@ class GameController extends Controller
                 ? abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game_end_date, false)))
                 : abs(round($currentDateTime->diffInSeconds($party->party_start_date, false)));
 
+            $waitingTimeReadable = $this->convertWaitingTimeToReadableFormat($waitingTime);
+
             return [
                 'user_id' => $player->user->id,
                 'party_member_id' => $player->id,
@@ -326,6 +322,7 @@ class GameController extends Controller
                 'game_status' => $player->game_status,
                 'finished_games_count' => $finishedGamesCount,
                 'waiting_time' => $waitingTime,
+                'waiting_time_readable' => $waitingTimeReadable,
             ];
         });
     }
@@ -413,6 +410,74 @@ class GameController extends Controller
 
         // return to_route('party')->with('success', 'Player added successfully to the game.');
         return back()->with('success', 'The game has been listed for play.');
+    }
+
+    public function createListGame(Request $request)
+    {
+        // Validate the request input
+        $validatedData = $request->validate([
+            'party_id' => 'required|exists:parties,id',
+            'game_type' => 'required|in:double,quadruple',
+            'players' => 'required|array|min:2',
+            'team1_start_side' => 'sometimes|in:north,south',
+            'initial_shuttlecock_game' => 'sometimes|numeric|min:0',
+        ]);
+
+        $party = Party::findOrFail($validatedData['party_id']);
+        $requiredPlayers = $validatedData['game_type'] === 'double' ? 2 : 4;
+
+        // Validate the number of players matches the game type
+        if (count($validatedData['players']) !== $requiredPlayers) {
+            return back()->with('error', 'The number of players does not match the game type requirements.');
+        }
+
+        // Check if there's already a game in the 'setting' status for this party
+        $existingGameSetting = Game::where('party_id', $validatedData['party_id'])
+            ->where('status', 'setting')
+            ->exists();
+
+        if ($existingGameSetting) {
+            return back()->with('error', 'There is already a game in the setting status for this party.');
+        }
+
+        // Create the game
+        $game = Game::create([
+            'party_id' => $validatedData['party_id'],
+            'game_type' => $validatedData['game_type'],
+            'status' => 'listing',
+            'game_create_date' => now(),
+        ]);
+
+        // Assign players to teams
+        foreach ($validatedData['players'] as $index => $playerId) {
+            $team = ($index < $requiredPlayers / 2) ? 1 : 2; // Split players into two teams
+            $game->gamePlayers()->create([
+                'user_id' => $playerId,
+                'team' => $team,
+            ]);
+        }
+
+        // Handle initial shuttlecocks
+        $initialShuttlecocks = $request->input('initial_shuttlecock_game', 0);
+        if ($initialShuttlecocks > 0) {
+            $game->shuttlecocks()->create([
+                'type' => 'initial',
+                'quantity' => $initialShuttlecocks,
+            ]);
+        }
+
+        // Determine sides for the game set
+        $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
+        $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
+
+        // Initialize the first game set
+        $game->gameSets()->create([
+            'set_number' => 1,
+            'team1_start_side' => $team1StartSide,
+            'team2_start_side' => $team2StartSide,
+        ]);
+
+        return back()->with('success', 'The game has been successfully created and listed.');
     }
 
     public function startGame(Request $request, $gameId)
@@ -606,5 +671,28 @@ class GameController extends Controller
         $game->delete();
 
         return back()->with('success', 'The game has been successfully deleted.');
+    }
+
+    public function convertWaitingTimeToReadableFormat($seconds)
+    {
+        if ($seconds < 60) {
+            return "{$seconds} seconds";
+        }
+
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+
+        if ($minutes < 60) {
+            return $remainingSeconds > 0
+                ? "{$minutes} minutes, {$remainingSeconds} seconds"
+                : "{$minutes} minutes";
+        }
+
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        return $remainingMinutes > 0
+            ? "{$hours} hours, {$remainingMinutes} minutes"
+            : "{$hours} hours";
     }
 }

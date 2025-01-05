@@ -131,6 +131,8 @@ Route::post('/games/{game}/add-shuttlecock', [GameController::class, 'addAdditio
 Route::post('/games/{game}/return-shuttlecocks', [GameController::class, 'returnShuttlecocks'])->name('games.returnShuttlecocks');
 Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
 Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
+
+Route::post('/games/create-list-game', [GameController::class, 'createListGame'])->name('createListGame');
 // game
 
 
