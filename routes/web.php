@@ -132,7 +132,7 @@ Route::post('/games/{game}/return-shuttlecocks', [GameController::class, 'return
 Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
 Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
 
-Route::post('/games/create-list-game', [GameController::class, 'createListGame'])->name('createListGame');
+Route::post('/games/create-game', [GameController::class, 'createGame'])->name('createGame');
 // game
 
 

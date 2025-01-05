@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('game_sets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('game_id');
+            $table->foreignId('game_id')->constrained('games');
             $table->integer('set_number');
             $table->string('team1_start_side')->default('north');  // Example: 'north' or 'south'
             $table->string('team2_start_side')->default('south');

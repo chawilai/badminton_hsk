@@ -28,7 +28,7 @@ return new class extends Migration
             // social
 
             // badminton profile
-            $table->foreignId('badminton_rank_id')->nullable();
+            $table->foreignId('badminton_rank_id')->nullable()->constrained('badminton_ranks');
             $table->string('gender')->nullable();  // Assuming gender is optional and stored as a string
             $table->date('date_of_birth')->nullable();  // Assuming date of birth is optional
             $table->string('player_motto')->nullable();

@@ -7,6 +7,11 @@ import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 
+import Ably from "ably";
+
+const messages = ref([]);
+const ably = new Ably.Realtime("qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo");
+
 const toast = useToast();
 const confirmPopup = useConfirm();
 
@@ -82,17 +87,59 @@ const shortenTitle = (title, maxLength = 10) => {
   return title;
 };
 
-const startNewGame = () => {};
-
-const listNewGame = () => {
-  router.post(
-    `/games/create-list-game`,
+const startNewGame = () => {
+    router.post(
+    `/games/create-game`,
     {
       party_id: 1, // Dummy party ID
       game_type: "quadruple", // Game type: 'double' or 'quadruple'
       players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
       team1_start_side: "north", // Optional, defaults to 'north'
       initial_shuttlecock_game: 1, // Optional, defaults to 0
+      process: 'playing', // listing, playing
+    },
+    {
+      preserveScroll: true,
+      headers: {
+        Accept: "application/json",
+      },
+      onSuccess: (res) => {
+        console.log(res.props);
+        // games.value = res.props.games;
+
+        dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
+        dropZones.Game = []
+
+        toast.add({
+          severity: "success",
+          summary: "Game Created",
+          detail: "The game has been successfully created and played.",
+          life: 3000,
+        });
+      },
+      onError: (err) => {
+        toast.add({
+          severity: "error",
+          summary: "Error",
+          detail:
+            err.response?.data?.message || "An error occurred while creating the game.",
+          life: 3000,
+        });
+      },
+    }
+  );
+};
+
+const listNewGame = () => {
+  router.post(
+    `/games/create-game`,
+    {
+      party_id: 1, // Dummy party ID
+      game_type: "quadruple", // Game type: 'double' or 'quadruple'
+      players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
+      team1_start_side: "north", // Optional, defaults to 'north'
+      initial_shuttlecock_game: 1, // Optional, defaults to 0
+      process: 'listing', // listing, playing
     },
     {
       preserveScroll: true,
@@ -123,9 +170,23 @@ const listNewGame = () => {
   );
 };
 
-// Run toggleSortOrder on mount
 onMounted(() => {
+
   toggleSortOrder();
+
+  const channel = ably.channels.get("get-started");
+
+  // Subscribe to messages
+  channel.subscribe("first", (message) => {
+    messages.value.push(message.data);
+  });
+
+  // Publish a message
+  channel.publish("first", "Hello from Vue!", (err) => {
+    if (err) {
+      console.error("Error publishing message:", err);
+    }
+  });
 });
 </script>
 
@@ -299,7 +360,7 @@ onMounted(() => {
               <span class="text-center font-medium">{{ item.title }}</span>
               <span
                 class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+                v-text="`กำลังเล่น`"
               ></span>
               <span
                 class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"

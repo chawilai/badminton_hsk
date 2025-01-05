@@ -8,23 +8,7 @@ export function useDragDrop() {
     const dropZones = reactive({
         Game: [], // Start empty
         Ready: [],
-        Playing: [
-            {
-                id: 5,
-                title: "Item E",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item E",
-            },
-            {
-                id: 6,
-                title: "Item F",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item F",
-            },
-            {
-                id: 7,
-                title: "Item G",
-                avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=Item G",
-            },
-        ],
+        Playing: [],
         Break: [
             // {
             //     id: 5,

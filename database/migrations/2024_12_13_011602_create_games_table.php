@@ -13,7 +13,7 @@ class CreateGamesTable extends Migration
     {
         Schema::create('games', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('party_id');
+            $table->foreignId('party_id')->constrained('parties');
             $table->enum('game_type', ['double', 'quadruple']);
             $table->enum('status', ['setting', 'listing', 'playing', 'finished']);
             $table->timestamp('game_create_date')->useCurrent();

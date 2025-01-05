@@ -60,7 +60,8 @@ class PartyFactory extends Factory
             'play_date' => $this->faker->dateTimeBetween($currentDate, $maxDate)->format('Y-m-d'),
             'court_id' => Court::inRandomOrder()->first()->id,
             'play_hours' => $playHours,
-            'max_players' => $this->faker->numberBetween(2, 50),  // Range changed as requested
+            // 'max_players' => $this->faker->numberBetween(2, 50),  // Range changed as requested
+            'max_players' => 18,  // Range changed as requested
             'start_time' => $startTime,
             'end_time' => $endTime,
             'age_range' => $ageRange,

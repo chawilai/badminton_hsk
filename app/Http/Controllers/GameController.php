@@ -207,7 +207,9 @@ class GameController extends Controller
                 abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game->game_end_date, false))) :
                 abs(round($currentDateTime->diffInSeconds($game->party->party_start_date, false)));
 
-            $gameDetails = $player->user->gamePlayers->map(function ($gamePlayer) {
+            $gameDetails = $player->user->gamePlayers->filter(function ($gamePlayer) {
+                return $gamePlayer->game !== null; // Filter out null game instances
+            })->map(function ($gamePlayer) {
                 // Group players by team within the game
                 $teamPlayers = $gamePlayer->game->gamePlayers
                     ->groupBy('team')
@@ -412,7 +414,7 @@ class GameController extends Controller
         return back()->with('success', 'The game has been listed for play.');
     }
 
-    public function createListGame(Request $request)
+    public function createGame(Request $request)
     {
         // Validate the request input
         $validatedData = $request->validate([
@@ -421,6 +423,7 @@ class GameController extends Controller
             'players' => 'required|array|min:2',
             'team1_start_side' => 'sometimes|in:north,south',
             'initial_shuttlecock_game' => 'sometimes|numeric|min:0',
+            'process' => 'required|in:listing,playing', // Accept process to set status
         ]);
 
         $party = Party::findOrFail($validatedData['party_id']);
@@ -440,15 +443,20 @@ class GameController extends Controller
             return back()->with('error', 'There is already a game in the setting status for this party.');
         }
 
+        // Set game_start_date if process is playing
+        $gameStartDate = $validatedData['process'] === 'playing' ? now() : null;
+
         // Create the game
         $game = Game::create([
             'party_id' => $validatedData['party_id'],
             'game_type' => $validatedData['game_type'],
-            'status' => 'listing',
+            'status' => $validatedData['process'], // Set the status based on process
+            'game_list_date' => now(),
+            'game_start_date' => $gameStartDate, // Add start date if process is playing
             'game_create_date' => now(),
         ]);
 
-        // Assign players to teams
+        // Assign players to the game
         foreach ($validatedData['players'] as $index => $playerId) {
             $team = ($index < $requiredPlayers / 2) ? 1 : 2; // Split players into two teams
             $game->gamePlayers()->create([
@@ -477,7 +485,7 @@ class GameController extends Controller
             'team2_start_side' => $team2StartSide,
         ]);
 
-        return back()->with('success', 'The game has been successfully created and listed.');
+        return back()->with('success', 'The game has been successfully created with the status set to ' . $validatedData['process'] . '.');
     }
 
     public function startGame(Request $request, $gameId)
