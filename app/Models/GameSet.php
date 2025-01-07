@@ -17,7 +17,10 @@ class GameSet extends Model
         'game_id',
         'set_number',
         'team1_start_side', // Assuming you've added fields for start sides as per previous discussion
-        'team2_start_side'
+        'team2_start_side',
+        'team1_score',
+        'team2_score',
+        'winning_team',
     ];
 
     /**

@@ -9,6 +9,7 @@ export function useDragDrop() {
         Game: [], // Start empty
         Ready: [],
         Playing: [],
+        Listing: [],
         Break: [
             // {
             //     id: 5,

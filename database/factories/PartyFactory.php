@@ -68,7 +68,7 @@ class PartyFactory extends Factory
             'status' => 'Open', // Default status as "Open" -> "Open", "Full", "Over"
             'is_private' => $this->faker->boolean(20), // 20% chance the party is private
             'is_inc_playing' => false, // 20% true
-            'is_break_aftergame' => $this->faker->boolean(50), // 50% chance the game_status is break after game
+            'is_break_aftergame' => $this->faker->boolean(0), // 50% chance the game_status is break after game
             'default_initial_shuttlecocks' => 0,
             'gender' => $this->faker->randomElement(['male', 'female', 'lgbt', null]),
             'badminton_level' => $badmintonLevel,

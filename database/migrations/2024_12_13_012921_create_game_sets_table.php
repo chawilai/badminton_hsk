@@ -17,6 +17,9 @@ return new class extends Migration
             $table->integer('set_number');
             $table->string('team1_start_side')->default('north');  // Example: 'north' or 'south'
             $table->string('team2_start_side')->default('south');
+            $table->integer('team1_score')->default(0)->comment('Score for Team 1');
+            $table->integer('team2_score')->default(0)->comment('Score for Team 2');
+            $table->enum('winning_team', ['team1', 'team2', null])->nullable()->comment('Winning team for this set');
             $table->timestamps();
         });
     }

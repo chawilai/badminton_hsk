@@ -703,4 +703,49 @@ class GameController extends Controller
             ? "{$hours} hours, {$remainingMinutes} minutes"
             : "{$hours} hours";
     }
+
+    /**
+     * Update or insert multiple sets for a game.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateGameSets(Request $request, $game)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'sets' => 'required|array',
+            'sets.*.set_number' => 'required|integer|min:1',
+            'sets.*.team1_start_side' => 'required|in:north,south',
+            'sets.*.team2_start_side' => 'required|in:north,south',
+            'sets.*.team1_score' => 'required|integer|min:0',
+            'sets.*.team2_score' => 'required|integer|min:0',
+            'sets.*.winning_team' => 'nullable|in:team1,team2',
+        ]);
+
+        // Process each set
+        $sets = $validated['sets'];
+
+        foreach ($sets as $set) {
+            // Update or insert the set
+            GameSet::updateOrCreate(
+                [
+                    'game_id' => $game, // Use the game ID from the route
+                    'set_number' => $set['set_number'],
+                ],
+                [
+                    'team1_start_side' => $set['team1_start_side'],
+                    'team2_start_side' => $set['team2_start_side'],
+                    'team1_score' => $set['team1_score'],
+                    'team2_score' => $set['team2_score'],
+                    'winning_team' => $set['winning_team'],
+                ]
+            );
+        }
+
+        return back()->with('response', [[
+            'message' => 'Game sets updated successfully',
+            'sets' => $sets,
+        ]]);
+    }
 }

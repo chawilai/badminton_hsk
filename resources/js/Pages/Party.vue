@@ -33,7 +33,8 @@ const game_data = reactive({
 parties.value = page.props.parties;
 games.value = page.props.games;
 
-const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null;
+const settingGame =
+    page.props.games.find((sc) => sc.status === "setting") ?? null;
 
 const visibleGameId = ref(settingGame ? settingGame.id : null);
 const game_players = ref(settingGame ? settingGame.game_players : []);
@@ -41,7 +42,22 @@ const game_players = ref(settingGame ? settingGame.game_players : []);
 const team1Side = ref(null);
 const initial_shuttlecock_party = ref(0);
 
-const thisGame = ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
+const position = ref("center");
+
+const visible = ref(false);
+const setScoreGame = ref({});
+
+const openPosition = (pos, game) => {
+    setScoreGame.value = game;
+
+    console.log(setScoreGame.value);
+
+    position.value = pos;
+    visible.value = true;
+};
+
+const thisGame =
+    ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
 
 const fetchReadyPlayer = (gameId) => {
     router.post(
@@ -512,6 +528,83 @@ const returnShuttlecock = (gameId) => {
     });
 };
 
+const isPlayerInGame = (game) => {
+    if (!game || !game.game_players) return false;
+
+    return game.game_players.some(
+        (player) => player.user_id === page.props.auth.user.id
+    );
+};
+
+const enterScore = (gameId) => {
+    confirmPopup.require({
+        target: event.target,
+        message: "Are you sure you want to update the game sets?",
+        icon: "pi pi-plus-circle",
+        accept: () => {
+            let sets = [
+                {
+                    set_number: 1,
+                    team1_start_side: "north",
+                    team2_start_side: "south",
+                    team1_score: 21,
+                    team2_score: 19,
+                    winning_team: "team1",
+                },
+                {
+                    set_number: 2,
+                    team1_start_side: "south",
+                    team2_start_side: "north",
+                    team1_score: 18,
+                    team2_score: 21,
+                    winning_team: "team2",
+                },
+            ];
+
+            router.post(
+                `/games/${gameId}/update-game-sets`, // Route to update game sets
+                { sets }, // Send the sets array as the request payload
+                {
+                    preserveScroll: true,
+                    headers: {
+                        Accept: "application/json",
+                    },
+                    onSuccess: (res) => {
+                        games.value = res.props.games; // Update the games data from the response
+
+                        console.log(res.props);
+
+                        visible.value = false;
+
+                        toast.add({
+                            severity: "success",
+                            summary: "Game Sets Updated",
+                            detail: "Game sets have been successfully updated.",
+                            life: 3000,
+                        });
+                    },
+                    onError: (err) => {
+                        toast.add({
+                            severity: "error",
+                            summary: "Error",
+                            detail: "Failed to update game sets. Please try again.",
+                            life: 3000,
+                        });
+                    },
+                }
+            );
+        },
+        reject: () => {
+            toast.add({
+                severity: "info",
+                summary: "Cancelled",
+                detail: "You cancelled updating the game sets.",
+                life: 3000,
+            });
+        },
+    });
+};
+
 // compute
 const playerSortWaiting = computed(() => {
     return Array.isArray(game_data.ready_players)
@@ -547,9 +640,9 @@ onMounted(() => {});
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
-                    <ConfirmPopup></ConfirmPopup>
+                <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
+                <ConfirmPopup></ConfirmPopup>
+                <div class="card p-fluid">
                     <button type="button" @click="createGame()">
                         Create Game
                     </button>
@@ -637,31 +730,32 @@ onMounted(() => {});
                     <button type="button" @click="addPlayer()">
                         Add Player
                     </button>
+                </div>
+                <ul v-if="$page.props.errors">
+                    <li
+                        class="text-red-600"
+                        v-for="error in $page.props.errors"
+                        v-text="error"
+                    ></li>
+                </ul>
 
-                    <ul v-if="$page.props.errors">
-                        <li
-                            class="text-red-600"
-                            v-for="error in $page.props.errors"
-                            v-text="error"
-                        ></li>
-                    </ul>
+                <ul v-if="$page.props.flash.success">
+                    <li
+                        class="text-green-600"
+                        v-for="success in $page.props.flash.success"
+                        v-text="success"
+                    ></li>
+                </ul>
 
-                    <ul v-if="$page.props.flash.success">
-                        <li
-                            class="text-green-600"
-                            v-for="success in $page.props.flash.success"
-                            v-text="success"
-                        ></li>
-                    </ul>
+                <ul v-if="$page.props.flash.info">
+                    <li
+                        class="text-blue-600"
+                        v-for="info in $page.props.flash.info"
+                        v-text="info"
+                    ></li>
+                </ul>
 
-                    <ul v-if="$page.props.flash.info">
-                        <li
-                            class="text-blue-600"
-                            v-for="info in $page.props.flash.info"
-                            v-text="info"
-                        ></li>
-                    </ul>
-
+                <div class="card p-fluid">
                     <table
                         v-if="visibleGameId"
                         class="border-1 border-gray-300 m-2"
@@ -708,8 +802,8 @@ onMounted(() => {});
                                     v-html="teamLabel(player.team)"
                                 ></td>
                                 <!-- <td class="px-3 py-2 text-center">
-                                    {{ player.user.gender }}
-                                </td> -->
+                                        {{ player.user.gender }}
+                                    </td> -->
                                 <td class="px-3 py-2 text-center">
                                     {{ player.user.badminton_rank_id }}
                                 </td>
@@ -729,7 +823,64 @@ onMounted(() => {});
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- Dialog for Set Game Score -->
+                <Dialog
+                    v-model:visible="visible"
+                    header="บันทึกผลการแข่งขัน"
+                    :style="{ width: '25rem' }"
+                    :position="position"
+                    :modal="true"
+                    :draggable="false"
+                >
+                    <div
+                        class="flex flex-column justify-content-center align-items-center gap-3"
+                    >
+                        <div>
+                            <div class="p-text-secondary mb-2">Team 1</div>
+                            <div class="flex flex-row gap-3">
+                                <img
+                                    v-for="player in setScoreGame.game_players.filter(
+                                        (item) => item.team === 'team1'
+                                    )"
+                                    :src="player.user.avatar"
+                                    class="w-4rem border-round-xl"
+                                    alt=""
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <div class="p-text-secondary mb-2">Team 2</div>
+                            <div class="flex flex-row gap-3">
+                                <img
+                                    v-for="player in setScoreGame.game_players.filter(
+                                        (item) => item.team === 'team2'
+                                    )"
+                                    :src="player.user.avatar"
+                                    class="w-4rem border-round-xl"
+                                    alt=""
+                                />
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="flex justify-content-end gap-2 mt-4">
+                        <Button
+                            type="button"
+                            label="Cancel"
+                            severity="secondary"
+                            @click="(visible = false), (setScoreGame = {})"
+                        ></Button>
+                        <Button
+                            type="button"
+                            label="Save"
+                            @click="enterScore(setScoreGame.id)"
+                        ></Button>
+                    </div>
+                </Dialog>
+                <!-- Dialog for Set Game Score -->
+
+                <div class="card p-fluid">
                     <table class="">
                         <thead>
                             <tr>
@@ -739,15 +890,15 @@ onMounted(() => {});
                                     ID
                                 </th>
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    Party ID
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        Party ID
+                                    </th> -->
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    Game Type
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        Game Type
+                                    </th> -->
                                 <th
                                     class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                 >
@@ -759,30 +910,30 @@ onMounted(() => {});
                                     Status
                                 </th>
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    List At
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        List At
+                                    </th> -->
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    Played At
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        Played At
+                                    </th> -->
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    Finished At
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        Finished At
+                                    </th> -->
                                 <th
                                     class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                 >
                                     Detail
                                 </th>
                                 <!-- <th
-                                    class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                >
-                                    Init
-                                </th> -->
+                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                    >
+                                        Init
+                                    </th> -->
                                 <th
                                     class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                 >
@@ -796,14 +947,20 @@ onMounted(() => {});
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="game in games" :key="game.id">
+                            <tr
+                                v-for="game in games"
+                                :key="game.id"
+                                :class="{
+                                    'bg-red-200': isPlayerInGame(game),
+                                }"
+                            >
                                 <td class="px-2 py-1">{{ game.id }}</td>
                                 <!-- <td class="px-2 py-1">
-                                    {{ game.party_id }}
-                                </td> -->
+                                        {{ game.party_id }}
+                                    </td> -->
                                 <!-- <td class="px-2 py-1">
-                                    {{ game.game_type }}
-                                </td> -->
+                                        {{ game.game_type }}
+                                    </td> -->
                                 <td class="px-2 py-1 relative">
                                     <div
                                         class="flex flex-row align-items-center justify-content-center gap-1 z-0"
@@ -828,22 +985,22 @@ onMounted(() => {});
                                     v-html="gameStatus(game.status)"
                                 ></td>
                                 <!-- <td class="px-2 py-1">
-                                    {{ showTime(game.game_list_date) }}
-                                </td> -->
+                                        {{ showTime(game.game_list_date) }}
+                                    </td> -->
                                 <!-- <td class="px-2 py-1">
-                                    {{ showTime(game.game_start_date) }}
-                                </td> -->
+                                        {{ showTime(game.game_start_date) }}
+                                    </td> -->
                                 <!-- <td class="px-2 py-1">
-                                    {{ showTime(game.game_end_date) }}
-                                </td> -->
+                                        {{ showTime(game.game_end_date) }}
+                                    </td> -->
                                 <td class="px-2 py-1">
                                     <button @click="togglePlayers(game.id)">
                                         Show
                                     </button>
                                 </td>
                                 <!-- <td class="px-2 py-1">
-                                    {{ shuttlecocksInit(game) }}
-                                </td> -->
+                                        {{ shuttlecocksInit(game) }}
+                                    </td> -->
                                 <td class="px-2 py-1 relative text-center">
                                     {{ shuttlecocksTotal(game) }}
 
@@ -863,7 +1020,6 @@ onMounted(() => {});
                                     </button>
                                 </td>
                                 <td class="px-2 py-1 text-center">
-                                    <ConfirmPopup></ConfirmPopup>
                                     <button
                                         class="cursor-pointer ml-1 bg-purple-400 text-white border-1 border-purple-600 border-round-sm"
                                         v-show="game.status === 'setting'"
@@ -904,10 +1060,129 @@ onMounted(() => {});
                                             )
                                         }}
                                     </div>
+                                    <div
+                                        v-show="
+                                            game.status === 'finished' &&
+                                            isPlayerInGame(game)
+                                        "
+                                    >
+                                        <Button
+                                            @click="
+                                                openPosition('center', game)
+                                            "
+                                            icon="pi pi-bookmark"
+                                            severity="blue"
+                                            rounded
+                                            class="mb-2 mr-2"
+                                        />
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col-12 md:col-5 xl:col-3">
+                <div class="card">
+                    <div class="text-900 text-xl font-semibold mb-3">
+                        Account Storage
+                    </div>
+                    <div
+                        class="flex flex-row justify-content-center"
+                        style="height: 200px"
+                    >
+                        <!-- <Chart type="doughnut" :plugins="chartPlugins" :data="chartData" :options="chartOptions"></Chart> -->
+                    </div>
+                    <div class="mt-5 flex gap-3">
+                        <Button
+                            icon="pi pi-search"
+                            class="flex-1"
+                            label="Details"
+                            outlined
+                        ></Button>
+                        <Button
+                            icon="pi pi-upload"
+                            class="flex-1"
+                            label="Upgrade"
+                        ></Button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="text-900 text-xl font-semibold mb-3">
+                        Categories
+                    </div>
+                    <ul class="list-none p-0 m-0">
+                        <li
+                            class="p-3 mb-3 flex align-items-center justify-content-between cursor-pointer border-round bg-indigo-50 text-indigo-900"
+                        >
+                            <div class="flex align-items-center">
+                                <i class="pi pi-image text-2xl mr-3"></i>
+                                <span class="ext-lg font-medium">Images</span>
+                            </div>
+                            <span class="text-lg font-bold">85</span>
+                        </li>
+                        <li
+                            class="p-3 mb-3 flex align-items-center justify-content-between cursor-pointer border-round bg-purple-50 text-purple-900"
+                        >
+                            <div class="flex align-items-center">
+                                <i class="pi pi-file text-2xl mr-3"></i>
+                                <span class="ext-lg font-medium"
+                                    >Documents</span
+                                >
+                            </div>
+                            <span class="text-lg font-bold">231</span>
+                        </li>
+                        <li
+                            class="p-3 flex align-items-center justify-content-between cursor-pointer border-round bg-teal-50 text-teal-900"
+                        >
+                            <div class="flex align-items-center">
+                                <i class="pi pi-video text-2xl mr-3"></i>
+                                <span class="ext-lg font-medium">Videos</span>
+                            </div>
+                            <span class="text-lg font-bold">40</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card p-0">
+                    <div class="card"></div>
+                </div>
+            </div>
+            <div class="col-12 md:col-7 xl:col-9">
+                <div class="card">
+                    <div class="text-900 text-xl font-semibold mb-3">
+                        Folders
+                    </div>
+                    <div class="grid"></div>
+                </div>
+                <div class="card">
+                    <div class="text-900 text-xl font-semibold mb-3">
+                        Recent Uploads
+                    </div>
+                    <!-- <DataTable :value="files" dataKey="id" paginator :rows="8">
+                        <Column field="name" header="Name" sortable :headerStyle="{ minWidth: '12rem' }">
+                            <template #body="{ data }">
+                                <div class="flex align-items-center">
+                                    <i class="text-xl text-primary mr-2" :class="data.icon"></i>
+                                    <span>{{ data.name }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="date" header="Date" headerClass="white-space-nowrap" :headerStyle="{ minWidth: '12rem' }"> </Column>
+                        <Column field="fileSize" header="File Size" sortable :headerStyle="{ minWidth: '12rem' }"></Column>
+                        <Column class="w-10rem">
+                            <template #body>
+                                <div class="text-center">
+                                    <Button icon="pi pi-times" class="mr-2" severity="danger" text rounded></Button>
+                                    <Button icon="pi pi-search" text rounded></Button>
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable> -->
                 </div>
             </div>
         </div>

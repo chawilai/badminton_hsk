@@ -7,15 +7,28 @@ import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 
-import Ably from "ably";
+// import Ably from "ably";
+// import Echo from 'laravel-echo';
+
+// window.Echo = new Echo({
+//     broadcaster: 'pusher',
+//     key: 'qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo',
+//     wsHost: 'realtime.ably.io',
+//     wsPort: 443,
+//     wssPort: 443,
+//     forceTLS: true,
+//     disableStats: true,
+// });
 
 const messages = ref([]);
-const ably = new Ably.Realtime("qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo");
+// const ably = new Ably.Realtime("qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo");
 
 const toast = useToast();
 const confirmPopup = useConfirm();
 
 const page = usePage();
+
+console.log(page.props)
 
 const {
   dropZones,
@@ -105,7 +118,6 @@ const startNewGame = () => {
       },
       onSuccess: (res) => {
         console.log(res.props);
-        // games.value = res.props.games;
 
         dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
         dropZones.Game = []
@@ -150,6 +162,9 @@ const listNewGame = () => {
         console.log(res.props);
         // games.value = res.props.games;
 
+        dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
+        dropZones.Game = []
+
         toast.add({
           severity: "success",
           summary: "Game Created",
@@ -174,19 +189,19 @@ onMounted(() => {
 
   toggleSortOrder();
 
-  const channel = ably.channels.get("get-started");
+//   const channel = ably.channels.get("get-started");
 
-  // Subscribe to messages
-  channel.subscribe("first", (message) => {
-    messages.value.push(message.data);
-  });
+//   // Subscribe to messages
+//   channel.subscribe("first", (message) => {
+//     messages.value.push(message.data);
+//   });
 
-  // Publish a message
-  channel.publish("first", "Hello from Vue!", (err) => {
-    if (err) {
-      console.error("Error publishing message:", err);
-    }
-  });
+//   // Publish a message
+//   channel.publish("first", "Hello from Vue!", (err) => {
+//     if (err) {
+//       console.error("Error publishing message:", err);
+//     }
+//   });
 });
 </script>
 
@@ -374,6 +389,56 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- Listing Zone -->
+        <div
+          class="col-12 drop-zone-listing p-3 p-card flex flex-column gap-3 shadow-md"
+          data-zone="Listing"
+          :class="{ 'drop-zone-active': dropZoneActive === 'Listing' }"
+        >
+          <h3 class="text-lg font-bold text-primary mb-3">Listing</h3>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="item in dropZones.Listing"
+              :key="item.id"
+              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
+              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
+              :data-id="item.id"
+              @mousedown.prevent="handleDragStart($event, item, 'Listing')"
+              @touchstart.prevent="handleDragStart($event, item, 'Listing')"
+            >
+              <!-- Add Button -->
+              <button
+                @mousedown.stop
+                @mouseup.stop="handleMouseUp"
+                @touchstart.stop="handleTouchStart"
+                @touchend.stop="handleTouchEnd(item, 'Listing')"
+                @dblclick.stop="handleDoubleClick(item, 'Listing')"
+                class="add-button"
+              >
+                <i class="pi pi-plus"></i>
+              </button>
+
+              <!-- Avatar -->
+              <img :src="item.avatar" alt="Avatar" class="avatar" />
+
+              <!-- Title -->
+              <span class="text-center font-medium">{{ item.title }}</span>
+              <span
+                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
+                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              ></span>
+              <span
+                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`${item.played} เกม`"
+              ></span>
+              <span
+                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
+                v-text="`LV: ${item.rank_level}`"
+              ></span>
+            </div>
+          </div>
+        </div>
+
         <!-- Break Zone -->
         <div
           class="col-12 drop-zone-break p-3 p-card flex flex-column gap-3 shadow-md"
@@ -511,6 +576,12 @@ onMounted(() => {
 .drop-zone-xxx {
   border: 3px dashed var(--teal-300);
   background-color: var(--teal-50);
+  border-radius: 10px;
+}
+
+.drop-zone-listing {
+  border: 3px dashed var(--pink-300);
+  background-color: var(--pink-50);
   border-radius: 10px;
 }
 
