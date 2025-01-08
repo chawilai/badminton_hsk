@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-$user = User::findOrFail(2);
-Auth::login($user);
+// $user = User::findOrFail(2);
+// Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
