@@ -17,8 +17,8 @@ export default {
         extend: {
             fontFamily: {
                 sans: [
-                    "DM Sans",
                     "Prompt",
+                    "DM Sans",
                     "Figtree",
                     "Source Code Pro",
                     ...defaultTheme.fontFamily.sans,

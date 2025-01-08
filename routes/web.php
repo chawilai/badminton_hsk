@@ -12,10 +12,14 @@ use App\Models\Party;
 use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+$user = User::findOrFail(2);
+Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
