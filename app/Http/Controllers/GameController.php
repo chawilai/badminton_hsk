@@ -19,9 +19,13 @@ class GameController extends Controller
 
     public function index(Request $request)
     {
-        $games = Game::with(['gamePlayers.user', 'shuttlecocks']) // Added 'shuttlecocks' to the eager loading array
-            ->withCount('gamePlayers') // Continue counting the number of game players
-            ->orderBy('id', 'desc') // Keep the order by id in descending order
+        $games = Game::with([
+            'gamePlayers.user',
+            'shuttlecocks',
+            'gameSets'
+        ])
+            ->withCount('gamePlayers')
+            ->orderBy('id', 'desc')
             ->get();
 
         $parties = Party::withCount('members')->get();
@@ -57,7 +61,7 @@ class GameController extends Controller
             ->exists();
 
         if ($existingGameSetting) {
-            return back()->with('error', 'There is already a game in the setting status for this party.');
+            return back()->with('error', ['existSettingGame' => 'There is already a game in the setting status for this party.']);
         }
 
         $game = Game::create([
@@ -113,7 +117,7 @@ class GameController extends Controller
 
         // Check if the game is in the 'setting' state
         if ($game->status !== 'setting') {
-            return back()->with('error', 'Players can only be added when the game is setting.');
+            return back()->with('error', ['onlyOnSetting' => 'Players can only be added when the game is setting.']);
         }
 
         // Define the maximum players allowed for each team based on the game type
@@ -341,7 +345,7 @@ class GameController extends Controller
 
         // Allow removal only if the game is in the 'setting' or 'listing' state
         if (!in_array($game->status, ['setting', 'listing'])) {
-            return back()->with('error', 'Players can only be removed when the game is in the setting or listing state.');
+            return back()->with('error', ['onlyOnSettingOrListing' => 'Players can only be removed when the game is in the setting or listing state.']);
         }
 
         // Retrieve the player to be removed
@@ -350,7 +354,7 @@ class GameController extends Controller
             ->first();
 
         if (!$gamePlayer) {
-            return back()->with('error', 'Player not found in the specified game.');
+            return back()->with('error', ['noPlayerFound' => 'Player not found in the specified game.']);
         }
 
         // Remove the player from the game
@@ -383,12 +387,12 @@ class GameController extends Controller
 
         // Check if the game has enough players
         if ($game->gamePlayers->count() < $requiredTotalPlayers) {
-            return back()->with('error', 'Cannot list the game: not enough players.');
+            return back()->with('error', ['notEnoughPlayers' => 'Cannot list the game: not enough players.']);
         }
 
         // Check if the game is already in progress or has started
         if ($game->status !== 'setting') {
-            return back()->with('error', 'Game is not in a setting state to list');
+            return back()->with('error', ['notInSetting' => 'Game is not in a setting state to list']);
         }
 
         // Determine sides based on input or default values
@@ -410,7 +414,6 @@ class GameController extends Controller
             'team2_start_side' => $team2StartSide,
         ]);
 
-        // return to_route('party')->with('success', 'Player added successfully to the game.');
         return back()->with('success', 'The game has been listed for play.');
     }
 
@@ -431,7 +434,7 @@ class GameController extends Controller
 
         // Validate the number of players matches the game type
         if (count($validatedData['players']) !== $requiredPlayers) {
-            return back()->with('error', 'The number of players does not match the game type requirements.');
+            return back()->with('error', ['notMatchType' => 'The number of players does not match the game type requirements.']);
         }
 
         // Check if there's already a game in the 'setting' status for this party
@@ -440,7 +443,7 @@ class GameController extends Controller
             ->exists();
 
         if ($existingGameSetting) {
-            return back()->with('error', 'There is already a game in the setting status for this party.');
+            return back()->with('error', ['existSettingGame' => 'There is already a game in the setting status for this party.']);
         }
 
         // Set game_start_date if process is playing
@@ -495,7 +498,7 @@ class GameController extends Controller
 
         // Check if the game is already in progress or has started
         if ($game->status !== 'listing') {
-            return back()->with('error', 'Game is not in a state listing to start');
+            return back()->with('error', ['notInListing' => 'Game is not in a state listing to start']);
         }
 
         // Check if any player is currently playing in another game within the same party
@@ -509,7 +512,7 @@ class GameController extends Controller
             ->count();
 
         if ($activeGamesCount > 0) {
-            return back()->with('error', 'One or more players are currently playing in another game within the same party.');
+            return back()->with('error', ['playerPlaying' => 'One or more players are currently playing in another game within the same party.']);
         }
 
         // Start the game
@@ -525,7 +528,7 @@ class GameController extends Controller
         $game = Game::with('gamePlayers')->findOrFail($gameId);
 
         if ($game->status !== 'playing') {
-            return back()->with('error', 'Game is not in a state that can be finished');
+            return back()->with('error', ['notInPlaying' => 'Game is not in a state that can be finished']);
         }
 
         $game->status = 'finished';
@@ -563,7 +566,7 @@ class GameController extends Controller
 
         // Check if the game is in the 'setting' state
         if ($game->status !== 'setting') {
-            return back()->with('error', 'Players can only be added when the game is setting.');
+            return back()->with('error', ['notInSetting' => 'Players can only be added when the game is setting.']);
         }
 
         // Determine the maximum players per team based on the game type
@@ -572,7 +575,7 @@ class GameController extends Controller
 
         // Initial check to see if the game is already full
         if ($game->gamePlayers()->count() >= $totalMaxPlayers) {
-            return back()->with('error', 'The game is already full and cannot accept more players.');
+            return back()->with('error', ['gameIsFull' => 'The game is already full and cannot accept more players.']);
         }
 
         // Retrieve all ready party members
@@ -638,7 +641,7 @@ class GameController extends Controller
 
         // Check if the game is finished
         // if ($game->status === 'finished') {
-        //     return back()->with('error', 'Cannot add shuttlecocks to a finished game');
+        //     return back()->with('error', ['finishedGame' => 'Cannot add shuttlecocks to a finished game']);
         // }
 
         $quantity = $request->input('quantity', 1);
@@ -659,7 +662,7 @@ class GameController extends Controller
 
         // Check if the return would result in a negative total
         if ($currentTotalShuttlecocks - $quantity < 0) {
-            return back()->with('error', 'Cannot return shuttlecocks. Total would be below zero.');
+            return back()->with('error', ['shuttlecocksIsZero' => 'Cannot return shuttlecocks. Total would be below zero.']);
         }
 
         $game->shuttlecocks()->create([
@@ -672,7 +675,7 @@ class GameController extends Controller
     {
         // Check if the game status is 'setting' or 'listing'
         if (!in_array($game->status, ['setting', 'listing'])) {
-            return back()->with('error', 'The game can only be deleted when its status is "setting" or "listing".');
+            return back()->with('error', ['onlyOnSettingOrListing' => 'The game can only be deleted when its status is "setting" or "listing".']);
         }
 
         // Delete the game
@@ -726,11 +729,17 @@ class GameController extends Controller
         // Process each set
         $sets = $validated['sets'];
 
+        // Retrieve existing sets for this game
+        $existingSets = GameSet::where('game_id', $game)->get();
+
+        // Track set numbers sent in the request
+        $sentSetNumbers = collect($sets)->pluck('set_number');
+
+
         foreach ($sets as $set) {
-            // Update or insert the set
             GameSet::updateOrCreate(
                 [
-                    'game_id' => $game, // Use the game ID from the route
+                    'game_id' => $game,
                     'set_number' => $set['set_number'],
                 ],
                 [
@@ -743,9 +752,14 @@ class GameController extends Controller
             );
         }
 
-        return back()->with('response', [[
+        // Delete any sets that are not in the sent set numbers
+        $existingSets
+            ->filter(fn($existingSet) => !$sentSetNumbers->contains($existingSet->set_number))
+            ->each(fn($set) => $set->delete());
+
+        return back()->with('response', [
             'message' => 'Game sets updated successfully',
             'sets' => $sets,
-        ]]);
+        ]);
     }
 }

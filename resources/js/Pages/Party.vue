@@ -144,27 +144,27 @@ watch(
 
 const getTeamBackground = (index, team) => {
   const set = sets.value[index];
-  if (!set) return 'bg-green-100';
+  if (!set) return "bg-green-100";
 
-  if (team === 'team1' && set.team1_score > set.team2_score) {
-    return 'bg-gold'; // Gold background for Team 1 win
+  if (team === "team1" && set.team1_score > set.team2_score) {
+    return "bg-gold"; // Gold background for Team 1 win
   }
 
-  if (team === 'team2' && set.team2_score > set.team1_score) {
-    return 'bg-gold'; // Default green for Team 1
+  if (team === "team2" && set.team2_score > set.team1_score) {
+    return "bg-gold"; // Default green for Team 1
   }
-  return 'bg-green-100'; // Default green
+  return "bg-green-100"; // Default green
 };
 
 const showCrown = (index, team) => {
   const set = sets.value[index];
   if (!set) return false; // Prevent errors if index is out of bounds
 
-  if (team === 'team1' && set.team1_score > set.team2_score) {
+  if (team === "team1" && set.team1_score > set.team2_score) {
     return true; // Show crown for Team 1
   }
 
-  if (team === 'team2' && set.team2_score > set.team1_score) {
+  if (team === "team2" && set.team2_score > set.team1_score) {
     return true; // Show crown for Team 2
   }
 
@@ -195,6 +195,14 @@ const addNewSet = (overrides = {}) => {
   sets.value.push(newSet);
 };
 
+const removeNewSet = () => {
+  if (sets.value.length > 1) {
+    sets.value.pop(); // Remove the last set
+  } else {
+    console.error("Cannot remove the last set. At least one set must remain.");
+  }
+};
+
 const onChooseUploadFiles = () => {
   fileUploaderRef.value.choose();
 };
@@ -221,7 +229,7 @@ const toggleColor = (color) => {
 const openPosition = (pos, game) => {
   setScoreGame.value = game;
 
-  console.log(setScoreGame.value);
+  sets.value = game.game_sets;
 
   position.value = pos;
   visible.value = true;
@@ -271,6 +279,26 @@ const addPlayer = () => {
 
         thisGame.value = games.value.find((sc) => sc.id == game_data.game_id);
         game_players.value = thisGame.value.game_players;
+
+        if (res.props.flash.success && res.props.flash.success.length > 0) {
+          toast.add({
+            severity: "success",
+            summary: "สำเร็จ",
+            detail: `เพิ่มผู้เล่นในเกมแล้ว`,
+            life: 3000,
+          });
+        }
+      },
+      onError: (err) => {
+        console.log(err);
+        if (err.onlyOnSetting) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "เพิ่มผู้เล่นระหว่างตั้งค่าเกมเท่านั้น",
+            life: 3000,
+          });
+        }
       },
     });
   }
@@ -293,6 +321,33 @@ const autoAddPlayers = (gameId) => {
 
         thisGame.value = games.value.find((sc) => sc.id == gameId);
         game_players.value = thisGame.value.game_players;
+
+        if (res.props.flash.success && res.props.flash.success.length > 0) {
+          toast.add({
+            severity: "success",
+            summary: "จัดผู้เล่น",
+            detail: `ระบบได้จัดผู้เล่นที่เหมาะสมลงเกมแล้ว โปรดปรับเปลี่ยน`,
+            life: 3000,
+          });
+        }
+      },
+      onError: (err) => {
+        if (err.notInSetting) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "เกมนี้ไม่ได้อยู่ในสถานะตั้งค่า",
+            life: 3000,
+          });
+        }
+        if (err.gameIsFull) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "มีผู้เล่นในเกมนี้ครบจำนวนแล้ว",
+            life: 3000,
+          });
+        }
       },
     }
   );
@@ -364,12 +419,32 @@ const listGame = (gameId, event) => {
               thisGame.value = games.value.find((sc) => sc.id == gameId);
               game_players.value = thisGame.value.game_players;
 
-              toast.add({
-                severity: "success",
-                summary: "Confirmed",
-                detail: "The game is listed to the game board",
-                life: 3000,
-              });
+              if (res.props.flash.success && res.props.flash.success.length > 0) {
+                toast.add({
+                  severity: "success",
+                  summary: "สำเร็จ",
+                  detail: `ลีสเกมลงรายการรอเล่นแล้ว`,
+                  life: 3000,
+                });
+              }
+            },
+            onError: (err) => {
+              if (err.notEnoughPlayers) {
+                toast.add({
+                  severity: "error",
+                  summary: "ล้มเหลว",
+                  detail: "มีผู้เล่นในเกมไม่ครบจำนวน",
+                  life: 3000,
+                });
+              }
+              if (err.notInSetting) {
+                toast.add({
+                  severity: "error",
+                  summary: "ล้มเหลว",
+                  detail: "ลีสเกมได้เฉพาะเกมที่อยู่ในสถานะตั้งค่า",
+                  life: 3000,
+                });
+              }
             },
           }
         );
@@ -405,12 +480,32 @@ const createGame = () => {
       thisGame.value = games.value.find((sc) => sc.id == newGame.id);
       game_players.value = thisGame.value.game_players;
 
-      toast.add({
-        severity: "success",
-        summary: "Confirmed",
-        detail: "The game is created.",
-        life: 3000,
-      });
+      if (res.props.flash.success && res.props.flash.success.length > 0) {
+        toast.add({
+          severity: "success",
+          summary: "สำเร็จ",
+          detail: `สร้างเกมแล้วโปรดตั้งค่าเกม`,
+          life: 3000,
+        });
+      }
+    },
+    onError: (err) => {
+      if (err.notMatchType) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
+          life: 3000,
+        });
+      }
+      if (err.existSettingGame) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
+          life: 3000,
+        });
+      }
     },
   });
 };
@@ -436,12 +531,32 @@ const startGame = (gameId) => {
             thisGame.value = games.value.find((sc) => sc.id == gameId);
             game_players.value = thisGame.value.game_players;
 
-            toast.add({
-              severity: "success",
-              summary: "Confirmed",
-              detail: "The game is started.",
-              life: 3000,
-            });
+            if (res.props.flash.success && res.props.flash.success.length > 0) {
+              toast.add({
+                severity: "success",
+                summary: "สำเร็จ",
+                detail: `เกมเริ่มต้นแล้ว`,
+                life: 3000,
+              });
+            }
+          },
+          onError: (err) => {
+            if (err.notInListing) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "เริ่มเกมได้เฉพาะเกมที่มีสถานะลีสรายการ",
+                life: 3000,
+              });
+            }
+            if (err.playerPlaying) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "มีผู้เล่นบางคนกำลังเล่นในเกมอื่นอยู่ โปรดจบเกมนั้นก่อน",
+                life: 3000,
+              });
+            }
           },
         }
       );
@@ -478,12 +593,24 @@ const finishGame = (gameId) => {
             thisGame.value = games.value.find((sc) => sc.id == gameId);
             game_players.value = thisGame.value.game_players;
 
-            toast.add({
-              severity: "success",
-              summary: "Confirmed",
-              detail: "The game is finished.",
-              life: 3000,
-            });
+            if (res.props.flash.success && res.props.flash.success.length > 0) {
+              toast.add({
+                severity: "success",
+                summary: "จบเกม",
+                detail: `จบเกมเรียบร้อยแล้ว`,
+                life: 3000,
+              });
+            }
+          },
+          onError: (err) => {
+            if (err.notInPlaying) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "เกมต้องกำลังเล่นจึงกดจบเกมได้",
+                life: 3000,
+              });
+            }
           },
         }
       );
@@ -517,12 +644,24 @@ const deleteGame = (gameId) => {
             game_data.game_id = "";
             games.value = res.props.games;
 
-            toast.add({
-              severity: "success",
-              summary: "Confirmed",
-              detail: "The game is deleted.",
-              life: 3000,
-            });
+            if (res.props.flash.success && res.props.flash.success.length > 0) {
+              toast.add({
+                severity: "warn",
+                summary: "ลบเกม",
+                detail: `ลบเกมเรียบร้อยแล้ว`,
+                life: 3000,
+              });
+            }
+          },
+          onError: (err) => {
+            if (err.onlyOnSettingOrListing) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "ลบเกมได้เฉพาะขณะตั้งค่าหรือลีสเกมเท่านั้น",
+                life: 3000,
+              });
+            }
           },
         }
       );
@@ -553,6 +692,33 @@ const deletePlayer = (gameId, playerId) => {
         fetchReadyPlayer(gameId);
         thisGame.value = games.value.find((sc) => sc.id == gameId);
         game_players.value = thisGame.value.game_players;
+
+        if (res.props.flash.success && res.props.flash.success.length > 0) {
+          toast.add({
+            severity: "warn",
+            summary: "สำเร็จ",
+            detail: `ลบผู้เล่นในเกมแล้ว`,
+            life: 3000,
+          });
+        }
+      },
+      onError: (err) => {
+        if (err.onlyOnSettingOrListing) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "ลบได้ระหว่างตั้งค่าหรือลีสเกมก่อนเล่นเท่านั้น",
+            life: 3000,
+          });
+        }
+        if (err.noPlayerFound) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "ไม่พบผู้เล่นดังกล่าวในเกมนี้",
+            life: 3000,
+          });
+        }
       },
     }
   );
@@ -588,6 +754,17 @@ const addPartyInitShuttleCock = (partyId) => {
       onSuccess: (res) => {
         parties.value = res.props.parties;
         data.initial_shuttlecock_game = initial_shuttlecock_party.value;
+
+        if (res.props.flash.info && res.props.flash.info.length > 0) {
+          toast.add({
+            severity: "info",
+            summary: "ค่าคงเดิม",
+            detail: `จำนวนลูกขนไก่ตั้งต้น คงเดิม (${initial_shuttlecock_party.value})`,
+            life: 3000,
+          });
+        }
+
+        console.log(res.props.flash);
       },
     }
   );
@@ -633,6 +810,16 @@ const addShuttlecock = (gameId) => {
               life: 3000,
             });
           },
+          onError: (err) => {
+            if (err.finishedGame) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "ไม่สามารถเพิ่มลูกขนไก่ได้หลังจบเกม",
+                life: 3000,
+              });
+            }
+          },
         }
       );
     },
@@ -670,6 +857,16 @@ const returnShuttlecock = (gameId) => {
               detail: "1 shuttlecock has been returned",
               life: 3000,
             });
+          },
+          onError: (err) => {
+            if (err.shuttlecocksIsZero) {
+              toast.add({
+                severity: "error",
+                summary: "ล้มเหลว",
+                detail: "จำนวนลูกขนไก่เป็นศูนย์แล้ว",
+                life: 3000,
+              });
+            }
           },
         }
       );
@@ -715,9 +912,18 @@ const enterScore = (gameId) => {
           onSuccess: (res) => {
             games.value = res.props.games; // Update the games data from the response
 
-            console.log(res.props);
-
             visible.value = false;
+
+            sets.value = [
+              {
+                set_number: 1,
+                team1_start_side: "north",
+                team2_start_side: "south",
+                team1_score: 0,
+                team2_score: 0,
+                winning_team: null,
+              },
+            ];
 
             toast.add({
               severity: "success",
@@ -855,29 +1061,29 @@ onMounted(() => {
           </select>
           <button type="button" @click="addPlayer()">Add Player</button>
         </div>
-        <ul v-if="$page.props.errors">
-          <li
-            class="text-red-600"
-            v-for="error in $page.props.errors"
-            v-text="error"
-          ></li>
-        </ul>
+        <!-- <ul v-if="$page.props.errors">
+            <li
+                class="text-red-600"
+                v-for="error in $page.props.errors"
+                v-text="error"
+            ></li>
+        </ul> -->
 
-        <ul v-if="$page.props.flash.success">
+        <!-- <ul v-if="$page.props.flash.success">
           <li
             class="text-green-600"
             v-for="success in $page.props.flash.success"
             v-text="success"
           ></li>
-        </ul>
+        </ul> -->
 
-        <ul v-if="$page.props.flash.info">
+        <!-- <ul v-if="$page.props.flash.info">
           <li
             class="text-blue-600"
             v-for="info in $page.props.flash.info"
             v-text="info"
           ></li>
-        </ul>
+        </ul> -->
 
         <div class="card p-fluid">
           <table v-if="visibleGameId" class="border-1 border-gray-300 m-2">
@@ -952,8 +1158,19 @@ onMounted(() => {
             </div>
             <div class="flex flex-row justify-content-center align-items-center">
               <!-- Team 1 Section -->
-              <div :class="['p-3 border-round-xl relative', getTeamBackground(index, 'team1')]">
-                <img v-show="showCrown(index, 'team1')" :src="crown" class="w-4rem h-4rem absolute -rotate-45" style="top:-25px; left:-10px" alt="">
+              <div
+                :class="[
+                  'p-3 border-round-xl relative',
+                  getTeamBackground(index, 'team1'),
+                ]"
+              >
+                <img
+                  v-show="showCrown(index, 'team1')"
+                  :src="crown"
+                  class="w-4rem h-4rem absolute -rotate-45"
+                  style="top: -25px; left: -10px"
+                  alt=""
+                />
                 <div class="p-text-secondary mb-2 text-center font-bold text-md">
                   Team 1
                 </div>
@@ -1010,8 +1227,19 @@ onMounted(() => {
               <Divider layout="vertical" />
 
               <!-- Team 2 Section -->
-              <div :class="['p-3 border-round-xl relative', getTeamBackground(index, 'team2')]">
-                <img v-show="showCrown(index, 'team2')" :src="crown" class="w-4rem h-4rem absolute rotate-45" style="top:-25px; right:-10px" alt="">
+              <div
+                :class="[
+                  'p-3 border-round-xl relative',
+                  getTeamBackground(index, 'team2'),
+                ]"
+              >
+                <img
+                  v-show="showCrown(index, 'team2')"
+                  :src="crown"
+                  class="w-4rem h-4rem absolute rotate-45"
+                  style="top: -25px; right: -10px"
+                  alt=""
+                />
                 <div class="p-text-secondary mb-2 text-center font-bold text-md">
                   Team 2
                 </div>
@@ -1067,13 +1295,23 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="flex justify-content-center">
+          <div class="flex align-items-center justify-content-center gap-2">
             <Button
               rounded
               type="button"
-              label="เพิ่ม Set"
+              :label="`เพิ่ม Set ${sets.length + 1}`"
               severity="warning"
               @click="addNewSet"
+            ></Button>
+            <Button
+              v-show="sets.length > 1"
+              class="w-5rem h-2rem"
+              style="font-size: 0.8rem"
+              rounded
+              type="button"
+              label="ลบ Set"
+              severity="danger"
+              @click="removeNewSet"
             ></Button>
           </div>
 
@@ -1796,6 +2034,6 @@ onMounted(() => {
 }
 
 .bg-gold {
-    background-color: gold;
-  }
+  background-color: gold;
+}
 </style>

@@ -11,9 +11,13 @@ class PartyController extends Controller
 {
     public function index(Request $request)
     {
-        $games = Game::with(['gamePlayers.user', 'shuttlecocks']) // Added 'shuttlecocks' to the eager loading array
-            ->withCount('gamePlayers') // Continue counting the number of game players
-            ->orderBy('id', 'desc') // Keep the order by id in descending order
+        $games = Game::with([
+            'gamePlayers.user',
+            'shuttlecocks',
+            'gameSets'
+            ])
+            ->withCount('gamePlayers')
+            ->orderBy('id', 'desc')
             ->get();
 
         $parties = Party::withCount('members')->get();

@@ -28,7 +28,7 @@ const confirmPopup = useConfirm();
 
 const page = usePage();
 
-console.log(page.props)
+console.log(page.props);
 
 const {
   dropZones,
@@ -101,7 +101,7 @@ const shortenTitle = (title, maxLength = 10) => {
 };
 
 const startNewGame = () => {
-    router.post(
+  router.post(
     `/games/create-game`,
     {
       party_id: 1, // Dummy party ID
@@ -109,7 +109,7 @@ const startNewGame = () => {
       players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
       team1_start_side: "north", // Optional, defaults to 'north'
       initial_shuttlecock_game: 1, // Optional, defaults to 0
-      process: 'playing', // listing, playing
+      process: "playing", // listing, playing
     },
     {
       preserveScroll: true,
@@ -120,23 +120,32 @@ const startNewGame = () => {
         console.log(res.props);
 
         dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
-        dropZones.Game = []
+        dropZones.Game = [];
 
         toast.add({
           severity: "success",
           summary: "Game Created",
-          detail: "The game has been successfully created and played.",
+          detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.",
           life: 3000,
         });
       },
       onError: (err) => {
-        toast.add({
-          severity: "error",
-          summary: "Error",
-          detail:
-            err.response?.data?.message || "An error occurred while creating the game.",
-          life: 3000,
-        });
+        if (err.notMatchType) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
+            life: 3000,
+          });
+        }
+        if (err.existSettingGame) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
+            life: 3000,
+          });
+        }
       },
     }
   );
@@ -151,7 +160,7 @@ const listNewGame = () => {
       players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
       team1_start_side: "north", // Optional, defaults to 'north'
       initial_shuttlecock_game: 1, // Optional, defaults to 0
-      process: 'listing', // listing, playing
+      process: "listing", // listing, playing
     },
     {
       preserveScroll: true,
@@ -163,45 +172,53 @@ const listNewGame = () => {
         // games.value = res.props.games;
 
         dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
-        dropZones.Game = []
+        dropZones.Game = [];
 
         toast.add({
           severity: "success",
           summary: "Game Created",
-          detail: "The game has been successfully created and listed.",
+          detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.",
           life: 3000,
         });
       },
       onError: (err) => {
-        toast.add({
-          severity: "error",
-          summary: "Error",
-          detail:
-            err.response?.data?.message || "An error occurred while creating the game.",
-          life: 3000,
-        });
+        if (err.notMatchType) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
+            life: 3000,
+          });
+        }
+        if (err.existSettingGame) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
+            life: 3000,
+          });
+        }
       },
     }
   );
 };
 
 onMounted(() => {
-
   toggleSortOrder();
 
-//   const channel = ably.channels.get("get-started");
+  //   const channel = ably.channels.get("get-started");
 
-//   // Subscribe to messages
-//   channel.subscribe("first", (message) => {
-//     messages.value.push(message.data);
-//   });
+  //   // Subscribe to messages
+  //   channel.subscribe("first", (message) => {
+  //     messages.value.push(message.data);
+  //   });
 
-//   // Publish a message
-//   channel.publish("first", "Hello from Vue!", (err) => {
-//     if (err) {
-//       console.error("Error publishing message:", err);
-//     }
-//   });
+  //   // Publish a message
+  //   channel.publish("first", "Hello from Vue!", (err) => {
+  //     if (err) {
+  //       console.error("Error publishing message:", err);
+  //     }
+  //   });
 });
 </script>
 
