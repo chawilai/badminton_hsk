@@ -28,7 +28,7 @@ const confirmPopup = useConfirm();
 
 const page = usePage();
 
-console.log(page.props);
+console.log(page.props.readyPlayers);
 
 const {
   dropZones,
@@ -65,7 +65,7 @@ const {
 const formattedData = computed(() =>
   page.props.readyPlayers.map((item) => ({
     id: item.user_id,
-    title: shortenTitle(item.name),
+    title: shortenTitle(item.display_name),
     avatar: item.avatar,
     rank_title: item.badminton_rank,
     rank_level: item.badminton_level,

@@ -171,6 +171,19 @@ const showCrown = (index, team) => {
   return false; // Don't show the crown if scores are tied or invalid
 };
 
+const validateScore = (index, field) => {
+  let value = sets.value[index][field];
+
+  // Remove non-numeric characters
+  value = value.toString().replace(/\D/g, "");
+
+  // Ensure the value is within the range 0-30
+  value = Math.max(0, Math.min(30, value));
+
+  // Update the score
+  sets.value[index][field] = value;
+}
+
 const addNewSet = (overrides = {}) => {
   let newSet = {
     set_number: sets.value.length + 1,
@@ -196,11 +209,38 @@ const addNewSet = (overrides = {}) => {
 };
 
 const removeNewSet = () => {
-  if (sets.value.length > 1) {
-    sets.value.pop(); // Remove the last set
-  } else {
-    console.error("Cannot remove the last set. At least one set must remain.");
-  }
+  confirmPopup.require({
+    target: event.target,
+    message: "ลบเกมเซ็ต ?",
+    icon: "pi pi-delete",
+    accept: () => {
+      if (sets.value.length > 1) {
+        toast.add({
+          severity: "success",
+          summary: "ลบเกมเซ็ต",
+          detail: `ลบรายการลงผลเกม เซ็ตที่ ${sets.value.length} แล้ว`,
+          life: 3000,
+        });
+
+        sets.value.pop(); // Remove the last set
+      } else {
+        toast.add({
+          severity: "error",
+          summary: "ลบเกมเซ็ต",
+          detail: "เหลือรายการเดียวแล้ว",
+          life: 3000,
+        });
+      }
+    },
+    reject: () => {
+      toast.add({
+        severity: "info",
+        summary: "ยกเลิก",
+        detail: "ยกเลิกการลบแล้ว",
+        life: 3000,
+      });
+    },
+  });
 };
 
 const onChooseUploadFiles = () => {
@@ -236,6 +276,37 @@ const openPosition = (pos, game) => {
 };
 
 const thisGame = ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
+
+const updateDisplayName = (partyMemberId, newName) => {
+  router.post(
+    `/party-members/${partyMemberId}/update-name`,
+    { display_name: newName },
+    {
+      preserveScroll: true,
+      headers: {
+        Accept: "application/json",
+      },
+      onSuccess: (response) => {
+        toast.add({
+          severity: "success",
+          summary: "Name Updated",
+          detail: "The player's display name has been updated successfully.",
+          life: 3000,
+        });
+
+        parties.value = response.props.parties;
+      },
+      onError: (error) => {
+        toast.add({
+          severity: "error",
+          summary: "Update Failed",
+          detail: "Could not update the display name. Please try again.",
+          life: 3000,
+        });
+      },
+    }
+  );
+};
 
 const fetchReadyPlayer = (gameId) => {
   router.post(
@@ -891,7 +962,7 @@ const isPlayerInGame = (game) => {
 const enterScore = (gameId) => {
   confirmPopup.require({
     target: event.target,
-    message: "Are you sure you want to update the game sets?",
+    message: "ยืนยัน ?",
     icon: "pi pi-plus-circle",
     accept: () => {
       // set winning team
@@ -927,16 +998,16 @@ const enterScore = (gameId) => {
 
             toast.add({
               severity: "success",
-              summary: "Game Sets Updated",
-              detail: "Game sets have been successfully updated.",
+              summary: "บันทึกผลการแข่ง",
+              detail: "ลงผลการแข่งของท่าน เรียบร้อยแล้ว",
               life: 3000,
             });
           },
           onError: (err) => {
             toast.add({
               severity: "error",
-              summary: "Error",
-              detail: "Failed to update game sets. Please try again.",
+              summary: "ล้มเหลว",
+              detail: "การลงผลล้มเหลว โปรดลองอีกครั้ง",
               life: 3000,
             });
           },
@@ -1144,10 +1215,10 @@ onMounted(() => {
           :style="{ width: '25rem', padding: '0px' }"
           :position="position"
           :modal="true"
-          :draggable="true"
+          :draggable="false"
         >
           <div
-            class="flex flex-column align-items-center w-full mb-5"
+            class="flex flex-column align-items-center w-full"
             v-for="(set, index) in sets"
             :key="index"
           >
@@ -1175,23 +1246,32 @@ onMounted(() => {
                   Team 1
                 </div>
                 <div class="flex flex-row gap-1 justify-content-center mb-3">
-                  <img
+                  <div
+                    class="flex flex-column"
                     v-for="player in setScoreGame.game_players.filter(
                       (item) => item.team === 'team1'
                     )"
                     :key="player.user.id"
-                    :src="player.user.avatar"
-                    class="w-4rem border-round-xl"
-                    alt="Player Avatar"
-                  />
+                  >
+                    <div
+                      v-text="player.user.name"
+                      class="text-xs text-gray-500 text-center"
+                    ></div>
+                    <img
+                      :src="player.user.avatar"
+                      class="w-4rem border-round-xl"
+                      alt="Player Avatar"
+                    />
+                  </div>
                 </div>
                 <div class="w-full text-center">
                   <div
                     class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
                   >
                     <InputText
-                      v-model.number="set.team1_score"
+                      v-model="set.team1_score"
                       class="w-4rem text-center"
+                      @input="validateScore(index, 'team1_score')"
                     />
                     <div
                       class="flex flex-column align-items-center justify-content-center gap-1"
@@ -1214,13 +1294,33 @@ onMounted(() => {
                       ></Button>
                     </div>
                   </div>
-                  <Slider
-                    :min="0"
-                    :max="30"
-                    v-model="set.team1_score"
-                    class="w-full"
-                    :data-set="'team1-set-' + index"
-                  />
+                  <div
+                    class="flex flex-row align-items-center justify-content-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      style="width: 12px; height: 12px; margin-left: -10px"
+                      class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                      @click="set.team1_score > 0 ? set.team1_score-- : null"
+                    >
+                      -
+                    </button>
+                    <Slider
+                      :min="0"
+                      :max="30"
+                      v-model="set.team1_score"
+                      class="w-full"
+                      :data-set="'team1-set-' + index"
+                    />
+                    <button
+                      type="button"
+                      style="width: 12px; height: 12px; margin-right: -10px"
+                      class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                      @click="set.team1_score < 30 ? set.team1_score++ : null"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1244,23 +1344,32 @@ onMounted(() => {
                   Team 2
                 </div>
                 <div class="flex flex-row gap-1 justify-content-center mb-3">
-                  <img
+                  <div
+                    class="flex flex-column"
                     v-for="player in setScoreGame.game_players.filter(
                       (item) => item.team === 'team2'
                     )"
                     :key="player.user.id"
-                    :src="player.user.avatar"
-                    class="w-4rem border-round-xl"
-                    alt="Player Avatar"
-                  />
+                  >
+                    <div
+                      v-text="player.user.name"
+                      class="text-xs text-gray-500 text-center"
+                    ></div>
+                    <img
+                      :src="player.user.avatar"
+                      class="w-4rem border-round-xl"
+                      alt="Player Avatar"
+                    />
+                  </div>
                 </div>
                 <div class="w-full text-center">
                   <div
                     class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
                   >
                     <InputText
-                      v-model.number="set.team2_score"
+                      v-model="set.team2_score"
                       class="w-4rem text-center"
+                      @input="validateScore(index, 'team2_score')"
                     />
                     <div
                       class="flex flex-column align-items-center justify-content-center gap-1"
@@ -1283,16 +1392,39 @@ onMounted(() => {
                       ></Button>
                     </div>
                   </div>
-                  <Slider
-                    :min="0"
-                    :max="30"
-                    v-model="set.team2_score"
-                    class="w-full"
-                    :data-set="'team2-set-' + index"
-                  />
+                  <div
+                    class="flex flex-row align-items-center justify-content-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      style="width: 12px; height: 12px; margin-left: -10px"
+                      class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                      @click="set.team2_score > 0 ? set.team2_score-- : null"
+                    >
+                      -
+                    </button>
+                    <Slider
+                      :min="0"
+                      :max="30"
+                      v-model="set.team2_score"
+                      class="w-full"
+                      :data-set="'team2-set-' + index"
+                    />
+                    <button
+                      type="button"
+                      style="width: 12px; height: 12px; margin-right: -10px"
+                      class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                      @click="set.team2_score < 30 ? set.team2_score++ : null"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Add <hr> Between Sets -->
+            <hr class="w-full my-4 border-gray-300" />
           </div>
 
           <div class="flex align-items-center justify-content-center gap-2">
@@ -1300,8 +1432,10 @@ onMounted(() => {
               rounded
               type="button"
               :label="`เพิ่ม Set ${sets.length + 1}`"
-              severity="warning"
+              severity="success"
               @click="addNewSet"
+              text
+              raised
             ></Button>
             <Button
               v-show="sets.length > 1"
@@ -1312,6 +1446,8 @@ onMounted(() => {
               label="ลบ Set"
               severity="danger"
               @click="removeNewSet"
+              text
+              raised
             ></Button>
           </div>
 
@@ -1725,66 +1861,26 @@ onMounted(() => {
       <TabView>
         <TabPanel header="Details">
           <div class="text-900 font-bold text-3xl mb-4 mt-2">Product Details</div>
-          <p class="line-height-3 text-600 p-0 mx-0 mt-0 mb-4">
-            Volutpat maecenas volutpat blandit aliquam etiam erat velit scelerisque in.
-            Duis ultricies lacus sed turpis tincidunt id. Sed tempus urna et pharetra.
-            Metus vulputate eu scelerisque felis imperdiet proin fermentum. Venenatis urna
-            cursus eget nunc scelerisque viverra mauris in. Viverra justo nec ultrices dui
-            sapien eget mi proin. Laoreet suspendisse interdum consectetur libero id
-            faucibus.
-          </p>
 
-          <div class="grid">
-            <div class="col-12 lg:col-4">
-              <span class="text-900 block font-medium mb-3 font-bold">Highlights</span>
-              <ul class="py-0 pl-3 m-0 text-600 mb-3">
-                <li class="mb-2">Vulputate sapien nec.</li>
-                <li class="mb-2">Purus gravida quis blandit.</li>
-                <li class="mb-2">Nisi quis eleifend quam adipiscing.</li>
-                <li>Imperdiet proin fermentum.</li>
-              </ul>
-            </div>
-            <div class="col-12 lg:col-4">
-              <span class="text-900 block mb-3 font-bold">Size and Fit</span>
-              <ul class="list-none p-0 m-0 text-600 mb-4 text-600">
-                <li class="mb-3">
-                  <span class="font-semibold">Leo vel:</span>
-                  Egestas congue.
-                </li>
-                <li class="mb-3">
-                  <span class="font-semibold">Sociis natoque:</span>
-                  Parturient montes nascetur.
-                </li>
-                <li>
-                  <span class="font-semibold">Suspendisse in:</span>
-                  Purus sit amet volutpat.
-                </li>
-              </ul>
-            </div>
-            <div class="col-12 lg:col-4">
-              <span class="text-900 block mb-3 font-bold">Material & Care</span>
-              <ul class="p-0 m-0 flex flex-wrap flex-column xl:flex-row text-600">
-                <li
-                  class="flex align-items-center white-space-nowrap w-10rem block mr-2 mb-3"
-                >
-                  <i class="pi pi-sun mr-2 text-900"></i>
-                  <span>Not dryer safe</span>
-                </li>
-                <li class="flex align-items-center white-space-nowrap w-10rem block mb-3">
-                  <i class="pi pi-times-circle mr-2 text-900"></i>
-                  <span>No chemical wash</span>
-                </li>
-                <li
-                  class="flex align-items-center white-space-nowrap w-10rem block mb-3 mr-2"
-                >
-                  <i class="pi pi-sliders-h mr-2 text-900"></i>
-                  <span>Iron medium heat</span>
-                </li>
-                <li class="flex align-items-center white-space-nowrap w-10rem block mb-3">
-                  <i class="pi pi-minus-circle mr-2 text-900"></i>
-                  <span>Dry flat</span>
-                </li>
-              </ul>
+          <div
+            v-for="member in parties[0].members"
+            :key="member.id"
+            class="flex flex-column mb-3"
+          >
+            <div class="flex flex-row align-items-center">
+              <img :src="member.user.avatar" class="w-3rem h-3rem border-round-xl mr-2" />
+              <input
+                type="text"
+                v-model="member.display_name"
+                class="p-inputtext w-full"
+                placeholder="Enter display name"
+              />
+              <button
+                class="p-button ml-2"
+                @click="updateDisplayName(member.id, member.display_name)"
+              >
+                Save
+              </button>
             </div>
           </div>
         </TabPanel>

@@ -15,12 +15,17 @@ class PartyController extends Controller
             'gamePlayers.user',
             'shuttlecocks',
             'gameSets'
-            ])
+        ])
             ->withCount('gamePlayers')
             ->orderBy('id', 'desc')
             ->get();
 
-        $parties = Party::withCount('members')->get();
+        $parties = Party::with([
+            'members',
+            'members.user',
+        ])
+            ->withCount('members')
+            ->get();
 
         return Inertia::render('Party', [
             'parties' => $parties,

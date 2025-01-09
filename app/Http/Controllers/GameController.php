@@ -319,6 +319,7 @@ class GameController extends Controller
                 'user_id' => $player->user->id,
                 'party_member_id' => $player->id,
                 'name' => $player->user->name,
+                'display_name' => $player->display_name ?? $player->user->name,
                 'gender' => $player->user->gender,
                 'avatar' => $player->user->avatar,
                 'age' => $player->user->age,

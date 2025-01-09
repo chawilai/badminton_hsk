@@ -12,6 +12,7 @@ class CreatePartyMembersTable extends Migration
             $table->id();
             $table->foreignId('party_id')->constrained('parties');
             $table->foreignId('user_id')->constrained('users');
+            $table->string('display_name')->nullable()->comment('Custom name set by the party host');
             $table->string('role')->nullable();  // Role can be 'owner', 'admin', 'member', etc., and can be null
             $table->string('status')->nullable();  // Status can be 'Host', 'Pending Confirmation', 'Cancelled', 'Waitlisted', 'Checked-in', 'No Show', 'Inviting', 'Requesting', 'Rejected', 'Accepted', 'Confirmed', etc., and can be null
             $table->string('game_status')->nullable()->default('ready');

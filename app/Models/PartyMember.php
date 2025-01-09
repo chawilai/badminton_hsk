@@ -12,6 +12,7 @@ class PartyMember extends Model
     protected $fillable = [
         'party_id',
         'user_id',
+        'display_name',
         'role',
         'status',
         'game_status',

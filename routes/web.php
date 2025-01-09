@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\CheckUserSetup;
 use App\Models\Game;
@@ -18,8 +19,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-$user = User::findOrFail(19);
-Auth::login($user);
+// $user = User::findOrFail(18);
+// Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -152,6 +153,7 @@ Route::get('login/{provider}/callback', [SocialController::class, 'handleProvide
 
 // party
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
+Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
 
 Route::get('/dashboard', function () {
     return redirect('/party');
