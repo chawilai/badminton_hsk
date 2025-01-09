@@ -16,9 +16,13 @@ class PartyController extends Controller
             'shuttlecocks',
             'gameSets'
         ])
-            ->withCount('gamePlayers')
-            ->orderBy('id', 'desc')
-            ->get();
+        ->withCount('gamePlayers')
+        ->with(['gamePlayers' => function ($query) {
+            $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
+                  ->select('game_players.*', 'party_members.display_name');
+        }])
+        ->orderBy('id', 'desc')
+        ->get();
 
         $parties = Party::with([
             'members',

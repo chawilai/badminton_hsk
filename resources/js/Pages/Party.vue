@@ -1119,7 +1119,7 @@ onMounted(() => {
               :value="ready_player.party_member_id"
               v-text="
                 `${index + 1}: ${ready_player.badminton_rank} | ${ready_player.age} (${
-                  ready_player.name
+                  ready_player.display_name
                 }) [played:${
                   ready_player.finished_games_count
                 }] [Wait Time: ${readAbleTime(ready_player.waiting_time)}]`
@@ -1184,7 +1184,7 @@ onMounted(() => {
                   {{ player.user.id }}
                 </td>
                 <td class="px-3 py-2 text-center">
-                  {{ player.user.name }}
+                  {{ player.display_name }}
                 </td>
                 <td class="px-3 py-2 text-center">
                   <img :src="player.user.avatar" class="w-4rem border-round-xl" alt="" />
@@ -1254,7 +1254,7 @@ onMounted(() => {
                     :key="player.user.id"
                   >
                     <div
-                      v-text="player.user.name"
+                      v-text="player.display_name"
                       class="text-xs text-gray-500 text-center"
                     ></div>
                     <img
@@ -1352,7 +1352,7 @@ onMounted(() => {
                     :key="player.user.id"
                   >
                     <div
-                      v-text="player.user.name"
+                      v-text="player.display_name"
                       class="text-xs text-gray-500 text-center"
                     ></div>
                     <img
@@ -1517,6 +1517,9 @@ onMounted(() => {
                 <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
                   Action
                 </th>
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Score
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1619,15 +1622,21 @@ onMounted(() => {
                   <div v-show="game.status === 'finished'">
                     {{ playTime(game.game_start_date, game.game_end_date) }}
                   </div>
-                  <div v-show="game.status === 'finished' && isPlayerInGame(game)">
-                    <Button
-                      @click="openPosition('top', game)"
-                      icon="pi pi-bookmark"
-                      severity="blue"
-                      rounded
-                      class="mb-2 mr-2"
-                    />
-                  </div>
+                </td>
+                <td class="px-2 py-1 text-center">
+                    <div v-show="game.status === 'finished' && isPlayerInGame(game)">
+                      <Button
+                        @click="openPosition('top', game)"
+                        icon="pi pi-bookmark"
+                        severity="blue"
+                        rounded
+                        class="mb-2 mr-2"
+                      />
+                    </div>
+                    <div class="flex flex-column">
+                        <div v-html="`Set : ${game.game_sets.length}`"></div>
+                        <div v-html="game_set.winning_team ? `${game_set.team1_score} : ${game_set.team2_score}` : `รอลงผล`" v-for="game_set in game.game_sets"></div>
+                    </div>
                 </td>
               </tr>
             </tbody>
@@ -1638,7 +1647,7 @@ onMounted(() => {
 
     <!-- <Crud></Crud> -->
     <hr />
-    <div class="card">
+    <div class="card" v-if="false">
       <span class="block text-900 font-bold text-xl mb-4">Create Product</span>
       <div class="grid grid-nogutter flex-wrap gap-3 p-fluid">
         <div class="col-12 lg:col-8">
@@ -1860,27 +1869,35 @@ onMounted(() => {
     <div class="card">
       <TabView>
         <TabPanel header="Details">
-          <div class="text-900 font-bold text-3xl mb-4 mt-2">Product Details</div>
+          <div class="text-900 font-bold text-3xl mb-4 mt-2">รายการผู้เล่น</div>
 
           <div
-            v-for="member in parties[0].members"
+            v-for="(member, index) in parties[0].members"
             :key="member.id"
             class="flex flex-column mb-3"
           >
-            <div class="flex flex-row align-items-center">
-              <img :src="member.user.avatar" class="w-3rem h-3rem border-round-xl mr-2" />
+            <div class="flex flex-row align-items-center gap-3">
+              <div v-text="`${index + 1}`" class="text-lg font-bold text-gray-600"></div>
+              <img
+                :src="member.user.avatar"
+                :alt="member.display_name"
+                class="w-3rem h-3rem border-round-xl mr-2"
+              />
               <input
                 type="text"
                 v-model="member.display_name"
-                class="p-inputtext w-full"
+                class="p-inputtext w-8rem"
                 placeholder="Enter display name"
               />
-              <button
-                class="p-button ml-2"
+              <Button
+                rounded
+                type="button"
+                :label="`Save`"
+                severity="primary"
                 @click="updateDisplayName(member.id, member.display_name)"
-              >
-                Save
-              </button>
+                raised
+              ></Button>
+              <div v-text="`(${member.user.name})`"></div>
             </div>
           </div>
         </TabPanel>
@@ -1954,7 +1971,7 @@ onMounted(() => {
       </TabView>
     </div>
 
-    <div class="grid card grid-nogutter" style="column-gap: 2rem; row-gap: 2rem">
+    <div v-if="false" class="grid card grid-nogutter" style="column-gap: 2rem; row-gap: 2rem">
       <div class="col-12">
         <p class="text-900 font-bold">Contact Us</p>
       </div>
@@ -2066,7 +2083,7 @@ onMounted(() => {
       </Accordion>
     </div>
 
-    <div class="card">
+    <div class="card" v-if="false">
       <h5>Panel</h5>
       <Panel header="Header" :toggleable="true">
         <p class="line-height-3 m-0">
@@ -2080,7 +2097,7 @@ onMounted(() => {
       </Panel>
     </div>
 
-    <div class="card">
+    <div class="card" v-if="false">
       <div class="field col-12 md:col-4">
         <FloatLabel>
           <Calendar inputId="calendar" v-model="value5"></Calendar>
@@ -2089,7 +2106,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" v-if="false">
       <div class="field col-12 md:col-4">
         <FloatLabel>
           <Dropdown
