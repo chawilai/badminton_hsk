@@ -1,6 +1,6 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, watch, reactive, computed, onMounted } from "vue";
 import AppLayout from "@/layout/AppLayout.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 
@@ -27,8 +27,6 @@ const toast = useToast();
 const confirmPopup = useConfirm();
 
 const page = usePage();
-
-console.log(page.props.readyPlayers);
 
 const {
   dropZones,

@@ -1,6 +1,7 @@
 <script setup>
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from "@/layout/AppLayout.vue";
+import Game from "@/Pages/Game2.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { reactive, ref, computed, onMounted, watch } from "vue";
 import { useToast } from "primevue/usetoast";
@@ -13,6 +14,8 @@ const toast = useToast();
 const confirmPopup = useConfirm();
 
 const page = usePage();
+
+const props = ref(page.props)
 
 const data = reactive({
   party_id: "1",
@@ -182,7 +185,7 @@ const validateScore = (index, field) => {
 
   // Update the score
   sets.value[index][field] = value;
-}
+};
 
 const addNewSet = (overrides = {}) => {
   let newSet = {
@@ -459,11 +462,11 @@ const readAbleTime = (secondTime) => {
   const seconds = dur.seconds();
 
   let result = "";
-  if (hours > 0) result += `${hours} hour${hours > 1 ? "s" : ""} `;
-  if (minutes > 0) result += `${minutes} minute${minutes > 1 ? "s" : ""} `;
-  result += `${seconds} second${seconds > 1 ? "s" : ""}`;
+  if (hours > 0) result += `${hours} ชั่วโมง `;
+  if (minutes > 0) result += `${minutes} นาที `;
+  result += `${seconds} วินาที`;
 
-  return `playtime: ` + result.trim(); // Trim any extra space
+  return `เล่น ` + result.trim(); // Trim any extra space
 };
 
 const listGame = (gameId, event) => {
@@ -664,6 +667,8 @@ const finishGame = (gameId) => {
             thisGame.value = games.value.find((sc) => sc.id == gameId);
             game_players.value = thisGame.value.game_players;
 
+            props.value = res.props
+
             if (res.props.flash.success && res.props.flash.success.length > 0) {
               toast.add({
                 severity: "success",
@@ -834,8 +839,6 @@ const addPartyInitShuttleCock = (partyId) => {
             life: 3000,
           });
         }
-
-        console.log(res.props.flash);
       },
     }
   );
@@ -1025,6 +1028,12 @@ const enterScore = (gameId) => {
   });
 };
 
+const partyReload = (payload) => {
+    console.log('Game Created')
+    console.log(payload)
+    router.get('party')
+}
+
 // compute
 const playerSortWaiting = computed(() => {
   return Array.isArray(game_data.ready_players)
@@ -1057,6 +1066,8 @@ onMounted(() => {
         >
             asdfasdf
         </Sidebar> -->
+
+    <Game :data="props" @gameCreated="partyReload" />
 
     <div class="py-12">
       <div class="max-w-7xl mx-auto">
@@ -1156,57 +1167,68 @@ onMounted(() => {
           ></li>
         </ul> -->
 
-        <div class="card p-fluid">
-          <table v-if="visibleGameId" class="border-1 border-gray-300 m-2">
-            <thead class="bg-green-700 text-white">
-              <tr>
-                <th colspan="6" class="px-3 py-2 text-center">
-                  Game ID : {{ visibleGameId }}
-                  <span v-html="gameStatus(thisGame.status)"></span>
-                  {{ gamePlayerSummary() }}
-                </th>
-              </tr>
-            </thead>
-            <thead class="bg-green-700 text-white">
-              <tr>
-                <th class="px-3 py-2 text-center">Player ID</th>
-                <th class="px-3 py-2 text-center">Name</th>
-                <th class="px-3 py-2 text-center">Pic</th>
-                <th class="px-3 py-2 text-center">Team</th>
-                <!-- <th class="px-3 py-2 text-center">Gender</th> -->
-                <th class="px-3 py-2 text-center">Range</th>
-                <th class="px-3 py-2 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="player in game_players" :key="player.id">
-                <td class="px-3 py-2 text-center">
-                  {{ player.user.id }}
-                </td>
-                <td class="px-3 py-2 text-center">
-                  {{ player.display_name }}
-                </td>
-                <td class="px-3 py-2 text-center">
-                  <img :src="player.user.avatar" class="w-4rem border-round-xl" alt="" />
-                </td>
-                <td class="px-3 py-2 text-center" v-html="teamLabel(player.team)"></td>
-                <!-- <td class="px-3 py-2 text-center">
+        <div class="card">
+          <Panel header="GamePlayers" toggleable>
+            <div class="overflow-auto whitespace-nowrap">
+              <table v-if="visibleGameId" class="border-1 border-gray-300 m-2">
+                <thead class="bg-green-700 text-white">
+                  <tr>
+                    <th colspan="6" class="px-3 py-2 text-center">
+                      Game ID : {{ visibleGameId }}
+                      <span v-html="gameStatus(thisGame.status)"></span>
+                      {{ gamePlayerSummary() }}
+                    </th>
+                  </tr>
+                </thead>
+                <thead class="bg-green-700 text-white">
+                  <tr>
+                    <th class="px-3 py-2 text-center">Player ID</th>
+                    <th class="px-3 py-2 text-center">Name</th>
+                    <th class="px-3 py-2 text-center">Pic</th>
+                    <th class="px-3 py-2 text-center">Team</th>
+                    <!-- <th class="px-3 py-2 text-center">Gender</th> -->
+                    <th class="px-3 py-2 text-center">Range</th>
+                    <th class="px-3 py-2 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="player in game_players" :key="player.id">
+                    <td class="px-3 py-2 text-center">
+                      {{ player.user.id }}
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      {{ player.display_name }}
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      <img
+                        :src="player.user.avatar"
+                        class="w-4rem border-round-xl"
+                        alt=""
+                      />
+                    </td>
+                    <td
+                      class="px-3 py-2 text-center"
+                      v-html="teamLabel(player.team)"
+                    ></td>
+                    <!-- <td class="px-3 py-2 text-center">
                                         {{ player.user.gender }}
                                     </td> -->
-                <td class="px-3 py-2 text-center">
-                  {{ player.user.badminton_rank_id }}
-                </td>
-                <td class="px-3 py-2 text-center">
-                  <button
-                    class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
-                    @click="deletePlayer(visibleGameId, player.user.id)"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <td class="px-3 py-2 text-center">
+                      {{ player.user.badminton_rank_id }}
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      <button
+                        class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
+                        @click="deletePlayer(visibleGameId, player.user.id)"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         </div>
         <!-- Dialog for Set Game Score -->
         <Dialog
@@ -1466,187 +1488,318 @@ onMounted(() => {
           </div>
         </Dialog>
         <!-- Dialog for Set Game Score -->
+        <div class="card">
+          <Panel header="Games List" toggleable>
+            <div class="overflow-auto whitespace-nowrap">
+              <table class="">
+                <thead>
+                  <tr>
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      ID
+                    </th>
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  Party ID
+                                              </th> -->
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  Game Type
+                                              </th> -->
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Players
+                    </th>
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Status
+                    </th>
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  List At
+                                              </th> -->
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  Played At
+                                              </th> -->
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  Finished At
+                                              </th> -->
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Detail
+                    </th>
+                    <!-- <th
+                                                  class="py-1 px-3 text-md text-center bg-green-500 text-white"
+                                              >
+                                                  Init
+                                              </th> -->
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Shuttle
+                    </th>
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Action
+                    </th>
+                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                      Score
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="game in games"
+                    :key="game.id"
+                    :class="{
+                      'bg-red-200': isPlayerInGame(game),
+                    }"
+                  >
+                    <td class="px-2 py-1">{{ game.id }}</td>
+                    <!-- <td class="px-2 py-1">
+                                                  {{ game.party_id }}
+                                              </td> -->
+                    <!-- <td class="px-2 py-1">
+                                                  {{ game.game_type }}
+                                              </td> -->
+                    <td class="px-2 py-1 relative">
+                      <div
+                        class="flex flex-row align-items-center justify-content-center gap-1 z-0"
+                      >
+                        <img
+                          :src="player.user.avatar"
+                          v-for="player in game.game_players"
+                          class="w-3rem border-round-xl"
+                          alt=""
+                        />
+                      </div>
+                      <button
+                        class="absolute z-3 right-0 top-0"
+                        type="button"
+                        @click="autoAddPlayers(game.id)"
+                      >
+                        +
+                      </button>
+                    </td>
+                    <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
+                    <!-- <td class="px-2 py-1">
+                                                  {{ showTime(game.game_list_date) }}
+                                              </td> -->
+                    <!-- <td class="px-2 py-1">
+                                                  {{ showTime(game.game_start_date) }}
+                                              </td> -->
+                    <!-- <td class="px-2 py-1">
+                                                  {{ showTime(game.game_end_date) }}
+                                              </td> -->
+                    <td class="px-2 py-1">
+                      <button @click="togglePlayers(game.id)">Show</button>
+                    </td>
+                    <!-- <td class="px-2 py-1">
+                                                  {{ shuttlecocksInit(game) }}
+                                              </td> -->
+                    <td class="px-2 py-1 relative text-center">
+                      {{ shuttlecocksTotal(game) }}
 
-        <div class="card p-fluid">
-          <table class="">
-            <thead>
-              <tr>
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">ID</th>
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        Party ID
-                                    </th> -->
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        Game Type
-                                    </th> -->
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Players
-                </th>
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Status
-                </th>
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        List At
-                                    </th> -->
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        Played At
-                                    </th> -->
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        Finished At
-                                    </th> -->
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Detail
-                </th>
-                <!-- <th
-                                        class="py-1 px-3 text-md text-center bg-green-500 text-white"
-                                    >
-                                        Init
-                                    </th> -->
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Shuttle
-                </th>
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Action
-                </th>
-                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                  Score
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="game in games"
-                :key="game.id"
-                :class="{
-                  'bg-red-200': isPlayerInGame(game),
-                }"
-              >
-                <td class="px-2 py-1">{{ game.id }}</td>
-                <!-- <td class="px-2 py-1">
-                                        {{ game.party_id }}
-                                    </td> -->
-                <!-- <td class="px-2 py-1">
-                                        {{ game.game_type }}
-                                    </td> -->
-                <td class="px-2 py-1 relative">
-                  <div
-                    class="flex flex-row align-items-center justify-content-center gap-1 z-0"
-                  >
-                    <img
-                      :src="player.user.avatar"
-                      v-for="player in game.game_players"
-                      class="w-3rem border-round-xl"
-                      alt=""
-                    />
-                  </div>
-                  <button
-                    class="absolute z-3 right-0 top-0"
-                    type="button"
-                    @click="autoAddPlayers(game.id)"
-                  >
-                    +
-                  </button>
-                </td>
-                <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
-                <!-- <td class="px-2 py-1">
-                                        {{ showTime(game.game_list_date) }}
-                                    </td> -->
-                <!-- <td class="px-2 py-1">
-                                        {{ showTime(game.game_start_date) }}
-                                    </td> -->
-                <!-- <td class="px-2 py-1">
-                                        {{ showTime(game.game_end_date) }}
-                                    </td> -->
-                <td class="px-2 py-1">
-                  <button @click="togglePlayers(game.id)">Show</button>
-                </td>
-                <!-- <td class="px-2 py-1">
-                                        {{ shuttlecocksInit(game) }}
-                                    </td> -->
-                <td class="px-2 py-1 relative text-center">
-                  {{ shuttlecocksTotal(game) }}
-
-                  <button
-                    class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
-                    type="button"
-                    @click="returnShuttlecock(game.id)"
-                  >
-                    -
-                  </button>
-                  <button
-                    class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
-                    type="button"
-                    @click="addShuttlecock(game.id)"
-                  >
-                    +
-                  </button>
-                </td>
-                <td class="px-2 py-1 text-center">
-                  <button
-                    class="cursor-pointer ml-1 bg-purple-400 text-white border-1 border-purple-600 border-round-sm"
-                    v-show="game.status === 'setting'"
-                    @click="listGame(game.id, $event)"
-                  >
-                    List
-                  </button>
-                  <button
-                    class="cursor-pointer ml-1 bg-green-600 text-white border-1 border-green-600 border-round-sm"
-                    v-show="game.status === 'listing'"
-                    @click="startGame(game.id)"
-                  >
-                    Start
-                  </button>
-                  <button
-                    class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
-                    v-show="['setting', 'listing'].includes(game.status)"
-                    @click="deleteGame(game.id)"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    class="cursor-pointer ml-1 bg-blue-600 text-white border-1 border-blue-600 border-round-sm"
-                    v-show="game.status === 'playing'"
-                    @click="finishGame(game.id)"
-                  >
-                    Finish
-                  </button>
-                  <div v-show="game.status === 'finished'">
-                    {{ playTime(game.game_start_date, game.game_end_date) }}
-                  </div>
-                </td>
-                <td class="px-2 py-1 text-center">
-                    <div v-show="game.status === 'finished' && isPlayerInGame(game)">
-                      <Button
-                        @click="openPosition('top', game)"
-                        icon="pi pi-bookmark"
-                        severity="blue"
-                        rounded
-                        class="mb-2 mr-2"
-                      />
-                    </div>
-                    <div class="flex flex-column">
-                        <div v-html="`Set : ${game.game_sets.length}`"></div>
-                        <div v-html="game_set.winning_team ? `${game_set.team1_score} : ${game_set.team2_score}` : `รอลงผล`" v-for="game_set in game.game_sets"></div>
-                    </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                      <button
+                        class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
+                        type="button"
+                        @click="returnShuttlecock(game.id)"
+                      >
+                        -
+                      </button>
+                      <button
+                        class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
+                        type="button"
+                        @click="addShuttlecock(game.id)"
+                      >
+                        +
+                      </button>
+                    </td>
+                    <td class="px-2 py-1 text-center">
+                      <button
+                        class="cursor-pointer ml-1 bg-purple-400 text-white border-1 border-purple-600 border-round-sm"
+                        v-show="game.status === 'setting'"
+                        @click="listGame(game.id, $event)"
+                      >
+                        List
+                      </button>
+                      <button
+                        class="cursor-pointer ml-1 bg-green-600 text-white border-1 border-green-600 border-round-sm"
+                        v-show="game.status === 'listing'"
+                        @click="startGame(game.id)"
+                      >
+                        Start
+                      </button>
+                      <button
+                        class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
+                        v-show="['setting', 'listing'].includes(game.status)"
+                        @click="deleteGame(game.id)"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        class="cursor-pointer ml-1 bg-blue-600 text-white border-1 border-blue-600 border-round-sm"
+                        v-show="game.status === 'playing'"
+                        @click="finishGame(game.id)"
+                      >
+                        Finish
+                      </button>
+                      <div v-show="game.status === 'finished'">
+                        {{ playTime(game.game_start_date, game.game_end_date) }}
+                      </div>
+                    </td>
+                    <td class="px-2 py-1 text-center">
+                      <div
+                        v-if="game.status === 'finished' && isPlayerInGame(game)"
+                        class="flex justify-content-center align-items-center"
+                      >
+                        <Button
+                          @click="openPosition('top', game)"
+                          label="ลงผล"
+                          severity="blue"
+                          style="font-size: 0.7rem"
+                          class="w-2rem h-1rem flex justify-content-center align-items-center"
+                        />
+                      </div>
+                      <div class="flex flex-column">
+                        <div
+                          v-show="game.game_sets[0].winning_team"
+                          v-html="`${game.game_sets.length} set`"
+                          class="underline font-bold"
+                        ></div>
+                        <div
+                          v-html="
+                            game_set.winning_team
+                              ? `${game_set.team1_score} : ${game_set.team2_score}`
+                              : `รอผู้เล่นลงผล`
+                          "
+                          v-for="game_set in game.game_sets"
+                        ></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         </div>
       </div>
     </div>
 
     <!-- <Crud></Crud> -->
     <hr />
+
+    <div class="card">
+      <TabView>
+        <TabPanel header="Details">
+          <div class="text-900 font-bold text-3xl mb-4 mt-2">รายการผู้เล่น</div>
+
+          <div class="overflow-auto whitespace-nowrap">
+            <div
+              v-for="(member, index) in parties[0].members"
+              :key="member.id"
+              class="flex flex-column mb-3"
+            >
+              <div class="flex flex-row align-items-center gap-3">
+                <div
+                  v-text="`${index + 1}`"
+                  class="text-lg font-bold text-gray-600"
+                ></div>
+                <img
+                  :src="member.user.avatar"
+                  :alt="member.display_name"
+                  class="w-3rem h-3rem border-round-xl mr-2"
+                />
+                <input
+                  type="text"
+                  v-model="member.display_name"
+                  class="p-inputtext w-8rem"
+                  placeholder="Enter display name"
+                  @blur="updateDisplayName(member.id, member.display_name)"
+                />
+                <button
+                  class=""
+                  type="button"
+                  @click="updateDisplayName(member.id, member.display_name)"
+                  raised
+                >
+                  Save
+                </button>
+                <div v-text="`(${member.user.name})`"></div>
+              </div>
+            </div>
+          </div>
+        </TabPanel>
+        <TabPanel header="Reviews">
+          <div class="text-900 font-bold text-3xl mb-4 mt-2">Customer Reviews</div>
+          <ul class="list-none p-0 m-0">
+            <li class="pb-5 border-bottom-1 surface-border">
+              <span>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-gray-500"></i>
+              </span>
+              <div class="text-900 font-bold text-xl my-3">Absolute Perfection!</div>
+              <p class="mx-0 mt-0 mb-3 text-600 line-height-3">
+                Blandit libero volutpat sed cras ornare arcu dui vivamus. Arcu dictum
+                varius duis at consectetur lorem donec massa. Imperdiet proin fermentum
+                leo vel orci porta non. Porttitor rhoncus dolor purus non.
+              </p>
+              <span class="font-medium">Darlene Robertson, 2 days ago</span>
+            </li>
+            <li class="py-5 border-bottom-1 surface-border">
+              <span>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
+                <i class="pi pi-star-fill text-yellow-500"></i>
+              </span>
+              <div class="text-900 font-bold text-xl my-3">Classy</div>
+              <p class="mx-0 mt-0 mb-3 text-600 line-height-3">
+                Venenatis cras sed felis eget. Proin nibh nisl condimentum id venenatis a
+                condimentum.
+              </p>
+              <span class="font-medium">Kristin Watson, 2 days ago</span>
+            </li>
+          </ul>
+        </TabPanel>
+        <TabPanel header="Shipping and Returns">
+          <div class="text-900 font-bold text-3xl mb-4 mt-2">Shipping Placeholder</div>
+          <p class="line-height-3 text-600 p-0 mx-0 mt-0 mb-4">
+            Mattis aliquam faucibus purus in massa tempor nec feugiat nisl. Justo donec
+            enim diam vulputate ut pharetra. Tempus egestas sed sed risus. Feugiat sed
+            lectus vestibulum mattis. Tristique nulla aliquet enim tortor at auctor urna
+            nunc. Habitant morbi tristique senectus et. Facilisi nullam vehicula ipsum.
+          </p>
+
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <span class="text-900 block font-bold mb-3 font-bold">Shipping Costs</span>
+              <ul class="py-0 pl-3 m-0 text-600 mb-3">
+                <li class="mb-2">Japan - JPY 2,500.</li>
+                <li class="mb-2">Europe - EUR 10</li>
+                <li class="mb-2">Switzerland - CHF 10</li>
+                <li class="mb-2">Canada - CAD 25</li>
+                <li class="mb-2">USA - USD 20</li>
+                <li class="mb-2">Australia - AUD 30</li>
+                <li class="mb-2">United Kingdom - GBP 10</li>
+              </ul>
+            </div>
+            <div class="col-12 md:col-6">
+              <span class="text-900 block font-bold mb-3">Return Policy</span>
+              <p class="line-height-3 text-600 p-0 m-0">
+                Pharetra et ultrices neque ornare aenean euismod elementum nisi. Diam
+                phasellus vestibulum lorem sed. Mattis molestie a iaculis at.
+              </p>
+            </div>
+          </div>
+        </TabPanel>
+      </TabView>
+    </div>
+
     <div class="card" v-if="false">
       <span class="block text-900 font-bold text-xl mb-4">Create Product</span>
       <div class="grid grid-nogutter flex-wrap gap-3 p-fluid">
@@ -1866,112 +2019,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="card">
-      <TabView>
-        <TabPanel header="Details">
-          <div class="text-900 font-bold text-3xl mb-4 mt-2">รายการผู้เล่น</div>
-
-          <div
-            v-for="(member, index) in parties[0].members"
-            :key="member.id"
-            class="flex flex-column mb-3"
-          >
-            <div class="flex flex-row align-items-center gap-3">
-              <div v-text="`${index + 1}`" class="text-lg font-bold text-gray-600"></div>
-              <img
-                :src="member.user.avatar"
-                :alt="member.display_name"
-                class="w-3rem h-3rem border-round-xl mr-2"
-              />
-              <input
-                type="text"
-                v-model="member.display_name"
-                class="p-inputtext w-8rem"
-                placeholder="Enter display name"
-              />
-              <Button
-                rounded
-                type="button"
-                :label="`Save`"
-                severity="primary"
-                @click="updateDisplayName(member.id, member.display_name)"
-                raised
-              ></Button>
-              <div v-text="`(${member.user.name})`"></div>
-            </div>
-          </div>
-        </TabPanel>
-        <TabPanel header="Reviews">
-          <div class="text-900 font-bold text-3xl mb-4 mt-2">Customer Reviews</div>
-          <ul class="list-none p-0 m-0">
-            <li class="pb-5 border-bottom-1 surface-border">
-              <span>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-gray-500"></i>
-              </span>
-              <div class="text-900 font-bold text-xl my-3">Absolute Perfection!</div>
-              <p class="mx-0 mt-0 mb-3 text-600 line-height-3">
-                Blandit libero volutpat sed cras ornare arcu dui vivamus. Arcu dictum
-                varius duis at consectetur lorem donec massa. Imperdiet proin fermentum
-                leo vel orci porta non. Porttitor rhoncus dolor purus non.
-              </p>
-              <span class="font-medium">Darlene Robertson, 2 days ago</span>
-            </li>
-            <li class="py-5 border-bottom-1 surface-border">
-              <span>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500 mr-1"></i>
-                <i class="pi pi-star-fill text-yellow-500"></i>
-              </span>
-              <div class="text-900 font-bold text-xl my-3">Classy</div>
-              <p class="mx-0 mt-0 mb-3 text-600 line-height-3">
-                Venenatis cras sed felis eget. Proin nibh nisl condimentum id venenatis a
-                condimentum.
-              </p>
-              <span class="font-medium">Kristin Watson, 2 days ago</span>
-            </li>
-          </ul>
-        </TabPanel>
-        <TabPanel header="Shipping and Returns">
-          <div class="text-900 font-bold text-3xl mb-4 mt-2">Shipping Placeholder</div>
-          <p class="line-height-3 text-600 p-0 mx-0 mt-0 mb-4">
-            Mattis aliquam faucibus purus in massa tempor nec feugiat nisl. Justo donec
-            enim diam vulputate ut pharetra. Tempus egestas sed sed risus. Feugiat sed
-            lectus vestibulum mattis. Tristique nulla aliquet enim tortor at auctor urna
-            nunc. Habitant morbi tristique senectus et. Facilisi nullam vehicula ipsum.
-          </p>
-
-          <div class="grid">
-            <div class="col-12 md:col-6">
-              <span class="text-900 block font-bold mb-3 font-bold">Shipping Costs</span>
-              <ul class="py-0 pl-3 m-0 text-600 mb-3">
-                <li class="mb-2">Japan - JPY 2,500.</li>
-                <li class="mb-2">Europe - EUR 10</li>
-                <li class="mb-2">Switzerland - CHF 10</li>
-                <li class="mb-2">Canada - CAD 25</li>
-                <li class="mb-2">USA - USD 20</li>
-                <li class="mb-2">Australia - AUD 30</li>
-                <li class="mb-2">United Kingdom - GBP 10</li>
-              </ul>
-            </div>
-            <div class="col-12 md:col-6">
-              <span class="text-900 block font-bold mb-3">Return Policy</span>
-              <p class="line-height-3 text-600 p-0 m-0">
-                Pharetra et ultrices neque ornare aenean euismod elementum nisi. Diam
-                phasellus vestibulum lorem sed. Mattis molestie a iaculis at.
-              </p>
-            </div>
-          </div>
-        </TabPanel>
-      </TabView>
-    </div>
-
-    <div v-if="false" class="grid card grid-nogutter" style="column-gap: 2rem; row-gap: 2rem">
+    <div
+      v-if="false"
+      class="grid card grid-nogutter"
+      style="column-gap: 2rem; row-gap: 2rem"
+    >
       <div class="col-12">
         <p class="text-900 font-bold">Contact Us</p>
       </div>
@@ -2047,7 +2099,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" v-if="false">
       <h5>AccordionPanel</h5>
       <Accordion :activeIndex="0">
         <AccordionTab header="Header I">

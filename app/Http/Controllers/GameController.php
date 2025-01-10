@@ -32,11 +32,16 @@ class GameController extends Controller
         ->orderBy('id', 'desc')
         ->get();
 
-        $parties = Party::withCount('members')->get();
+        $parties = Party::with([
+            'members',
+            'members.user',
+        ])
+            ->withCount('members')
+            ->get();
 
         $readyPlayers = $this->fetchReadyPlayersByPartyID(1);
 
-        return Inertia::render('Game', [
+        return Inertia::render('Game2', [
             'parties' => $parties,
             'games' => $games,
             'readyPlayers' => $readyPlayers

@@ -7,6 +7,8 @@ use App\Models\Party;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+use App\Http\Controllers\GameController;
+
 class PartyController extends Controller
 {
     public function index(Request $request)
@@ -16,13 +18,13 @@ class PartyController extends Controller
             'shuttlecocks',
             'gameSets'
         ])
-        ->withCount('gamePlayers')
-        ->with(['gamePlayers' => function ($query) {
-            $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
-                  ->select('game_players.*', 'party_members.display_name');
-        }])
-        ->orderBy('id', 'desc')
-        ->get();
+            ->withCount('gamePlayers')
+            ->with(['gamePlayers' => function ($query) {
+                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
+                    ->select('game_players.*', 'party_members.display_name');
+            }])
+            ->orderBy('id', 'desc')
+            ->get();
 
         $parties = Party::with([
             'members',
@@ -31,9 +33,14 @@ class PartyController extends Controller
             ->withCount('members')
             ->get();
 
+
+        $gameController = new GameController();
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(1);
+
         return Inertia::render('Party', [
             'parties' => $parties,
             'games' => $games,
+            'readyPlayers' => $readyPlayers
         ]);
     }
 
