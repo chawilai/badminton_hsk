@@ -44,6 +44,39 @@ class PartyController extends Controller
         ]);
     }
 
+    public function fetchPartyData(Request $request)
+    {
+        $games = Game::with([
+            'gamePlayers.user',
+            'shuttlecocks',
+            'gameSets'
+        ])
+            ->withCount('gamePlayers')
+            ->with(['gamePlayers' => function ($query) {
+                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
+                    ->select('game_players.*', 'party_members.display_name');
+            }])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $parties = Party::with([
+            'members',
+            'members.user',
+        ])
+            ->withCount('members')
+            ->get();
+
+
+        $gameController = new GameController();
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(1);
+
+        return back()->with([
+            'parties' => $parties,
+            'games' => $games,
+            'readyPlayers' => $readyPlayers
+        ]);
+    }
+
     public function setInitialShuttlecocks(Request $request, Party $party)
     {
         $request->validate([

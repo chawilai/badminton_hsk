@@ -9,13 +9,14 @@ import { useConfirm } from "primevue/useconfirm";
 import Crud from "@/Pages/Prime/Crud.vue";
 
 import crown from "@/../assets/images/crown.png";
+import amyelsner from "@/../assets/demo/images/avatar/amyelsner.png";
 
 const toast = useToast();
 const confirmPopup = useConfirm();
 
 const page = usePage();
 
-const props = ref(page.props)
+const props = ref(page.props);
 
 const data = reactive({
   party_id: "1",
@@ -28,6 +29,7 @@ const parties = ref([]);
 const selectedParty = ref({});
 const games = ref([]);
 const isSidebar = ref(true);
+const visibleTop = ref(false);
 
 const game_data = reactive({
   game_id: "",
@@ -667,7 +669,7 @@ const finishGame = (gameId) => {
             thisGame.value = games.value.find((sc) => sc.id == gameId);
             game_players.value = thisGame.value.game_players;
 
-            props.value = res.props
+            props.value = res.props;
 
             if (res.props.flash.success && res.props.flash.success.length > 0) {
               toast.add({
@@ -962,6 +964,27 @@ const isPlayerInGame = (game) => {
   return game.game_players.some((player) => player.user_id === page.props.auth.user.id);
 };
 
+const getMaxPlayers = (gameType) => {
+  switch (gameType) {
+    case "double":
+      return 2;
+    case "quadruple":
+      return 4;
+    default:
+      return null; // Invalid or undefined game type
+  }
+};
+
+const isGameIsFull = (game) => {
+  if (!game || !game.game_players || !game.game_type) return false;
+
+  const maxPlayers = getMaxPlayers(game.game_type);
+
+  if (maxPlayers === null) return false;
+
+  return game.game_players.length >= maxPlayers;
+};
+
 const enterScore = (gameId) => {
   confirmPopup.require({
     target: event.target,
@@ -1029,10 +1052,41 @@ const enterScore = (gameId) => {
 };
 
 const partyReload = (payload) => {
-    console.log('Game Created')
-    console.log(payload)
-    router.get('party')
-}
+  console.log("Game Created");
+  console.log(payload);
+
+  router.post(
+    `/fetch-party-data`,
+    {},
+    {
+      preserveScroll: true,
+      headers: {
+        Accept: "application/json",
+      },
+      onSuccess: (res) => {
+        props.value = res.props;
+
+        game_data.party_member_id = "";
+        games.value = res.props.games;
+      },
+      onError: (err) => {
+        console.log(err);
+        if (err.onlyOnSetting) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "เพิ่มผู้เล่นระหว่างตั้งค่าเกมเท่านั้น",
+            life: 3000,
+          });
+        }
+      },
+    }
+  );
+
+  visibleTop.value = false;
+
+  //   router.get("party");
+};
 
 // compute
 const playerSortWaiting = computed(() => {
@@ -1066,84 +1120,96 @@ onMounted(() => {
         >
             asdfasdf
         </Sidebar> -->
+    <div class="card mt-4">
+      <Button icon="pi pi-plus" label="Create New Game" @click="visibleTop = true" />
 
-    <Game :data="props" @gameCreated="partyReload" />
+      <Sidebar
+        v-model:visible="visibleTop"
+        position="top"
+        style="height: auto; padding: 0px; margin: 0px"
+      >
+        <template #header>
+          <div class="flex align-items-center gap-2">
+            <Avatar :image="amyelsner" shape="circle" />
+            <span class="font-bold">Game Making</span>
+          </div>
+        </template>
+        <ScrollPanel style="width: 100%; height: 85vh">
+          <Game :data="props" @gameCreated="partyReload" />
+        </ScrollPanel>
+      </Sidebar>
+    </div>
 
-    <div class="py-12">
-      <div class="max-w-7xl mx-auto">
-        <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
-        <ConfirmPopup></ConfirmPopup>
-        <div class="card p-fluid">
-          <button type="button" @click="createGame()">Create Game</button>
+    <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
+    <ConfirmPopup></ConfirmPopup>
+    <div class="card p-fluid">
+      <button type="button" @click="createGame()">Create Game</button>
 
-          <select
-            name="party_id"
-            v-model="data.party_id"
-            @change="selectParty(data.party_id)"
-          >
-            <option></option>
-            <option v-for="party in parties" v-text="party.id"></option>
-          </select>
-          <select name="game_type" v-model="data.game_type">
-            <option></option>
-            <option
-              v-for="game_type in ['double', 'quadruple']"
-              v-text="game_type"
-            ></option>
-          </select>
+      <select
+        name="party_id"
+        v-model="data.party_id"
+        @change="selectParty(data.party_id)"
+      >
+        <option></option>
+        <option v-for="party in parties" v-text="party.id"></option>
+      </select>
+      <select name="game_type" v-model="data.game_type">
+        <option></option>
+        <option v-for="game_type in ['double', 'quadruple']" v-text="game_type"></option>
+      </select>
 
-          <input
-            v-if="data.party_id"
-            v-model.number="initial_shuttlecock_party"
-            type="number"
-            min="0"
-            name="initial_shuttlecock_party"
-            @blur="addPartyInitShuttleCock(data.party_id)"
-          />
-          <input
-            v-if="data.party_id"
-            v-model.number="data.initial_shuttlecock_game"
-            type="number"
-            min="0"
-            name="initial_shuttlecock_game"
-          />
+      <input
+        v-if="data.party_id"
+        v-model.number="initial_shuttlecock_party"
+        type="number"
+        min="0"
+        name="initial_shuttlecock_party"
+        @blur="addPartyInitShuttleCock(data.party_id)"
+      />
+      <input
+        v-if="data.party_id"
+        v-model.number="data.initial_shuttlecock_game"
+        type="number"
+        min="0"
+        name="initial_shuttlecock_game"
+      />
 
-          {{ selectedParty ? selectedParty.is_break_aftergame : "" }}
-          <br />
+      {{ selectedParty ? selectedParty.is_break_aftergame : "" }}
+      <br />
 
-          <select
-            name="game_id"
-            @change="fetchReadyPlayer(game_data.game_id)"
-            v-model="game_data.game_id"
-          >
-            <option></option>
-            <option
-              v-for="game in games"
-              :value="game.id"
-              v-text="`game:${game.id} party:${game.party_id} type:${game.game_type}`"
-            ></option>
-          </select>
-          <select name="party_member_id" v-model="game_data.party_member_id">
-            <option></option>
-            <option
-              v-for="(ready_player, index) in playerSortWaiting"
-              :value="ready_player.party_member_id"
-              v-text="
-                `${index + 1}: ${ready_player.badminton_rank} | ${ready_player.age} (${
-                  ready_player.display_name
-                }) [played:${
-                  ready_player.finished_games_count
-                }] [Wait Time: ${readAbleTime(ready_player.waiting_time)}]`
-              "
-            ></option>
-          </select>
-          <select name="team" v-model="game_data.team">
-            <option></option>
-            <option v-for="team in ['team1', 'team2']" v-text="team"></option>
-          </select>
-          <button type="button" @click="addPlayer()">Add Player</button>
-        </div>
-        <!-- <ul v-if="$page.props.errors">
+      <select
+        name="game_id"
+        @change="fetchReadyPlayer(game_data.game_id)"
+        v-model="game_data.game_id"
+      >
+        <option></option>
+        <option
+          v-for="game in games"
+          :value="game.id"
+          v-text="`game:${game.id} party:${game.party_id} type:${game.game_type}`"
+        ></option>
+      </select>
+      <select name="party_member_id" v-model="game_data.party_member_id">
+        <option></option>
+        <option
+          v-for="(ready_player, index) in playerSortWaiting"
+          :value="ready_player.party_member_id"
+          v-text="
+            `${index + 1}: ${ready_player.badminton_rank} | ${ready_player.age} (${
+              ready_player.display_name
+            }) [played:${ready_player.finished_games_count}] [Wait Time: ${readAbleTime(
+              ready_player.waiting_time
+            )}]`
+          "
+        ></option>
+      </select>
+      <select name="team" v-model="game_data.team">
+        <option></option>
+        <option v-for="team in ['team1', 'team2']" v-text="team"></option>
+      </select>
+      <button type="button" @click="addPlayer()">Add Player</button>
+    </div>
+    <!-- <ul v-if="$page.props.errors">
             <li
                 class="text-red-600"
                 v-for="error in $page.props.errors"
@@ -1151,7 +1217,7 @@ onMounted(() => {
             ></li>
         </ul> -->
 
-        <!-- <ul v-if="$page.props.flash.success">
+    <!-- <ul v-if="$page.props.flash.success">
           <li
             class="text-green-600"
             v-for="success in $page.props.flash.success"
@@ -1159,7 +1225,7 @@ onMounted(() => {
           ></li>
         </ul> -->
 
-        <!-- <ul v-if="$page.props.flash.info">
+    <!-- <ul v-if="$page.props.flash.info">
           <li
             class="text-blue-600"
             v-for="info in $page.props.flash.info"
@@ -1167,523 +1233,499 @@ onMounted(() => {
           ></li>
         </ul> -->
 
-        <div class="card">
-          <Panel header="GamePlayers" toggleable>
-            <div class="overflow-auto whitespace-nowrap">
-              <table v-if="visibleGameId" class="border-1 border-gray-300 m-2">
-                <thead class="bg-green-700 text-white">
-                  <tr>
-                    <th colspan="6" class="px-3 py-2 text-center">
-                      Game ID : {{ visibleGameId }}
-                      <span v-html="gameStatus(thisGame.status)"></span>
-                      {{ gamePlayerSummary() }}
-                    </th>
-                  </tr>
-                </thead>
-                <thead class="bg-green-700 text-white">
-                  <tr>
-                    <th class="px-3 py-2 text-center">Player ID</th>
-                    <th class="px-3 py-2 text-center">Name</th>
-                    <th class="px-3 py-2 text-center">Pic</th>
-                    <th class="px-3 py-2 text-center">Team</th>
-                    <!-- <th class="px-3 py-2 text-center">Gender</th> -->
-                    <th class="px-3 py-2 text-center">Range</th>
-                    <th class="px-3 py-2 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="player in game_players" :key="player.id">
-                    <td class="px-3 py-2 text-center">
-                      {{ player.user.id }}
-                    </td>
-                    <td class="px-3 py-2 text-center">
-                      {{ player.display_name }}
-                    </td>
-                    <td class="px-3 py-2 text-center">
-                      <img
-                        :src="player.user.avatar"
-                        class="w-4rem border-round-xl"
-                        alt=""
-                      />
-                    </td>
-                    <td
-                      class="px-3 py-2 text-center"
-                      v-html="teamLabel(player.team)"
-                    ></td>
-                    <!-- <td class="px-3 py-2 text-center">
+    <div class="card" v-if="false">
+      <Panel header="GamePlayers" toggleable>
+        <div class="overflow-auto whitespace-nowrap">
+          <table v-if="visibleGameId" class="border-1 border-gray-300 m-2">
+            <thead class="bg-green-700 text-white">
+              <tr>
+                <th colspan="6" class="px-3 py-2 text-center">
+                  Game ID : {{ visibleGameId }}
+                  <span v-html="gameStatus(thisGame.status)"></span>
+                  {{ gamePlayerSummary() }}
+                </th>
+              </tr>
+            </thead>
+            <thead class="bg-green-700 text-white">
+              <tr>
+                <th class="px-3 py-2 text-center">Player ID</th>
+                <th class="px-3 py-2 text-center">Name</th>
+                <th class="px-3 py-2 text-center">Pic</th>
+                <th class="px-3 py-2 text-center">Team</th>
+                <!-- <th class="px-3 py-2 text-center">Gender</th> -->
+                <th class="px-3 py-2 text-center">Range</th>
+                <th class="px-3 py-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="player in game_players" :key="player.id">
+                <td class="px-3 py-2 text-center">
+                  {{ player.user.id }}
+                </td>
+                <td class="px-3 py-2 text-center">
+                  {{ player.display_name }}
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <img :src="player.user.avatar" class="w-4rem border-round-xl" alt="" />
+                </td>
+                <td class="px-3 py-2 text-center" v-html="teamLabel(player.team)"></td>
+                <!-- <td class="px-3 py-2 text-center">
                                         {{ player.user.gender }}
                                     </td> -->
-                    <td class="px-3 py-2 text-center">
-                      {{ player.user.badminton_rank_id }}
-                    </td>
-                    <td class="px-3 py-2 text-center">
-                      <button
-                        class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
-                        @click="deletePlayer(visibleGameId, player.user.id)"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+                <td class="px-3 py-2 text-center">
+                  {{ player.user.badminton_rank_id }}
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <button
+                    class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
+                    @click="deletePlayer(visibleGameId, player.user.id)"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <!-- Dialog for Set Game Score -->
-        <Dialog
-          v-model:visible="visible"
-          header="บันทึกผลการแข่งขัน"
-          :style="{ width: '25rem', padding: '0px' }"
-          :position="position"
-          :modal="true"
-          :draggable="false"
-        >
+      </Panel>
+    </div>
+    <!-- Dialog for Set Game Score -->
+    <Dialog
+      v-model:visible="visible"
+      header="บันทึกผลการแข่งขัน"
+      :style="{ width: '25rem', padding: '0px' }"
+      :position="position"
+      :modal="true"
+      :draggable="false"
+    >
+      <div
+        class="flex flex-column align-items-center w-full"
+        v-for="(set, index) in sets"
+        :key="index"
+      >
+        <div class="text-center text-xl font-bold bg-blue-300 border-round-lg px-2 mb-2">
+          SET #{{ index + 1 }}
+        </div>
+        <div class="flex flex-row justify-content-center align-items-center">
+          <!-- Team 1 Section -->
           <div
-            class="flex flex-column align-items-center w-full"
-            v-for="(set, index) in sets"
-            :key="index"
+            :class="['p-3 border-round-xl relative', getTeamBackground(index, 'team1')]"
           >
-            <div
-              class="text-center text-xl font-bold bg-blue-300 border-round-lg px-2 mb-2"
-            >
-              SET #{{ index + 1 }}
-            </div>
-            <div class="flex flex-row justify-content-center align-items-center">
-              <!-- Team 1 Section -->
+            <img
+              v-show="showCrown(index, 'team1')"
+              :src="crown"
+              class="w-4rem h-4rem absolute -rotate-45"
+              style="top: -25px; left: -10px"
+              alt=""
+            />
+            <div class="p-text-secondary mb-2 text-center font-bold text-md">Team 1</div>
+            <div class="flex flex-row gap-1 justify-content-center mb-3">
               <div
-                :class="[
-                  'p-3 border-round-xl relative',
-                  getTeamBackground(index, 'team1'),
-                ]"
+                class="flex flex-column"
+                v-for="player in setScoreGame.game_players.filter(
+                  (item) => item.team === 'team1'
+                )"
+                :key="player.user.id"
               >
+                <div
+                  v-text="player.display_name"
+                  class="text-xs text-gray-500 text-center"
+                ></div>
                 <img
-                  v-show="showCrown(index, 'team1')"
-                  :src="crown"
-                  class="w-4rem h-4rem absolute -rotate-45"
-                  style="top: -25px; left: -10px"
-                  alt=""
+                  :src="player.user.avatar"
+                  class="w-4rem border-round-xl"
+                  alt="Player Avatar"
                 />
-                <div class="p-text-secondary mb-2 text-center font-bold text-md">
-                  Team 1
-                </div>
-                <div class="flex flex-row gap-1 justify-content-center mb-3">
-                  <div
-                    class="flex flex-column"
-                    v-for="player in setScoreGame.game_players.filter(
-                      (item) => item.team === 'team1'
-                    )"
-                    :key="player.user.id"
-                  >
-                    <div
-                      v-text="player.display_name"
-                      class="text-xs text-gray-500 text-center"
-                    ></div>
-                    <img
-                      :src="player.user.avatar"
-                      class="w-4rem border-round-xl"
-                      alt="Player Avatar"
-                    />
-                  </div>
-                </div>
-                <div class="w-full text-center">
-                  <div
-                    class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
-                  >
-                    <InputText
-                      v-model="set.team1_score"
-                      class="w-4rem text-center"
-                      @input="validateScore(index, 'team1_score')"
-                    />
-                    <div
-                      class="flex flex-column align-items-center justify-content-center gap-1"
-                    >
-                      <Button
-                        class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
-                        rounded
-                        type="button"
-                        label="Clear"
-                        severity="danger"
-                        @click="set.team1_score = 0"
-                      ></Button>
-                      <Button
-                        class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
-                        rounded
-                        type="button"
-                        label="21"
-                        severity="success"
-                        @click="set.team1_score = 21"
-                      ></Button>
-                    </div>
-                  </div>
-                  <div
-                    class="flex flex-row align-items-center justify-content-center gap-2"
-                  >
-                    <button
-                      type="button"
-                      style="width: 12px; height: 12px; margin-left: -10px"
-                      class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
-                      @click="set.team1_score > 0 ? set.team1_score-- : null"
-                    >
-                      -
-                    </button>
-                    <Slider
-                      :min="0"
-                      :max="30"
-                      v-model="set.team1_score"
-                      class="w-full"
-                      :data-set="'team1-set-' + index"
-                    />
-                    <button
-                      type="button"
-                      style="width: 12px; height: 12px; margin-right: -10px"
-                      class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
-                      @click="set.team1_score < 30 ? set.team1_score++ : null"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <Divider layout="vertical" />
-
-              <!-- Team 2 Section -->
-              <div
-                :class="[
-                  'p-3 border-round-xl relative',
-                  getTeamBackground(index, 'team2'),
-                ]"
-              >
-                <img
-                  v-show="showCrown(index, 'team2')"
-                  :src="crown"
-                  class="w-4rem h-4rem absolute rotate-45"
-                  style="top: -25px; right: -10px"
-                  alt=""
-                />
-                <div class="p-text-secondary mb-2 text-center font-bold text-md">
-                  Team 2
-                </div>
-                <div class="flex flex-row gap-1 justify-content-center mb-3">
-                  <div
-                    class="flex flex-column"
-                    v-for="player in setScoreGame.game_players.filter(
-                      (item) => item.team === 'team2'
-                    )"
-                    :key="player.user.id"
-                  >
-                    <div
-                      v-text="player.display_name"
-                      class="text-xs text-gray-500 text-center"
-                    ></div>
-                    <img
-                      :src="player.user.avatar"
-                      class="w-4rem border-round-xl"
-                      alt="Player Avatar"
-                    />
-                  </div>
-                </div>
-                <div class="w-full text-center">
-                  <div
-                    class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
-                  >
-                    <InputText
-                      v-model="set.team2_score"
-                      class="w-4rem text-center"
-                      @input="validateScore(index, 'team2_score')"
-                    />
-                    <div
-                      class="flex flex-column align-items-center justify-content-center gap-1"
-                    >
-                      <Button
-                        class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
-                        rounded
-                        type="button"
-                        label="Clear"
-                        severity="danger"
-                        @click="set.team2_score = 0"
-                      ></Button>
-                      <Button
-                        class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
-                        rounded
-                        type="button"
-                        label="21"
-                        severity="success"
-                        @click="set.team2_score = 21"
-                      ></Button>
-                    </div>
-                  </div>
-                  <div
-                    class="flex flex-row align-items-center justify-content-center gap-2"
-                  >
-                    <button
-                      type="button"
-                      style="width: 12px; height: 12px; margin-left: -10px"
-                      class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
-                      @click="set.team2_score > 0 ? set.team2_score-- : null"
-                    >
-                      -
-                    </button>
-                    <Slider
-                      :min="0"
-                      :max="30"
-                      v-model="set.team2_score"
-                      class="w-full"
-                      :data-set="'team2-set-' + index"
-                    />
-                    <button
-                      type="button"
-                      style="width: 12px; height: 12px; margin-right: -10px"
-                      class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
-                      @click="set.team2_score < 30 ? set.team2_score++ : null"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
-
-            <!-- Add <hr> Between Sets -->
-            <hr class="w-full my-4 border-gray-300" />
+            <div class="w-full text-center">
+              <div
+                class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
+              >
+                <InputText
+                  v-model="set.team1_score"
+                  class="w-4rem text-center"
+                  @input="validateScore(index, 'team1_score')"
+                />
+                <div
+                  class="flex flex-column align-items-center justify-content-center gap-1"
+                >
+                  <Button
+                    class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
+                    rounded
+                    type="button"
+                    label="Clear"
+                    severity="danger"
+                    @click="set.team1_score = 0"
+                  ></Button>
+                  <Button
+                    class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
+                    rounded
+                    type="button"
+                    label="21"
+                    severity="success"
+                    @click="set.team1_score = 21"
+                  ></Button>
+                </div>
+              </div>
+              <div class="flex flex-row align-items-center justify-content-center gap-2">
+                <button
+                  type="button"
+                  style="width: 12px; height: 12px; margin-left: -10px"
+                  class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                  @click="set.team1_score > 0 ? set.team1_score-- : null"
+                >
+                  -
+                </button>
+                <Slider
+                  :min="0"
+                  :max="30"
+                  v-model="set.team1_score"
+                  class="w-full"
+                  :data-set="'team1-set-' + index"
+                />
+                <button
+                  type="button"
+                  style="width: 12px; height: 12px; margin-right: -10px"
+                  class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                  @click="set.team1_score < 30 ? set.team1_score++ : null"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div class="flex align-items-center justify-content-center gap-2">
-            <Button
-              rounded
-              type="button"
-              :label="`เพิ่ม Set ${sets.length + 1}`"
-              severity="success"
-              @click="addNewSet"
-              text
-              raised
-            ></Button>
-            <Button
-              v-show="sets.length > 1"
-              class="w-5rem h-2rem"
-              style="font-size: 0.8rem"
-              rounded
-              type="button"
-              label="ลบ Set"
-              severity="danger"
-              @click="removeNewSet"
-              text
-              raised
-            ></Button>
-          </div>
+          <Divider layout="vertical" />
 
-          <div class="flex justify-content-end gap-2 mt-4">
-            <Button
-              type="button"
-              label="Cancel"
-              severity="secondary"
-              @click="(visible = false), (setScoreGame = {})"
-            ></Button>
-            <Button
-              type="button"
-              label="Save"
-              @click="enterScore(setScoreGame.id)"
-            ></Button>
+          <!-- Team 2 Section -->
+          <div
+            :class="['p-3 border-round-xl relative', getTeamBackground(index, 'team2')]"
+          >
+            <img
+              v-show="showCrown(index, 'team2')"
+              :src="crown"
+              class="w-4rem h-4rem absolute rotate-45"
+              style="top: -25px; right: -10px"
+              alt=""
+            />
+            <div class="p-text-secondary mb-2 text-center font-bold text-md">Team 2</div>
+            <div class="flex flex-row gap-1 justify-content-center mb-3">
+              <div
+                class="flex flex-column"
+                v-for="player in setScoreGame.game_players.filter(
+                  (item) => item.team === 'team2'
+                )"
+                :key="player.user.id"
+              >
+                <div
+                  v-text="player.display_name"
+                  class="text-xs text-gray-500 text-center"
+                ></div>
+                <img
+                  :src="player.user.avatar"
+                  class="w-4rem border-round-xl"
+                  alt="Player Avatar"
+                />
+              </div>
+            </div>
+            <div class="w-full text-center">
+              <div
+                class="flex flex-row align-items-center justify-content-center mb-3 gap-1"
+              >
+                <InputText
+                  v-model="set.team2_score"
+                  class="w-4rem text-center"
+                  @input="validateScore(index, 'team2_score')"
+                />
+                <div
+                  class="flex flex-column align-items-center justify-content-center gap-1"
+                >
+                  <Button
+                    class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
+                    rounded
+                    type="button"
+                    label="Clear"
+                    severity="danger"
+                    @click="set.team2_score = 0"
+                  ></Button>
+                  <Button
+                    class="w-2rem h-1rem text-xs flex align-items-center p-0 m-0"
+                    rounded
+                    type="button"
+                    label="21"
+                    severity="success"
+                    @click="set.team2_score = 21"
+                  ></Button>
+                </div>
+              </div>
+              <div class="flex flex-row align-items-center justify-content-center gap-2">
+                <button
+                  type="button"
+                  style="width: 12px; height: 12px; margin-left: -10px"
+                  class="flex align-items-center justify-content-center bg-red-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                  @click="set.team2_score > 0 ? set.team2_score-- : null"
+                >
+                  -
+                </button>
+                <Slider
+                  :min="0"
+                  :max="30"
+                  v-model="set.team2_score"
+                  class="w-full"
+                  :data-set="'team2-set-' + index"
+                />
+                <button
+                  type="button"
+                  style="width: 12px; height: 12px; margin-right: -10px"
+                  class="flex align-items-center justify-content-center bg-green-400 border-none border-round-xl text-white font-bold cursor-pointer"
+                  @click="set.team2_score < 30 ? set.team2_score++ : null"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           </div>
-        </Dialog>
-        <!-- Dialog for Set Game Score -->
-        <div class="card">
-          <Panel header="Games List" toggleable>
-            <div class="overflow-auto whitespace-nowrap">
-              <table class="">
-                <thead>
-                  <tr>
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      ID
-                    </th>
-                    <!-- <th
+        </div>
+
+        <!-- Add <hr> Between Sets -->
+        <hr class="w-full my-4 border-gray-300" />
+      </div>
+
+      <div class="flex align-items-center justify-content-center gap-2">
+        <Button
+          rounded
+          type="button"
+          :label="`เพิ่ม Set ${sets.length + 1}`"
+          severity="success"
+          @click="addNewSet"
+          text
+          raised
+        ></Button>
+        <Button
+          v-show="sets.length > 1"
+          class="w-5rem h-2rem"
+          style="font-size: 0.8rem"
+          rounded
+          type="button"
+          label="ลบ Set"
+          severity="danger"
+          @click="removeNewSet"
+          text
+          raised
+        ></Button>
+      </div>
+
+      <div class="flex justify-content-end gap-2 mt-4">
+        <Button
+          type="button"
+          label="Cancel"
+          severity="secondary"
+          @click="(visible = false), (setScoreGame = {})"
+        ></Button>
+        <Button type="button" label="Save" @click="enterScore(setScoreGame.id)"></Button>
+      </div>
+    </Dialog>
+    <!-- Dialog for Set Game Score -->
+    <div class="card">
+      <Panel header="Games List" toggleable>
+        <div class="overflow-auto whitespace-nowrap">
+          <table class="">
+            <thead>
+              <tr>
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">ID</th>
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   Party ID
                                               </th> -->
-                    <!-- <th
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   Game Type
                                               </th> -->
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Players
-                    </th>
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Status
-                    </th>
-                    <!-- <th
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Players
+                </th>
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Status
+                </th>
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   List At
                                               </th> -->
-                    <!-- <th
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   Played At
                                               </th> -->
-                    <!-- <th
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   Finished At
                                               </th> -->
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Detail
-                    </th>
-                    <!-- <th
+                <!-- <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Detail
+                </th> -->
+                <!-- <th
                                                   class="py-1 px-3 text-md text-center bg-green-500 text-white"
                                               >
                                                   Init
                                               </th> -->
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Shuttle
-                    </th>
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Action
-                    </th>
-                    <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
-                      Score
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="game in games"
-                    :key="game.id"
-                    :class="{
-                      'bg-red-200': isPlayerInGame(game),
-                    }"
-                  >
-                    <td class="px-2 py-1">{{ game.id }}</td>
-                    <!-- <td class="px-2 py-1">
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Shuttle
+                </th>
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Action
+                </th>
+                <th class="py-1 px-3 text-md text-center bg-green-500 text-white">
+                  Score
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="game in games"
+                :key="game.id"
+                :class="{
+                  'bg-teal-200': isPlayerInGame(game),
+                }"
+              >
+                <td class="px-2 py-1">{{ game.id }}</td>
+                <!-- <td class="px-2 py-1">
                                                   {{ game.party_id }}
                                               </td> -->
-                    <!-- <td class="px-2 py-1">
+                <!-- <td class="px-2 py-1">
                                                   {{ game.game_type }}
                                               </td> -->
-                    <td class="px-2 py-1 relative">
-                      <div
-                        class="flex flex-row align-items-center justify-content-center gap-1 z-0"
-                      >
-                        <img
-                          :src="player.user.avatar"
-                          v-for="player in game.game_players"
-                          class="w-3rem border-round-xl"
-                          alt=""
-                        />
-                      </div>
-                      <button
-                        class="absolute z-3 right-0 top-0"
-                        type="button"
-                        @click="autoAddPlayers(game.id)"
-                      >
-                        +
-                      </button>
-                    </td>
-                    <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
-                    <!-- <td class="px-2 py-1">
+                <td class="px-2 py-1 relative">
+                  <div
+                    class="flex flex-row align-items-center justify-content-center gap-1 z-0"
+                  >
+                    <img
+                      :src="player.user.avatar"
+                      v-for="player in game.game_players"
+                      class="w-3rem border-round-xl"
+                      alt=""
+                    />
+                  </div>
+                  <button
+                    v-if="!isGameIsFull(game)"
+                    class="absolute z-3 right-0 top-0"
+                    type="button"
+                    @click="autoAddPlayers(game.id)"
+                  >
+                    +
+                  </button>
+                </td>
+                <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
+                <!-- <td class="px-2 py-1">
                                                   {{ showTime(game.game_list_date) }}
                                               </td> -->
-                    <!-- <td class="px-2 py-1">
+                <!-- <td class="px-2 py-1">
                                                   {{ showTime(game.game_start_date) }}
                                               </td> -->
-                    <!-- <td class="px-2 py-1">
+                <!-- <td class="px-2 py-1">
                                                   {{ showTime(game.game_end_date) }}
                                               </td> -->
-                    <td class="px-2 py-1">
-                      <button @click="togglePlayers(game.id)">Show</button>
-                    </td>
-                    <!-- <td class="px-2 py-1">
+                <!-- <td class="px-2 py-1">
+                  <button @click="togglePlayers(game.id)">Show</button>
+                </td> -->
+                <!-- <td class="px-2 py-1">
                                                   {{ shuttlecocksInit(game) }}
                                               </td> -->
-                    <td class="px-2 py-1 relative text-center">
-                      {{ shuttlecocksTotal(game) }}
+                <td class="px-2 py-1 relative text-center">
+                  {{ shuttlecocksTotal(game) }}
 
-                      <button
-                        class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
-                        type="button"
-                        @click="returnShuttlecock(game.id)"
-                      >
-                        -
-                      </button>
-                      <button
-                        class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
-                        type="button"
-                        @click="addShuttlecock(game.id)"
-                      >
-                        +
-                      </button>
-                    </td>
-                    <td class="px-2 py-1 text-center">
-                      <button
-                        class="cursor-pointer ml-1 bg-purple-400 text-white border-1 border-purple-600 border-round-sm"
-                        v-show="game.status === 'setting'"
-                        @click="listGame(game.id, $event)"
-                      >
-                        List
-                      </button>
-                      <button
-                        class="cursor-pointer ml-1 bg-green-600 text-white border-1 border-green-600 border-round-sm"
-                        v-show="game.status === 'listing'"
-                        @click="startGame(game.id)"
-                      >
-                        Start
-                      </button>
-                      <button
-                        class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
-                        v-show="['setting', 'listing'].includes(game.status)"
-                        @click="deleteGame(game.id)"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        class="cursor-pointer ml-1 bg-blue-600 text-white border-1 border-blue-600 border-round-sm"
-                        v-show="game.status === 'playing'"
-                        @click="finishGame(game.id)"
-                      >
-                        Finish
-                      </button>
-                      <div v-show="game.status === 'finished'">
-                        {{ playTime(game.game_start_date, game.game_end_date) }}
-                      </div>
-                    </td>
-                    <td class="px-2 py-1 text-center">
-                      <div
-                        v-if="game.status === 'finished' && isPlayerInGame(game)"
-                        class="flex justify-content-center align-items-center"
-                      >
-                        <Button
-                          @click="openPosition('top', game)"
-                          label="ลงผล"
-                          severity="blue"
-                          style="font-size: 0.7rem"
-                          class="w-2rem h-1rem flex justify-content-center align-items-center"
-                        />
-                      </div>
-                      <div class="flex flex-column">
-                        <div
-                          v-show="game.game_sets[0].winning_team"
-                          v-html="`${game.game_sets.length} set`"
-                          class="underline font-bold"
-                        ></div>
-                        <div
-                          v-html="
-                            game_set.winning_team
-                              ? `${game_set.team1_score} : ${game_set.team2_score}`
-                              : `รอผู้เล่นลงผล`
-                          "
-                          v-for="game_set in game.game_sets"
-                        ></div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+                  <button
+                    class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
+                    type="button"
+                    @click="returnShuttlecock(game.id)"
+                  >
+                    -
+                  </button>
+                  <button
+                    class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
+                    type="button"
+                    @click="addShuttlecock(game.id)"
+                  >
+                    +
+                  </button>
+                </td>
+                <td class="px-2 py-1 text-center">
+                  <button
+                    class="cursor-pointer ml-1 bg-purple-400 text-white border-1 border-purple-600 border-round-sm"
+                    v-show="game.status === 'setting'"
+                    @click="listGame(game.id, $event)"
+                  >
+                    List
+                  </button>
+                  <button
+                    class="cursor-pointer ml-1 bg-green-600 text-white border-1 border-green-600 border-round-sm"
+                    v-show="game.status === 'listing'"
+                    @click="startGame(game.id)"
+                  >
+                    Start
+                  </button>
+                  <button
+                    class="cursor-pointer ml-1 bg-red-600 text-white border-1 border-red-600 border-round-sm"
+                    v-show="['setting', 'listing'].includes(game.status)"
+                    @click="deleteGame(game.id)"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    class="cursor-pointer ml-1 bg-blue-600 text-white border-1 border-blue-600 border-round-sm"
+                    v-show="game.status === 'playing'"
+                    @click="finishGame(game.id)"
+                  >
+                    Finish
+                  </button>
+                  <div v-show="game.status === 'finished'">
+                    {{ playTime(game.game_start_date, game.game_end_date) }}
+                  </div>
+                </td>
+                <td class="px-2 py-1 text-center">
+                  <div
+                    v-if="game.status === 'finished' && isPlayerInGame(game)"
+                    class="flex justify-content-center align-items-center"
+                  >
+                    <Button
+                      @click="openPosition('top', game)"
+                      label="ลงผล"
+                      severity="blue"
+                      style="font-size: 1rem"
+                      class="w-4rem h-2rem flex justify-content-center align-items-center"
+                    />
+                  </div>
+                  <div class="flex flex-column">
+                    <div
+                      v-if="
+                        game.status === 'finished' &&
+                        game.game_sets &&
+                        game.game_sets[0] &&
+                        game.game_sets[0].winning_team
+                      "
+                      v-html="`${game.game_sets.length} set`"
+                      class="underline font-bold"
+                    ></div>
+                    <div
+                      v-if="game.status === 'finished'"
+                      v-html="
+                        game_set && game_set.winning_team
+                          ? `${game_set.team1_score} : ${game_set.team2_score}`
+                          : `รอผู้เล่นลงผล`
+                      "
+                      v-for="game_set in game.game_sets"
+                    ></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
+      </Panel>
     </div>
 
     <!-- <Crud></Crud> -->
@@ -2189,6 +2231,10 @@ onMounted(() => {
   background-color: #ffffff;
   border-radius: 50%;
   box-shadow: 0px 0.5px 0px 0px rgba(0, 0, 0, 0.08), 0px 1px 1px 0px rgba(0, 0, 0, 0.14);
+}
+
+.p-sidebar-content {
+  padding: 0.8rem;
 }
 
 .p-slider .p-slider-handle:hover::before {

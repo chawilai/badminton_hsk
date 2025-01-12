@@ -41,7 +41,7 @@ class GameController extends Controller
 
         $readyPlayers = $this->fetchReadyPlayersByPartyID(1);
 
-        return Inertia::render('Game2', [
+        return Inertia::render('Game', [
             'parties' => $parties,
             'games' => $games,
             'readyPlayers' => $readyPlayers
@@ -406,24 +406,10 @@ class GameController extends Controller
             return back()->with('error', ['notInSetting' => 'Game is not in a setting state to list']);
         }
 
-        // Determine sides based on input or default values
-        $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
-        $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
-
-        // Determine the next set number by finding the highest current set number and adding 1
-        $nextSetNumber = $game->gameSets()->max('set_number') + 1 ?? 1;
-
         // Start the game
         $game->status = 'listing';
         $game->game_list_date = Carbon::now();
         $game->save();
-
-        // Initialize the first game set with specified or default sides
-        $initialSet = $game->gameSets()->create([
-            'set_number' => $nextSetNumber,
-            'team1_start_side' => $team1StartSide,
-            'team2_start_side' => $team2StartSide,
-        ]);
 
         return back()->with('success', 'The game has been listed for play.');
     }
@@ -488,22 +474,31 @@ class GameController extends Controller
             ]);
         }
 
-        // Determine sides for the game set
-        $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
-        $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
+        if($validatedData['process'] === 'playing') {
+            // Determine sides for the game set
+            $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
+            $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
 
-        // Initialize the first game set
-        $game->gameSets()->create([
-            'set_number' => 1,
-            'team1_start_side' => $team1StartSide,
-            'team2_start_side' => $team2StartSide,
-        ]);
+            // Initialize the first game set
+            $game->gameSets()->create([
+                'set_number' => 1,
+                'team1_start_side' => $team1StartSide,
+                'team2_start_side' => $team2StartSide,
+            ]);
+        }
 
         return back()->with('success', 'The game has been successfully created with the status set to ' . $validatedData['process'] . '.');
     }
 
     public function startGame(Request $request, $gameId)
     {
+        $validatedData = $request->validate([
+            'team1_start_side' => [
+                'sometimes',
+                Rule::in(['north', 'south'])
+            ]
+        ]);
+
         // Find the game or fail with a 404 error
         $game = Game::with('gamePlayers')->findOrFail($gameId);
 
@@ -530,6 +525,20 @@ class GameController extends Controller
         $game->status = 'playing';
         $game->game_start_date = Carbon::now();
         $game->save();
+
+        // Determine sides based on input or default values
+        $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
+        $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';
+
+        // Determine the next set number by finding the highest current set number and adding 1
+        $nextSetNumber = $game->gameSets()->max('set_number') + 1 ?? 1;
+
+        // Initialize the first game set with specified or default sides
+        $game->gameSets()->create([
+            'set_number' => $nextSetNumber,
+            'team1_start_side' => $team1StartSide,
+            'team2_start_side' => $team2StartSide,
+        ]);
 
         return back()->with('success', 'Game is starting.');
     }
