@@ -45,7 +45,7 @@ class SendIHRIApiSummaryEmail extends Command
 
         // Loop through each site and collect API responses
         $api_date = date('Y-m-d');
-        $api_date = '2025-01-11';
+        // $api_date = '2025-01-11';
 
         $data = [
             'send_date' => now()->format('Y-m-d H:i:s'),
@@ -77,8 +77,9 @@ class SendIHRIApiSummaryEmail extends Command
         $this->sendEmail($data);
         // \Log::info('API Summary Data:', $data);
 
-        // $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
-        // $logFile = storage_path('logs/api_summary.json');
+        $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $logFile = storage_path('logs/api_summary.json');
+        file_put_contents($logFile, $jsonData . PHP_EOL, FILE_APPEND);
         // file_put_contents($logFile, $jsonData);
 
         $this->info('API summary email sent successfully!');
