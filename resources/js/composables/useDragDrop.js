@@ -325,10 +325,6 @@ export function useDragDrop() {
                     fromZone[draggedIndex] = fromZone[hoveredIndex];
                     fromZone[hoveredIndex] = temp;
 
-                    // console.log(
-                    //     `Swapped ${draggedItem.value.title} with ${hoveredItem.value.title} within ${draggedFrom.value}`
-                    // );
-
                     toast.add({
                         severity: "info",
                         summary: "สลับผู้เล่น",
@@ -337,24 +333,20 @@ export function useDragDrop() {
                         life: 1500,
                     });
                 } else {
-                    // Move to the end if not hovered over an item
-                    const [removedDraggedItem] = fromZone.splice(
-                        draggedIndex,
-                        1
-                    );
-                    fromZone.push(removedDraggedItem);
-
-                    // console.log(
-                    //     `Moved ${draggedItem.value.title} to the end of ${draggedFrom.value}`
+                    // drag and drop in same zone do notthing
+                    // // Move to the end if not hovered over an item
+                    // const [removedDraggedItem] = fromZone.splice(
+                    //     draggedIndex,
+                    //     1
                     // );
+                    // fromZone.push(removedDraggedItem);
 
-                    toast.add({
-                        severity: "info",
-                        summary: "ย้ายผู้เล่น",
-                        detail: `ย้าย ${draggedItem.value.title} ไปยัง ${draggedFrom.value} สำเร็จ`,
-                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
-                        life: 1500,
-                    });
+                    // toast.add({
+                    //     severity: "info",
+                    //     summary: "ย้ายผู้เล่น",
+                    //     detail: `ย้าย ${draggedItem.value.title} ไปยัง ${draggedFrom.value} สำเร็จ`,
+                    //     life: 1500,
+                    // });
                 }
             } else {
                 // Case 2: Moving to a different drop zone
@@ -370,10 +362,6 @@ export function useDragDrop() {
                         removedDraggedItem
                     );
                     fromZone.splice(draggedIndex, 0, removedHoveredItem); // Place the hovered item back to the dragged item's original position
-
-                    // console.log(
-                    //     `Swapped ${draggedItem.value.title} from ${draggedFrom.value} with ${hoveredItem.value.title} in ${dropZoneActive.value}`
-                    // );
 
                     toast.add({
                         severity: "info",
@@ -402,12 +390,24 @@ export function useDragDrop() {
                         return; // Prevent adding the item
                     }
 
+                    // Playing Zone not for drag & drop
+                    if (
+                        ["Playing", "Listing"].includes(dropZoneActive.value)
+                    ) {
+                        toast.add({
+                            severity: "error",
+                            summary: "ย้ายผู้เล่นล้มเหลว",
+                            detail: "ไม่สามารถย้ายผู้เล่นมา Zone นี้ได้",
+                            // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                            life: 1500,
+                        });
+
+                        resetDragState();
+                        return; // Prevent adding the item
+                    }
+
                     const [removedItem] = fromZone.splice(draggedIndex, 1);
                     toZone.push(removedItem);
-
-                    // console.log(
-                    //     `Moved ${draggedItem.value.title} from ${draggedFrom.value} to ${dropZoneActive.value}`
-                    // );
 
                     console.log(dropZones.Game)
 

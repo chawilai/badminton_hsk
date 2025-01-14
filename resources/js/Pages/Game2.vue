@@ -1,15 +1,6 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import {
-  ref,
-  watch,
-  reactive,
-  computed,
-  onMounted,
-  defineProps,
-  defineEmits,
-  callWithAsyncErrorHandling,
-} from "vue";
+import { ref, watch, computed, onMounted, defineProps, defineEmits } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 
 import { useToast } from "primevue/usetoast";
@@ -86,7 +77,6 @@ const sortedPlayerByGamePlayed = computed(() => {
   });
 });
 
-// Toggle sort order and update dropZones.Ready
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
   dropZones.Ready = [...sortedPlayerByGamePlayed.value]; // Ensure value is evaluated
@@ -103,7 +93,7 @@ const startNewGame = () => {
   router.post(
     `/games/create-game`,
     {
-      party_id: 1, // Dummy party ID
+      party_id: 2, // Dummy party ID
       game_type: "quadruple", // Game type: 'double' or 'quadruple'
       players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
       team1_start_side: "north", // Optional, defaults to 'north'
@@ -154,7 +144,7 @@ const listNewGame = () => {
   router.post(
     `/games/create-game`,
     {
-      party_id: 1, // Dummy party ID
+      party_id: 2, // Dummy party ID
       game_type: "quadruple", // Game type: 'double' or 'quadruple'
       players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
       team1_start_side: "north", // Optional, defaults to 'north'
@@ -211,7 +201,6 @@ const listNewGame = () => {
   );
 };
 
-// Watch the data prop for changes
 watch(
   () => props.data, // Watch the prop
   (newData) => {
@@ -228,20 +217,6 @@ watch(
 
 onMounted(() => {
   toggleSortOrder();
-
-  //   const channel = ably.channels.get("get-started");
-
-  //   // Subscribe to messages
-  //   channel.subscribe("first", (message) => {
-  //     messages.value.push(message.data);
-  //   });
-
-  //   // Publish a message
-  //   channel.publish("first", "Hello from Vue!", (err) => {
-  //     if (err) {
-  //       console.error("Error publishing message:", err);
-  //     }
-  //   });
 });
 </script>
 

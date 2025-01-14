@@ -70,7 +70,7 @@ class SocialController extends Controller
 
         \DB::table('party_members')->insert([
             'user_id' => $newUser->id,
-            'party_id' => 1,
+            'party_id' => 2,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -131,7 +131,7 @@ class SocialController extends Controller
 
         \DB::table('party_members')->insert([
             'user_id' => $newUser->id,
-            'party_id' => 1,
+            'party_id' => 2,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

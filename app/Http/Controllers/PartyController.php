@@ -23,6 +23,7 @@ class PartyController extends Controller
                 $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
                     ->select('game_players.*', 'party_members.display_name');
             }])
+            ->where('party_id', 2) // Filter games with party_id = 2
             ->orderBy('id', 'desc')
             ->get();
 
@@ -35,7 +36,7 @@ class PartyController extends Controller
 
 
         $gameController = new GameController();
-        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(1);
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(2);
 
         return Inertia::render('Party', [
             'parties' => $parties,
@@ -56,6 +57,7 @@ class PartyController extends Controller
                 $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
                     ->select('game_players.*', 'party_members.display_name');
             }])
+            ->where('party_id', 2) // Filter games with party_id = 2
             ->orderBy('id', 'desc')
             ->get();
 
@@ -68,7 +70,7 @@ class PartyController extends Controller
 
 
         $gameController = new GameController();
-        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(1);
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(2);
 
         return back()->with([
             'parties' => $parties,

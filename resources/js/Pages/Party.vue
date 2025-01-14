@@ -9,7 +9,6 @@ import { useConfirm } from "primevue/useconfirm";
 import Crud from "@/Pages/Prime/Crud.vue";
 
 import crown from "@/../assets/images/crown.png";
-import amyelsner from "@/../assets/demo/images/avatar/amyelsner.png";
 
 const toast = useToast();
 const confirmPopup = useConfirm();
@@ -19,7 +18,7 @@ const page = usePage();
 const props = ref(page.props);
 
 const data = reactive({
-  party_id: "1",
+  party_id: "2",
   game_type: "quadruple",
   status: "setting",
   initial_shuttlecock_game: 0,
@@ -1130,7 +1129,7 @@ onMounted(() => {
       >
         <template #header>
           <div class="flex align-items-center gap-2">
-            <Avatar :image="amyelsner" shape="circle" />
+            <Avatar :image="$page.props.auth.user.avatar" shape="circle" />
             <span class="font-bold">Game Making</span>
           </div>
         </template>
@@ -1639,14 +1638,14 @@ onMounted(() => {
                   {{ shuttlecocksTotal(game) }}
 
                   <button
-                    class="absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
+                    class="cursor-pointer absolute z-3 left-0 top-8 bg-red-100 border-1 border-gray-400 border-round-xl"
                     type="button"
                     @click="returnShuttlecock(game.id)"
                   >
                     -
                   </button>
                   <button
-                    class="absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
+                    class="cursor-pointer absolute z-3 right-0 top-8 bg-green-100 border-1 border-gray-400 border-round-xl"
                     type="button"
                     @click="addShuttlecock(game.id)"
                   >
@@ -1738,7 +1737,7 @@ onMounted(() => {
 
           <div class="overflow-auto whitespace-nowrap">
             <div
-              v-for="(member, index) in parties[0].members"
+              v-for="(member, index) in parties[1].members"
               :key="member.id"
               class="flex flex-column mb-3"
             >
@@ -1759,14 +1758,14 @@ onMounted(() => {
                   placeholder="Enter display name"
                   @blur="updateDisplayName(member.id, member.display_name)"
                 />
-                <button
+                <!-- <button
                   class=""
                   type="button"
                   @click="updateDisplayName(member.id, member.display_name)"
                   raised
                 >
                   Save
-                </button>
+                </button> -->
                 <div v-text="`(${member.user.name})`"></div>
               </div>
             </div>

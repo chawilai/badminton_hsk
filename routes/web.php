@@ -180,6 +180,14 @@ Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])-
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
 
+Route::get('/test-email', function () {
+    \Illuminate\Support\Facades\Mail::raw('This is a test email.', function ($message) {
+        $message->to('wat.chawilai@gmail.com')
+                ->subject('Test Email');
+    });
+    return 'Test email sent!';
+});
+
 Route::fallback(function () {
     return Inertia::render('404');
 });

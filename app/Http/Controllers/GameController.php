@@ -24,13 +24,14 @@ class GameController extends Controller
             'shuttlecocks',
             'gameSets'
         ])
-        ->withCount('gamePlayers')
-        ->with(['gamePlayers' => function ($query) {
-            $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
-                  ->select('game_players.*', 'party_members.display_name');
-        }])
-        ->orderBy('id', 'desc')
-        ->get();
+            ->withCount('gamePlayers')
+            ->with(['gamePlayers' => function ($query) {
+                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
+                    ->select('game_players.*', 'party_members.display_name');
+            }])
+            ->where('party_id', 2) // Filter games with party_id = 2
+            ->orderBy('id', 'desc')
+            ->get();
 
         $parties = Party::with([
             'members',
@@ -39,7 +40,7 @@ class GameController extends Controller
             ->withCount('members')
             ->get();
 
-        $readyPlayers = $this->fetchReadyPlayersByPartyID(1);
+        $readyPlayers = $this->fetchReadyPlayersByPartyID(2);
 
         return Inertia::render('Game', [
             'parties' => $parties,
@@ -274,7 +275,7 @@ class GameController extends Controller
         return back()->with(['response' => $mappedPlayers]);
     }
 
-    public function fetchReadyPlayersByPartyID($partyId)
+    public function fetchReadyPlayersByPartyID(2partyId)
     {
         $party = Party::find($partyId);
 
