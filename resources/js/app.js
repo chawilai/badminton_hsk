@@ -8,6 +8,7 @@ import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
 import { Draggable, DraggablePlugin, DraggableDirective } from '@braks/revue-draggable';
 
+import Vue3Lottie from 'vue3-lottie'
 // Prime Vue
 
 import PrimeVue from "primevue/config";
@@ -165,6 +166,7 @@ createInertiaApp({
         app.use(ToastService);
         app.use(DialogService);
         app.use(ConfirmationService);
+        app.use(Vue3Lottie);
 
         app.directive("tooltip", Tooltip);
         app.directive("badge", BadgeDirective);

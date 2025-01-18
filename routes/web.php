@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\OrderStatusUpdate;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\ProfileController;
@@ -19,8 +20,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-$user = User::findOrFail(18);
-Auth::login($user);
+// $user = User::findOrFail(18);
+// Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -50,6 +51,13 @@ Route::get('/', function () {
 
 Route::get('/organic', function () {
     return Inertia::render('Organic');
+});
+
+Route::post('/reverb/{game}', function (Game $game) {
+
+    OrderStatusUpdate::dispatch($game);
+
+    return to_route('party');
 });
 
 Route::get('/warrior_home', function () {
@@ -169,6 +177,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/games', [GameController::class, 'index'])->name('games');
 
+    Route::get('/party_home', [PartyController::class, 'partyHome'])->name('party-home');
     Route::get('/party', [PartyController::class, 'index'])->name('party');
     // Route::get('/party', [PartyController::class, 'index'])->name('party')->middleware(CheckUserSetup::class);
 });
@@ -179,14 +188,6 @@ Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
-
-Route::get('/test-email', function () {
-    \Illuminate\Support\Facades\Mail::raw('This is a test email.', function ($message) {
-        $message->to('wat.chawilai@gmail.com')
-                ->subject('Test Email');
-    });
-    return 'Test email sent!';
-});
 
 Route::fallback(function () {
     return Inertia::render('404');

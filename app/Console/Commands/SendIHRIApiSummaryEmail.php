@@ -43,9 +43,12 @@ class SendIHRIApiSummaryEmail extends Command
             'https://www.rsat-ubn.actse-clinic.com/api/ihri_data_api_send.php',
         ];
 
-        // Loop through each site and collect API responses
+        // $sites = [
+        //     'https://carematapp.com.test/api/ihri_data_api_send.php',
+        // ];
+
         $api_date = date('Y-m-d');
-        // $api_date = '2025-01-11';
+        // $api_date = '2025-01-14';
 
         $data = [
             'send_date' => now()->format('Y-m-d H:i:s'),
@@ -59,12 +62,13 @@ class SendIHRIApiSummaryEmail extends Command
                 $response = Http::post($site, [
                     'api_date' => $api_date,
                 ]);
+
                 if ($response->successful()) {
                     $json = $response->json();
                     $data['site_data'][] = [
                         'site_name' => $json['site_name'] ?? 'Unknown Site',
-                        'uid_count' => count($json['uid_lists'] ?? []),
-                        'uid_lists' => count($json['uid_lists']) > 0 ? array_keys($json['uid_lists']) : [],
+                        'uid_count' => count($json['uid_lists_email'] ?? []),
+                        'uid_lists_email' => count($json['uid_lists_email']) > 0 ? $json['uid_lists_email'] : [],
                     ];
                 } else {
                     $this->error("Failed to fetch data from: $site");
@@ -74,27 +78,51 @@ class SendIHRIApiSummaryEmail extends Command
             }
         }
 
-        $this->sendEmail($data);
-        // \Log::info('API Summary Data:', $data);
+        // Check if at least one site has records before sending the email
+        $hasData = collect($data['site_data'])->contains(function ($site) {
+            return $site['uid_count'] > 0;
+        });
 
+        if ($hasData) {
+            $this->sendEmail($data);
+            $this->info('API summary email sent successfully!');
+        } else {
+            $this->info('No data to send. Email not sent.');
+        }
+
+        // Save the summary data to the log file
         $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE);
         $logFile = storage_path('logs/api_summary.json');
-        file_put_contents($logFile, $jsonData . PHP_EOL, FILE_APPEND);
-        // file_put_contents($logFile, $jsonData);
-
-        $this->info('API summary email sent successfully!');
+        file_put_contents($logFile, $jsonData);
     }
+
 
     private function sendEmail($data)
     {
         // Generate the HTML email content
         $tableRows = '';
         foreach ($data['site_data'] as $site) {
-            $tableRows .= "<tr>
-                <td>{$site['site_name']}</td>
-                <td>{$site['uid_count']}</td>
-                <td>" . implode(', ', $site['uid_lists']) . "</td>
-            </tr>";
+
+            if (count($site['uid_lists_email']) > 0) {
+                $tableRows .= "<tr>
+                    <td rowspan='" . (count($site['uid_lists_email']) + 1) . "'>{$site['site_name']}</td>
+                    <td rowspan='" . (count($site['uid_lists_email']) + 1) . "'>{$site['uid_count']}</td>
+                </tr>";
+                // Add rows for UID Lists
+                foreach ($site['uid_lists_email'] as $uidData) {
+                    $tableRows .= "<tr>
+                        <td>{$uidData['service_date']}</td>
+                        <td>{$uidData['uid']}</td>
+                    </tr>";
+                }
+            } else {
+                $tableRows .= "<tr>
+                    <td rowspan='" . (count($site['uid_lists_email']) + 1) . "'>{$site['site_name']}</td>
+                    <td rowspan='" . (count($site['uid_lists_email']) + 1) . "'>{$site['uid_count']}</td>
+                    <td></td>
+                    <td></td>
+                </tr>";
+            }
         }
 
         $htmlContent = view('emails.api_summary', ['data' => $data, 'tableRows' => $tableRows])->render();

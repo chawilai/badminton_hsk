@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderStatusUpdate;
 use App\Models\Game;
 use App\Models\Party;
 use Illuminate\Http\Request;
@@ -20,12 +21,17 @@ class PartyController extends Controller
         ])
             ->withCount('gamePlayers')
             ->with(['gamePlayers' => function ($query) {
-                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
-                    ->select('game_players.*', 'party_members.display_name');
+                $query->leftJoin('games', 'game_players.game_id', '=', 'games.id') // Link game_players to games
+                    ->leftJoin('party_members', function ($join) {
+                        $join->on('game_players.user_id', '=', 'party_members.user_id')
+                             ->on('party_members.party_id', '=', 'games.party_id'); // Match the party
+                    })
+                    ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
             ->where('party_id', 2) // Filter games with party_id = 2
             ->orderBy('id', 'desc')
             ->get();
+
 
         $parties = Party::with([
             'members',
@@ -34,7 +40,6 @@ class PartyController extends Controller
             ->withCount('members')
             ->get();
 
-
         $gameController = new GameController();
         $readyPlayers = $gameController->fetchReadyPlayersByPartyID(2);
 
@@ -42,6 +47,20 @@ class PartyController extends Controller
             'parties' => $parties,
             'games' => $games,
             'readyPlayers' => $readyPlayers
+        ]);
+    }
+
+    public function partyHome(Request $request)
+    {
+        $parties = Party::with([
+            'members',
+            'members.user',
+        ])
+            ->withCount('members')
+            ->get();
+
+        return Inertia::render('PartyHome', [
+            'parties' => $parties,
         ]);
     }
 
@@ -54,12 +73,18 @@ class PartyController extends Controller
         ])
             ->withCount('gamePlayers')
             ->with(['gamePlayers' => function ($query) {
-                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
-                    ->select('game_players.*', 'party_members.display_name');
+                $query->leftJoin('games', 'game_players.game_id', '=', 'games.id') // Link game_players to games
+                    ->leftJoin('party_members', function ($join) {
+                        $join->on('game_players.user_id', '=', 'party_members.user_id')
+                             ->on('party_members.party_id', '=', 'games.party_id'); // Match the party
+                    })
+                    ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
             ->where('party_id', 2) // Filter games with party_id = 2
             ->orderBy('id', 'desc')
             ->get();
+
+
 
         $parties = Party::with([
             'members',

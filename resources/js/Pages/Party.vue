@@ -17,6 +17,11 @@ const page = usePage();
 
 const props = ref(page.props);
 
+Echo.private('lobbyxxx')
+    .listen('OrderStatusUpdate', (event) => {
+        console.log('event')
+    })
+
 const data = reactive({
   party_id: "2",
   game_type: "quadruple",
@@ -145,6 +150,25 @@ watch(
   },
   { deep: true }
 );
+
+const reverbTest = () => {
+    router.post(
+    `/reverb/40`,
+    { display_name: 'newName' },
+    {
+      preserveScroll: true,
+      headers: {
+        Accept: "application/json",
+      },
+      onSuccess: (response) => {
+        // console.log(response)
+      },
+      onError: (error) => {
+
+      },
+    }
+  );
+}
 
 const getTeamBackground = (index, team) => {
   const set = sets.value[index];
@@ -1138,7 +1162,7 @@ onMounted(() => {
         </ScrollPanel>
       </Sidebar>
     </div>
-
+    <button @click="reverbTest">Reverb</button>
     <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
     <ConfirmPopup></ConfirmPopup>
     <div class="card p-fluid">
@@ -1737,7 +1761,7 @@ onMounted(() => {
 
           <div class="overflow-auto whitespace-nowrap">
             <div
-              v-for="(member, index) in parties[1].members"
+              v-for="(member, index) in parties[0].members"
               :key="member.id"
               class="flex flex-column mb-3"
             >

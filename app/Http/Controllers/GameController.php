@@ -26,12 +26,17 @@ class GameController extends Controller
         ])
             ->withCount('gamePlayers')
             ->with(['gamePlayers' => function ($query) {
-                $query->leftJoin('party_members', 'game_players.user_id', '=', 'party_members.user_id')
-                    ->select('game_players.*', 'party_members.display_name');
+                $query->leftJoin('games', 'game_players.game_id', '=', 'games.id') // Link game_players to games
+                    ->leftJoin('party_members', function ($join) {
+                        $join->on('game_players.user_id', '=', 'party_members.user_id')
+                             ->on('party_members.party_id', '=', 'games.party_id'); // Match the party
+                    })
+                    ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
             ->where('party_id', 2) // Filter games with party_id = 2
             ->orderBy('id', 'desc')
             ->get();
+
 
         $parties = Party::with([
             'members',
@@ -275,7 +280,7 @@ class GameController extends Controller
         return back()->with(['response' => $mappedPlayers]);
     }
 
-    public function fetchReadyPlayersByPartyID(2partyId)
+    public function fetchReadyPlayersByPartyID($partyId)
     {
         $party = Party::find($partyId);
 
@@ -475,7 +480,7 @@ class GameController extends Controller
             ]);
         }
 
-        if($validatedData['process'] === 'playing') {
+        if ($validatedData['process'] === 'playing') {
             // Determine sides for the game set
             $team1StartSide = $validatedData['team1_start_side'] ?? 'north';
             $team2StartSide = $team1StartSide === 'north' ? 'south' : 'north';

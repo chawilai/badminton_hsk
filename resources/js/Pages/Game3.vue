@@ -1,32 +1,24 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import { ref, watch, reactive, computed, onMounted } from "vue";
-import AppLayout from "@/layout/AppLayout.vue";
+import { ref, watch, computed, onMounted, defineProps, defineEmits } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 
-// import Ably from "ably";
-// import Echo from 'laravel-echo';
-
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: 'qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo',
-//     wsHost: 'realtime.ably.io',
-//     wsPort: 443,
-//     wssPort: 443,
-//     forceTLS: true,
-//     disableStats: true,
-// });
-
-const messages = ref([]);
-// const ably = new Ably.Realtime("qCCD1A.jbJmHw:TuTOdTumcVtmRSP_sCQ2kxSpmP5OEVcG1UhjvuwGJVo");
-
 const toast = useToast();
 const confirmPopup = useConfirm();
 
-const page = usePage();
+let props = defineProps({
+  data: {
+    type: Object,
+  },
+});
+
+// Define the emits
+const emit = defineEmits(["gameCreated"]);
+
+const localData = ref({ ...props.data });
 
 const {
   dropZones,
@@ -61,7 +53,7 @@ const {
 } = useDragDrop();
 
 const formattedData = computed(() =>
-  page.props.readyPlayers.map((item) => ({
+  localData.value.readyPlayers.map((item) => ({
     id: item.user_id,
     title: shortenTitle(item.display_name),
     avatar: item.avatar,
@@ -85,7 +77,6 @@ const sortedPlayerByGamePlayed = computed(() => {
   });
 });
 
-// Toggle sort order and update dropZones.Ready
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
   dropZones.Ready = [...sortedPlayerByGamePlayed.value]; // Ensure value is evaluated
@@ -115,10 +106,10 @@ const startNewGame = () => {
         Accept: "application/json",
       },
       onSuccess: (res) => {
-        console.log(res.props);
-
         dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
         dropZones.Game = [];
+
+        emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
 
         toast.add({
           severity: "success",
@@ -166,11 +157,10 @@ const listNewGame = () => {
         Accept: "application/json",
       },
       onSuccess: (res) => {
-        console.log(res.props);
-        // games.value = res.props.games;
-
         dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
         dropZones.Game = [];
+
+        emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
 
         toast.add({
           severity: "success",
@@ -180,11 +170,21 @@ const listNewGame = () => {
         });
       },
       onError: (err) => {
+        console.log(err);
+
         if (err.notMatchType) {
           toast.add({
             severity: "error",
             summary: "ล้มเหลว",
             detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
+            life: 3000,
+          });
+        }
+        if (err.players) {
+          toast.add({
+            severity: "error",
+            summary: "ล้มเหลว",
+            detail: "โปรดกำหนดผู้เล่นให้ครบถ้วน",
             life: 3000,
           });
         }
@@ -201,29 +201,27 @@ const listNewGame = () => {
   );
 };
 
+watch(
+  () => props.data, // Watch the prop
+  (newData) => {
+    console.log("Props data updated:", newData);
+
+    localData.value = newData;
+
+    toggleSortOrder();
+
+    console.log(localData.value.readyPlayers);
+  },
+  { immediate: true } // Run immediately on initial mount
+);
+
 onMounted(() => {
   toggleSortOrder();
-
-  //   const channel = ably.channels.get("get-started");
-
-  //   // Subscribe to messages
-  //   channel.subscribe("first", (message) => {
-  //     messages.value.push(message.data);
-  //   });
-
-  //   // Publish a message
-  //   channel.publish("first", "Hello from Vue!", (err) => {
-  //     if (err) {
-  //       console.error("Error publishing message:", err);
-  //     }
-  //   });
 });
 </script>
 
 <template>
-  <Head title="Game" />
-
-  <AppLayout>
+  <div>
     <div class="flex flex-column sm:flex-row justify-content-center gap-4">
       <!-- Game Zone -->
       <div
@@ -268,6 +266,7 @@ onMounted(() => {
           >
             <!-- Subtract Button -->
             <button
+              class="w-2rem h-2rem"
               @mousedown.stop
               @mouseup.stop="handleMouseUp"
               @touchstart.stop="handleTouchStart"
@@ -306,7 +305,7 @@ onMounted(() => {
       <!-- Ready Zone -->
       <div class="flex-1 flex flex-column justify-content-center w-full gap-3">
         <div
-          class="col-12 drop-zone-ready p-2 sm:p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-ready p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Ready"
           :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
         >
@@ -328,7 +327,7 @@ onMounted(() => {
                 @touchstart.stop="handleTouchStart"
                 @touchend.stop="handleTouchEnd(item, 'Ready')"
                 @dblclick.stop="handleDoubleClick(item, 'Ready')"
-                class="add-button"
+                class="add-button w-2rem h-2rem"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -356,7 +355,7 @@ onMounted(() => {
 
         <!-- Playing Zone -->
         <div
-          class="col-12 drop-zone-xxx p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-playing p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Playing"
           :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
         >
@@ -378,7 +377,7 @@ onMounted(() => {
                 @touchstart.stop="handleTouchStart"
                 @touchend.stop="handleTouchEnd(item, 'Playing')"
                 @dblclick.stop="handleDoubleClick(item, 'Playing')"
-                class="add-button"
+                class="add-button w-2rem h-2rem"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -406,7 +405,7 @@ onMounted(() => {
 
         <!-- Listing Zone -->
         <div
-          class="col-12 drop-zone-listing p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-listing p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Listing"
           :class="{ 'drop-zone-active': dropZoneActive === 'Listing' }"
         >
@@ -428,7 +427,7 @@ onMounted(() => {
                 @touchstart.stop="handleTouchStart"
                 @touchend.stop="handleTouchEnd(item, 'Listing')"
                 @dblclick.stop="handleDoubleClick(item, 'Listing')"
-                class="add-button"
+                class="add-button w-2rem h-2rem"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -456,7 +455,7 @@ onMounted(() => {
 
         <!-- Break Zone -->
         <div
-          class="col-12 drop-zone-break p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-break p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Break"
           :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
         >
@@ -478,7 +477,7 @@ onMounted(() => {
                 @touchstart.stop="handleTouchStart"
                 @touchend.stop="handleTouchEnd(item, 'Break')"
                 @dblclick.stop="handleDoubleClick(item, 'Break')"
-                class="add-button"
+                class="add-button w-2rem h-2rem"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -506,7 +505,7 @@ onMounted(() => {
 
         <!-- Finish Zone -->
         <div
-          class="col-12 drop-zone-finish p-3 p-card flex flex-column gap-3 shadow-md"
+          class="col-12 drop-zone-finish p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
           data-zone="Finish"
           :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
         >
@@ -528,7 +527,7 @@ onMounted(() => {
                 @touchstart.stop="handleTouchStart"
                 @touchend.stop="handleTouchEnd(item, 'Finish')"
                 @dblclick.stop="handleDoubleClick(item, 'Finish')"
-                class="add-button"
+                class="add-button w-2rem h-2rem"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -570,7 +569,7 @@ onMounted(() => {
       <img :src="draggedItem.avatar" alt="Dragging Avatar" class="avatar drag-avatar" />
       <span class="text-center font-medium" v-text="draggedItem.title"></span>
     </div>
-  </AppLayout>
+  </div>
 </template>
 
 <style scoped>
@@ -588,7 +587,7 @@ onMounted(() => {
   border-radius: 10px;
 }
 
-.drop-zone-xxx {
+.drop-zone-playing {
   border: 3px dashed var(--teal-300);
   background-color: var(--teal-50);
   border-radius: 10px;

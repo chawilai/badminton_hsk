@@ -11,8 +11,8 @@
         "@vitejs/plugin-vue": "^5.0.0",
         "@vue/server-renderer": "^3.4.0",
         "autoprefixer": "^10.4.12",
-        "axios": "^1.6.4",
-        "laravel-echo": "^1.17.1",
+        "axios": "^1.7.9",
+        "laravel-echo": "^1.18.0",
         "laravel-vite-plugin": "^1.0",
         "lodash": "^4.17.21",
         "postcss": "^8.4.31",
@@ -25,6 +25,8 @@
         "@braks/revue-draggable": "^0.5.1",
         "@line/liff": "^2.25.1",
         "ably": "^2.6.0",
+        "chart.js": "^4.4.7",
+        "chartjs-plugin-datalabels": "^2.2.0",
         "cli": "^1.0.1",
         "dayjs": "^1.11.13",
         "hanzi-writer": "^3.6.1",
@@ -43,6 +45,7 @@
         "typewriter-effect": "^2.21.0",
         "vite-svg-loader": "^4.0.0",
         "vue-dndrop": "1.2.2",
-        "vue-smooth-dnd": "^0.8.1"
+        "vue-smooth-dnd": "^0.8.1",
+        "vue3-lottie": "^3.3.1"
     }
 }

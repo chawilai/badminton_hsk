@@ -188,6 +188,7 @@ const onSidebarButtonClick = () => {
             </li>
             <li role="menuitem" class="m-0">
               <Link
+                as="button"
                 :href="route('logout')"
                 method="post"
                 class="flex align-items-center hover:text-primary-500 transition-duration-200"

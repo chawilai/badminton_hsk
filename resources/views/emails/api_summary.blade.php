@@ -23,14 +23,19 @@
         </div>
         <p><strong>{{ $data['summary_title'] }}</strong></p>
         <p><strong>Send Date:</strong> {{ $data['send_date'] }}</p>
-        <p><strong>Clinic Date:</strong> {{ $data['clinic_date'] }}</p>
+        <p><strong>Lab Entry Date:</strong> {{ $data['clinic_date'] }}</p>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>Site Name</th>
                         <th>UID Count</th>
-                        <th>UID Lists</th>
+                        <th colspan="2">UID Lists</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2"></th>
+                        <th>Service Date</th>
+                        <th>UID</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -13,7 +13,7 @@
     <meta property="og:title" content="Badminton Party" />
     <meta property="og:description" content="ตั้งปาร์ตี้ จอยปาร์ตี้ ตีแบดมินตัน" />
     <meta property="og:type" content="website" />
-    {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- facebook --}}
 
     <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/assets/images/badminton_party_no_bg.png') }}">
