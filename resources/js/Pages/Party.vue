@@ -17,11 +17,6 @@ const page = usePage();
 
 const props = ref(page.props);
 
-Echo.private('lobbyxxx')
-    .listen('OrderStatusUpdate', (event) => {
-        console.log('event')
-    })
-
 const data = reactive({
   party_id: "2",
   game_type: "quadruple",
@@ -152,9 +147,9 @@ watch(
 );
 
 const reverbTest = () => {
-    router.post(
+  router.post(
     `/reverb/40`,
-    { display_name: 'newName' },
+    { display_name: "newName" },
     {
       preserveScroll: true,
       headers: {
@@ -163,12 +158,10 @@ const reverbTest = () => {
       onSuccess: (response) => {
         // console.log(response)
       },
-      onError: (error) => {
-
-      },
+      onError: (error) => {},
     }
   );
-}
+};
 
 const getTeamBackground = (index, team) => {
   const set = sets.value[index];
@@ -1119,6 +1112,23 @@ const playerSortWaiting = computed(() => {
 });
 
 onMounted(() => {
+  // Enable pusher logging - don't include this in production
+  Pusher.logToConsole = true;
+
+//   var pusher = new Pusher("6570467905c1b5abc19e", {
+//     cluster: "ap1",
+//   });
+
+//   var channel = pusher.subscribe("my-channel");
+//   channel.bind("my-event", function (data) {
+//     alert(JSON.stringify(data));
+//   });
+
+  Echo.private("lobby").listen("OrderStatusUpdate", (e) => {
+    console.log(e);
+    alert(JSON.stringify(e));
+  });
+
   updateSliderHandleValue();
 });
 </script>

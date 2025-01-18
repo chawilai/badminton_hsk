@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\MessageSent;
 use App\Events\OrderStatusUpdate;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialController;
@@ -55,9 +56,23 @@ Route::get('/organic', function () {
 
 Route::post('/reverb/{game}', function (Game $game) {
 
-    OrderStatusUpdate::dispatch($game);
+    // OrderStatusUpdate::dispatch($game);
+
+    broadcast(new OrderStatusUpdate($game));
 
     return to_route('party');
+});
+
+Route::get('/broadcast', function () {
+    $message = [
+        'user' => 'John Doe',
+        'content' => 'Hello, this is a broadcast message!',
+        'time' => now(),
+    ];
+
+    event(new MessageSent($message));
+
+    return 'Message broadcasted successfully!';
 });
 
 Route::get('/warrior_home', function () {
@@ -188,6 +203,10 @@ Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
+
+// Route::post('/broadcasting/auth', function () {
+//     return Auth::user();
+//  });
 
 Route::fallback(function () {
     return Inertia::render('404');

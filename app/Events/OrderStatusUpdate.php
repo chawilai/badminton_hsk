@@ -18,9 +18,12 @@ class OrderStatusUpdate implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public readonly Game $game)
+
+    public $game;
+
+    public function __construct(Game $game)
     {
-        //
+        $this->game = $game;
     }
 
     /**
@@ -31,7 +34,22 @@ class OrderStatusUpdate implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('lobby'),
+            new PrivateChannel('lobby'), // Use Channel instead if no authentication is needed
         ];
+    }
+
+    /**
+     * Get the data to broadcast.
+     */
+    // public function broadcastWith(): array
+    // {
+    //     return [
+    //         'game' => $this->game->toArray(), // Ensure Game model has serializable data
+    //     ];
+    // }
+
+    public function broadcastAs()
+    {
+        return 'OrderStatusUpdate';
     }
 }
