@@ -8,6 +8,8 @@ import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import Crud from "@/Pages/Prime/Crud.vue";
 
+import { Realtime } from 'ably';
+
 import crown from "@/../assets/images/crown.png";
 
 const toast = useToast();
@@ -38,6 +40,8 @@ const game_data = reactive({
 
 parties.value = page.props.parties;
 games.value = page.props.games;
+
+// console.log(games.value)
 
 const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null;
 
@@ -146,10 +150,10 @@ watch(
   { deep: true }
 );
 
-const reverbTest = () => {
+const sendMessage = (message) => {
   router.post(
-    `/reverb/40`,
-    { display_name: "newName" },
+    `/ably/${message}`,
+    { text: message },
     {
       preserveScroll: true,
       headers: {
@@ -1112,22 +1116,33 @@ const playerSortWaiting = computed(() => {
 });
 
 onMounted(() => {
-  // Enable pusher logging - don't include this in production
-  Pusher.logToConsole = true;
 
-//   var pusher = new Pusher("6570467905c1b5abc19e", {
-//     cluster: "ap1",
-//   });
+  setTimeout(() => {
 
-//   var channel = pusher.subscribe("my-channel");
-//   channel.bind("my-event", function (data) {
-//     alert(JSON.stringify(data));
-//   });
 
-  Echo.private("lobby").listen("OrderStatusUpdate", (e) => {
-    console.log(e);
-    alert(JSON.stringify(e));
-  });
+const messages = ref([]);
+const ably = new Realtime(page.props.ably_key);
+
+// Subscribe to the channel
+const channel = ably.channels.get(`ably.${page.props.auth.user.id}`);
+channel.subscribe('message', (message) => {
+    messages.value.push(message.data.text);
+
+    console.log(messages.value)
+});
+
+    // window.Echo.channel("testChannel").listen("PublicEvent", (e) => {
+    //   console.log(e);
+    // });
+
+    // // Use window.userId for private channel
+    // window.Echo.private(`private-channel.user.${page.props.auth.user.id}`).listen(
+    //   "PrivateEvent",
+    //   (e) => {
+    //     console.log(e.data);
+    //   }
+    // );
+  }, 300);
 
   updateSliderHandleValue();
 });
@@ -1172,7 +1187,7 @@ onMounted(() => {
         </ScrollPanel>
       </Sidebar>
     </div>
-    <button @click="reverbTest">Reverb</button>
+    <button @click="sendMessage('sssss')">SendMessage</button>
     <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
     <ConfirmPopup></ConfirmPopup>
     <div class="card p-fluid">

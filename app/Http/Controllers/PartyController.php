@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OrderStatusUpdate;
 use App\Models\Game;
 use App\Models\Party;
 use Illuminate\Http\Request;

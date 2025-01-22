@@ -24,7 +24,7 @@
     "dependencies": {
         "@braks/revue-draggable": "^0.5.1",
         "@line/liff": "^2.25.1",
-        "ably": "^2.6.0",
+        "ably": "^2.6.2",
         "chart.js": "^4.4.7",
         "chartjs-plugin-datalabels": "^2.2.0",
         "cli": "^1.0.1",

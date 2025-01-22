@@ -24,5 +24,7 @@ class DatabaseSeeder extends Seeder
         Court::factory(20)->create();
         Party::factory(1)->create();
         $this->call(PartyMembersSeeder::class);
+
+        $this->call(ChatSeeder::class);
     }
 }

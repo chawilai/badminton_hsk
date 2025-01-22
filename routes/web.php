@@ -1,11 +1,14 @@
 <?php
 
+use Ably\AblyRest;
 use App\Events\MessageSent;
-use App\Events\OrderStatusUpdate;
+use App\Events\PrivateEvent;
+use App\Events\PublicEvent;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\LineMessagingController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\UserController;
@@ -21,6 +24,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\ChatController;
 // $user = User::findOrFail(18);
 // Auth::login($user);
 
@@ -54,13 +58,51 @@ Route::get('/organic', function () {
     return Inertia::render('Organic');
 });
 
-Route::post('/reverb/{game}', function (Game $game) {
+Route::get('/reverb/{text}', function (Request $request) {
 
-    // OrderStatusUpdate::dispatch($game);
+    event(new PublicEvent('$request->text'));
+    event(new PrivateEvent(auth()->user(), auth()->user()->id));
 
-    broadcast(new OrderStatusUpdate($game));
+    // return to_route('party');
+});
 
-    return to_route('party');
+Route::get('/ably/{text}', function (Request $request) {
+
+    // event(new PublicEvent('$request->text'));
+    // event(new PrivateEvent(auth()->user(), auth()->user()->id));
+
+    // dd($request->text);
+
+
+    $ably = new AblyRest(env('ABLY_KEY'));
+
+    $channel = $ably->channels->get("ably.". auth()->user()->id);
+    $channel->publish('message', ['text' => $request->text]);
+
+    // dd($ably);
+
+    return response()->json(['success' => true]);
+
+    // return to_route('party');
+});
+Route::post('/ably/{text}', function (Request $request) {
+
+    // event(new PublicEvent('$request->text'));
+    // event(new PrivateEvent(auth()->user(), auth()->user()->id));
+
+    // dd($request->text);
+
+
+    $ably = new AblyRest(env('ABLY_KEY'));
+
+    $channel = $ably->channels->get("ably.". auth()->user()->id);
+    $channel->publish('message', ['text' => $request->text]);
+
+    // dd($ably);
+
+    // return response()->json(['success' => true]);
+
+    // return to_route('party');
 });
 
 Route::get('/broadcast', function () {
@@ -83,6 +125,14 @@ Route::get('/test', function () {
 
     return Inertia::render('Test');
 });
+
+Route::post('/webhook', function () {
+
+    return Inertia::render('Test');
+});
+
+Route::post('/webhook', [LineMessagingController::class, 'webhook'])->name('createGame');
+
 
 Route::get('/primevue3', function () {
 
@@ -139,6 +189,13 @@ Route::get('/home', function () {
 Route::get('/crud', function () {
     return Inertia::render('Prime/Crud');
 });
+
+// Chat
+Route::get('/chat', [ChatController::class, 'showChat']);
+Route::post('/chat/create', [ChatController::class, 'createChat']);
+Route::get('/chat/{chat_id}/messages', [ChatController::class, 'getMessages']);
+Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
+// Chat
 
 // game
 // Using web routes (if your application uses CSRF protection and sessions)

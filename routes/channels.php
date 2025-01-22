@@ -7,6 +7,10 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('lobby', function (User $user) {
-    return true;
+Broadcast::channel('private-channel.user.{id}', function ($user, $id) {
+    return $user->id == $id;
+});
+
+Broadcast::channel('ably.{id}', function ($user, $id) {
+    return $user->id == $id;
 });

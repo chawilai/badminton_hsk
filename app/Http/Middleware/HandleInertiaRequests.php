@@ -62,6 +62,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'errors' => Inertia::always($errors),
             'flash' => $flash,
+            'ably_key' => env('ABLY_KEY'),
             'response' => $response,
             'auth' => [
                 'user' => $request->user(),

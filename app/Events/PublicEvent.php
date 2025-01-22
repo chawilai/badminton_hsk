@@ -2,7 +2,6 @@
 
 namespace App\Events;
 
-use App\Models\Game;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -11,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderStatusUpdate implements ShouldBroadcast
+class PublicEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,11 +18,11 @@ class OrderStatusUpdate implements ShouldBroadcast
      * Create a new event instance.
      */
 
-    public $game;
+     private $message;
 
-    public function __construct(Game $game)
+    public function __construct($message)
     {
-        $this->game = $game;
+        $this->message = $message;
     }
 
     /**
@@ -34,22 +33,15 @@ class OrderStatusUpdate implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('lobby'), // Use Channel instead if no authentication is needed
+            // new PrivateChannel('channel-name'),
+            new Channel('testChannel'),
         ];
     }
 
-    /**
-     * Get the data to broadcast.
-     */
-    // public function broadcastWith(): array
-    // {
-    //     return [
-    //         'game' => $this->game->toArray(), // Ensure Game model has serializable data
-    //     ];
-    // }
-
-    public function broadcastAs()
+    public function broadcastWith(): array
     {
-        return 'OrderStatusUpdate';
+        return [
+            'message' => $this->message
+        ];
     }
 }
