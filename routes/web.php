@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
-// $user = User::findOrFail(18);
+// $user = User::findOrFail(6);
 // Auth::login($user);
 
 // Route::get('/', function () {

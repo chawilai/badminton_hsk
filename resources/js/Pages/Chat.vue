@@ -27,12 +27,13 @@ const messages = ref([]);
 const newMessage = ref("");
 
 // Get the Ably key and chat ID from Inertia's shared props
-const ablyKey = page.props.ably_key; // Shared Ably key
-const chatId = page.props.chat_id; // Chat ID passed from the server
+const ablyKey = page.props.ably_key;
+const ablyToken = page.props.ably_token;
+const chatId = page.props.chat_id;
 
 const logKey = (event) => {
-  console.log('Key:', event.key);
-  console.log('Code:', event.code);
+    console.log("Key:", event.key);
+    console.log("Code:", event.code);
 };
 
 const fetchMessages = async (chatId) => {
@@ -45,55 +46,54 @@ const sendMessage = async () => {
     if (!newMessage.value) return;
 
     router.post(
-    `/chat/${chatId}/send-message`,
-    {
-        sender_id: page.props.auth.user.id,
-        content: newMessage.value
-     },
-    {
-      preserveScroll: true,
-      headers: {
-        Accept: "application/json",
-      },
-      onSuccess: (response) => {
-            newMessage.value = ""; // Clear input
-      },
-      onError: (error) => {},
-    }
-  );
+        `/chat/${chatId}/send-message`,
+        {
+            sender_id: page.props.auth.user.id,
+            content: newMessage.value,
+        },
+        {
+            preserveScroll: true,
+            headers: {
+                Accept: "application/json",
+            },
+            onSuccess: (response) => {
+                newMessage.value = ""; // Clear input
+            },
+            onError: (error) => {},
+        }
+    );
 };
 
-// // testing
-// 5. Testing
-// Test Creating a Chat: Use a POST request to /chat/create with a payload like:
-
-// json
-// Copy
-// Edit
-// {
-//     "user_ids": [1, 2],
-//     "is_group": false,
-//     "name": null
-// }
-// Test Fetching Messages: Use a GET request to /chat/{chat_id}/messages.
-
-// Test Sending a Message: Use a POST request to /chat/{chat_id}/send-message with a payload like:
-
-// json
-// Copy
-// Edit
-// {
-//     "sender_id": 1,
-//     "content": "Hello!"
-// }
-// // testing
-
 onMounted(() => {
-    const ably = new Realtime(ablyKey);
+    const ably = new Realtime({
+        key: ablyKey,
+        clientId: `${page.props.auth.user.id}`
+    });
+
     const channel = ably.channels.get(`chat.${chatId}`);
 
     channel.subscribe("message", (message) => {
         messages.value.push(message.data); // Add incoming message to the chat
+    });
+
+    channel.presence.enter({
+        name: 'John Doe'
+    }); // Notify others you're online
+
+    channel.presence.subscribe("enter", (member) => {
+        console.log(`${member.clientId} joined the chat.`);
+    });
+
+    channel.presence.subscribe("leave", (member) => {
+        console.log(`${member.clientId} left the chat.`);
+    });
+
+    ably.connection.on('disconnected', () => {
+    console.log('You are offline.');
+    });
+
+    ably.connection.on('connected', () => {
+        console.log('You are back online!');
     });
 });
 </script>

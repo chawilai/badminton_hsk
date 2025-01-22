@@ -14,11 +14,20 @@ class ChatController extends Controller
     // Create or find a chat
     public function showChat(Request $request)
     {
-        $chat = Chat::findOrFail($request->chatId);
+        $chatId = $request->chatId ?? 1;
+
+        $chat = Chat::findOrFail($chatId);
+
+        $ably = new AblyRest(env('ABLY_KEY'));
+
+        $tokenRequest = $ably->auth->createTokenRequest([
+            'clientId' => auth()->user()->id ?? 'guest',
+        ]);
 
         return Inertia::render('Chat', [
             'chat_id' => $chat->id, // Pass the chat ID
             'ably_key' => env('ABLY_KEY'),
+            'ably_token' => $tokenRequest,
         ]);
     }
 

@@ -1116,34 +1116,6 @@ const playerSortWaiting = computed(() => {
 });
 
 onMounted(() => {
-
-  setTimeout(() => {
-
-
-const messages = ref([]);
-const ably = new Realtime(page.props.ably_key);
-
-// Subscribe to the channel
-const channel = ably.channels.get(`ably.${page.props.auth.user.id}`);
-channel.subscribe('message', (message) => {
-    messages.value.push(message.data.text);
-
-    console.log(messages.value)
-});
-
-    // window.Echo.channel("testChannel").listen("PublicEvent", (e) => {
-    //   console.log(e);
-    // });
-
-    // // Use window.userId for private channel
-    // window.Echo.private(`private-channel.user.${page.props.auth.user.id}`).listen(
-    //   "PrivateEvent",
-    //   (e) => {
-    //     console.log(e.data);
-    //   }
-    // );
-  }, 300);
-
   updateSliderHandleValue();
 });
 </script>
