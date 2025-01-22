@@ -480,15 +480,25 @@ const model = ref([
                 icon: 'pi pi-user',
                 to: '/profile'
             },
+            {
+                label: 'Chat',
+                icon: 'pi pi-comments',
+                to: '/chat'
+            },
             // {
             //     label: 'Game',
             //     icon: 'pi pi-play',
             //     to: '/games'
             // },
             {
+                label: 'Party',
+                icon: 'pi pi-play',
+                to: '/party'
+            },
+            {
                 label: 'Party Lists',
                 icon: 'pi pi-list',
-                to: '/party'
+                to: '/party/lists'
             },
             // {
             //     label: 'Landing',

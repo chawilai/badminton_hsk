@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamp('party_end_date')->nullable();
             $table->text('court_booking_details')->nullable();
             $table->timestamps();
-            $table->softDeletes(); // Enables soft deleting
+            $table->softDeletes();
         });
     }
 

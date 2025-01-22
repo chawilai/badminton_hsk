@@ -114,4 +114,9 @@ class Party extends Model
     {
         return $query->where('status', 'open');
     }
+
+    public function courtBookings()
+    {
+        return $this->hasMany(PartyCourtBooking::class);
+    }
 }

@@ -36,9 +36,9 @@ const logKey = (event) => {
     console.log("Code:", event.code);
 };
 
-const fetchMessages = async (chatId) => {
-    const response = await axios.get(`/chat/${chatId}/messages`);
-    messages.value = response.data;
+const fetchMessages = async () => {
+    const response = await axios.post(`/chat/messages`, {chat_id: chatId});
+    messages.value = response.data
 };
 
 // Send a message
@@ -65,6 +65,9 @@ const sendMessage = async () => {
 };
 
 onMounted(() => {
+
+    fetchMessages()
+
     const ably = new Realtime({
         key: ablyKey,
         clientId: `${page.props.auth.user.id}`

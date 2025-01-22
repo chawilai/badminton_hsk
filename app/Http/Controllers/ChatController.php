@@ -56,9 +56,9 @@ class ChatController extends Controller
     }
 
     // Get messages in a chat
-    public function getMessages($chat_id)
+    public function getMessages(Request $request)
     {
-        $messages = Message::where('chat_id', $chat_id)
+        $messages = Message::where('chat_id', $request->chat_id)
             ->with('sender')
             ->orderBy('created_at', 'asc')
             ->get();

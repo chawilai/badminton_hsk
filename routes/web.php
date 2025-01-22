@@ -193,7 +193,7 @@ Route::get('/crud', function () {
 // Chat
 Route::get('/chat', [ChatController::class, 'showChat']);
 Route::post('/chat/create', [ChatController::class, 'createChat']);
-Route::get('/chat/{chat_id}/messages', [ChatController::class, 'getMessages']);
+Route::post('/chat/messages', [ChatController::class, 'getMessages']);
 Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
 // Chat
 
@@ -232,7 +232,9 @@ Route::get('login/{provider}/callback', [SocialController::class, 'handleProvide
 // OAuth Provider
 
 // party
+Route::get('/party/lists', [PartyController::class, 'partyLists'])->name('parties.lists');
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
+Route::post('/party/create', [PartyController::class, 'store'])->name('parties.create');
 Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
 Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 
