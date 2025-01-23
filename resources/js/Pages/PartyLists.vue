@@ -2,7 +2,7 @@
   <AppLayout>
     <div class="p-grid p-dir-col lg:p-dir-row p-m-3">
       <!-- Create Party Button -->
-      <div class="p-col-12 lg:p-col-3">
+      <div class="p-col-12 lg:p-col-3 mb-6">
         <Button
           label="Create Party"
           icon="pi pi-plus"
@@ -13,7 +13,7 @@
 
       <!-- Party List -->
       <div class="p-col-12 lg:p-col-9">
-        <h2>Party List</h2>
+        <h3>Party List</h3>
         <DataTable
           :value="parties"
           class="p-datatable-responsive"
@@ -170,6 +170,11 @@
 import AppLayout from "@/layout/AppLayout.vue";
 import { ref } from "vue";
 import { usePage, router } from "@inertiajs/vue3";
+import { useToast } from "primevue/usetoast";
+import { useConfirm } from "primevue/useconfirm";
+
+const toast = useToast();
+const confirmPopup = useConfirm();
 
 const showDialog = ref(false);
 const page = usePage();
@@ -206,17 +211,41 @@ const isUserInParty = (members) => {
 
 const joinParty = (partyId) => {
   console.log(`Joining party ${partyId}`);
+
   // Make API call to join the party
-  router.post(`/parties/${partyId}/join`, {}, {
-    onSuccess: () => {
-      // Refresh or show success message
-      console.log("Successfully joined the party");
-    },
-    onError: (error) => {
-      console.error("Error joining the party:", error);
-    },
-  });
+  router.post(
+    `/party-join`,
+    { party_id: partyId }, // Pass the party ID as part of the request body
+    {
+      onSuccess: (res) => {
+        // Show success message or refresh the party data
+        parties.value = res.props.parties
+        courts.value = res.props.courts
+
+        toast.add({
+          severity: "success",
+          summary: "เข้าร่วมปาร์ตี้สำเร็จ",
+          detail: "คุณเข้าร่วมปาร์ตี้สำเร็จแล้ว!",
+          life: 3000,
+        });
+
+        console.log("Successfully joined the party");
+      },
+      onError: (error) => {
+        // Show error message
+        toast.add({
+          severity: "error",
+          summary: "เข้าร่วมปาร์ตี้ล้มเหลว",
+          detail: error?.message || "เกิดข้อผิดพลาดในการเข้าร่วมปาร์ตี้",
+          life: 3000,
+        });
+
+        console.error("Error joining the party:", error);
+      },
+    }
+  );
 };
+
 
 const enterParty = (partyId) => {
   console.log(`Entering party ${partyId}`);

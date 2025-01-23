@@ -149,6 +149,38 @@ class PartyController extends Controller
         return back()->with('success', 'Party created successfully!');
     }
 
+    public function joinParty(Request $request)
+{
+    $validated = $request->validate([
+        'party_id' => 'required|exists:parties,id',
+    ]);
+
+    $partyId = $validated['party_id'];
+    $userId = auth()->id();
+
+    // Check if the user is already a member of the party
+    $isAlreadyMember = PartyMember::where('party_id', $partyId)
+        ->where('user_id', $userId)
+        ->exists();
+
+    if ($isAlreadyMember) {
+        return response()->json([
+            'message' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว',
+        ], 400);
+    }
+
+    // Add the user as a member of the party
+    PartyMember::create([
+        'party_id' => $partyId,
+        'user_id' => $userId,
+        'role' => 'member',
+        'status' => 'Requesting',
+        'request_date' => now()
+    ]);
+
+    return back()->with('success', 'Party joined successfully!');
+}
+
     public function partyLists(Request $request)
     {
         $parties = Party::with([

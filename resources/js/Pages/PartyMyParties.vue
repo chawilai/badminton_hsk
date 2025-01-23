@@ -3,7 +3,7 @@
     <div class="p-grid p-dir-col lg:p-dir-row p-m-3">
       <!-- Party List -->
       <div class="p-col-12 lg:p-col-9">
-        <h2>Party List</h2>
+        <h3>My Party List</h3>
         <DataTable
           :value="parties"
           class="p-datatable-responsive"

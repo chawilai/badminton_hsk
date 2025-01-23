@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
-$user = User::findOrFail(30);
-Auth::login($user);
+// $user = User::findOrFail(5);
+// Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -237,6 +237,7 @@ Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.
 Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
 Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
+Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
 Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
 Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 

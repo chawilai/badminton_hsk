@@ -40,8 +40,8 @@ const game_data = reactive({
 party.value = page.props.party;
 games.value = page.props.games;
 
-data.party_id = party.value.id
-game_data.party_id = party.value.id
+data.party_id = party.value.id;
+game_data.party_id = party.value.id;
 
 // console.log(games.value)
 
@@ -287,10 +287,15 @@ const openPosition = (pos, game) => {
 
 const thisGame = ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
 
-const updateDisplayName = (partyMemberId, newName) => {
+const updateDisplayName = (partyMemberId, newName, currentName) => {
+  const trimmedNewName = (newName || "").trim();
+  const trimmedCurrentName = (currentName || "").trim();
+
+  if (trimmedNewName === trimmedCurrentName) return;
+
   router.post(
     `/party-members/${partyMemberId}/update-name`,
-    { display_name: newName },
+    { display_name: newName.trim() },
     {
       preserveScroll: true,
       headers: {
@@ -300,7 +305,7 @@ const updateDisplayName = (partyMemberId, newName) => {
         toast.add({
           severity: "success",
           summary: "Name Updated",
-          detail: "The player's display name has been updated successfully.",
+          detail: "ตั้งค่าชื่อเรียกใน Party เรียบร้อยแล้ว.",
           life: 3000,
         });
 
@@ -310,12 +315,18 @@ const updateDisplayName = (partyMemberId, newName) => {
         toast.add({
           severity: "error",
           summary: "Update Failed",
-          detail: "Could not update the display name. Please try again.",
+          detail: "ตั้งค่าชื่อเรียกไม่สำเร็จ โปรดลองอีกครั้ง.",
           life: 3000,
         });
       },
     }
   );
+};
+
+const setOriginalDisplayName = (member) => {
+  if (!member.original_display_name) {
+    member.original_display_name = member.display_name; // Store the original display name
+  }
 };
 
 const fetchReadyPlayer = (gameId) => {
@@ -1670,7 +1681,7 @@ onMounted(() => {
 
     <div class="card">
       <TabView>
-        <TabPanel header="Details">
+        <TabPanel header="รายการผู้เล่น">
           <div class="text-900 font-bold text-3xl mb-4 mt-2">รายการผู้เล่น</div>
 
           <div class="overflow-auto whitespace-nowrap">
@@ -1694,7 +1705,14 @@ onMounted(() => {
                   v-model="member.display_name"
                   class="p-inputtext w-8rem"
                   placeholder="Enter display name"
-                  @blur="updateDisplayName(member.id, member.display_name)"
+                  @blur="
+                    updateDisplayName(
+                      member.id,
+                      member.display_name,
+                      member.original_display_name
+                    )
+                  "
+                  @focus="setOriginalDisplayName(member)"
                 />
                 <!-- <button
                   class=""
@@ -1709,7 +1727,7 @@ onMounted(() => {
             </div>
           </div>
         </TabPanel>
-        <TabPanel header="Reviews">
+        <TabPanel header="Reviews" v-if="false">
           <div class="text-900 font-bold text-3xl mb-4 mt-2">Customer Reviews</div>
           <ul class="list-none p-0 m-0">
             <li class="pb-5 border-bottom-1 surface-border">
@@ -1745,7 +1763,7 @@ onMounted(() => {
             </li>
           </ul>
         </TabPanel>
-        <TabPanel header="Shipping and Returns">
+        <TabPanel header="Shipping and Returns" v-if="false">
           <div class="text-900 font-bold text-3xl mb-4 mt-2">Shipping Placeholder</div>
           <p class="line-height-3 text-600 p-0 mx-0 mt-0 mb-4">
             Mattis aliquam faucibus purus in massa tempor nec feugiat nisl. Justo donec
