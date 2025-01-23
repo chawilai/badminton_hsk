@@ -58,8 +58,13 @@ export function useDragDrop() {
     let tapTimeout = null; // Timeout for detecting double taps
     let lastTouchTime = 0; // To differentiate between touch and click events
 
-    const handleClick = (event) => {
+    const handleClick = (item, currentZone) => {
+        if (isActionProcessed.value) return; // Prevent duplicate processing
+        isActionProcessed.value = true;
         // console.log("Clicked!");
+        moveItem(item, currentZone);
+
+        setTimeout(() => (isActionProcessed.value = false), 300);
     };
 
     const handleDoubleClick = (item, currentZone) => {
@@ -106,6 +111,21 @@ export function useDragDrop() {
             // Return to original zone
             const originalZone = originalZones[item.id];
             if (originalZone) {
+                // Check if the player is already in the Game zone
+                const isPlayerInOther = dropZones[originalZone].some(
+                    (player) => player.id === item.id
+                );
+                if (isPlayerInOther) {
+                    // toast.add({
+                    //     severity: "error",
+                    //     summary: "เพิ่มผู้เล่นล้มเหลว",
+                    //     detail: `${item.title} อยู่ใน ${originalZone} แล้ว`,
+                    //     life: 1500,
+                    // });
+
+                    return;
+                }
+
                 fromZone.splice(fromZone.indexOf(item), 1);
                 dropZones[originalZone].push(item);
                 // console.log(`Moved item ${item.title} back to ${originalZone}`);
@@ -132,6 +152,21 @@ export function useDragDrop() {
                 return;
             }
 
+            // Check if the player is already in the Game zone
+            const isPlayerInGame = playingZone.some(
+                (player) => player.id === item.id
+            );
+            if (isPlayerInGame) {
+                // toast.add({
+                //     severity: "error",
+                //     summary: "เพิ่มผู้เล่นล้มเหลว",
+                //     detail: `${item.title} อยู่ใน Game แล้ว`,
+                //     life: 1500,
+                // });
+
+                return;
+            }
+
             // Store the original zone if not already stored
             if (!originalZones[item.id]) {
                 originalZones[item.id] = currentZone;
@@ -148,6 +183,8 @@ export function useDragDrop() {
                 life: 1500,
             });
         }
+
+        isActionProcessed.value = false;
     };
 
     const releaseAllItems = () => {
@@ -340,7 +377,6 @@ export function useDragDrop() {
                     //     1
                     // );
                     // fromZone.push(removedDraggedItem);
-
                     // toast.add({
                     //     severity: "info",
                     //     summary: "ย้ายผู้เล่น",
@@ -391,9 +427,7 @@ export function useDragDrop() {
                     }
 
                     // Playing Zone not for drag & drop
-                    if (
-                        ["Playing", "Listing"].includes(dropZoneActive.value)
-                    ) {
+                    if (["Playing", "Listing"].includes(dropZoneActive.value)) {
                         toast.add({
                             severity: "error",
                             summary: "ย้ายผู้เล่นล้มเหลว",
@@ -409,7 +443,7 @@ export function useDragDrop() {
                     const [removedItem] = fromZone.splice(draggedIndex, 1);
                     toZone.push(removedItem);
 
-                    console.log(dropZones.Game)
+                    console.log(dropZones.Game);
 
                     toast.add({
                         severity: "info",

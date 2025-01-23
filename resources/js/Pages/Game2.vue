@@ -20,6 +20,8 @@ const emit = defineEmits(["gameCreated"]);
 
 const localData = ref({ ...props.data });
 
+console.log(localData);
+
 const {
   dropZones,
   draggedItem,
@@ -64,7 +66,16 @@ const formattedData = computed(() =>
   }))
 );
 
-const sortOrder = ref("DESC");
+const form = ref({
+  party_id: localData.value.party.id,
+  game_type: "quadruple",
+  players: [], // Dynamically set from dropZones.Game
+  team1_start_side: "north",
+  initial_shuttlecock_game: 0, // Default value
+  process: "playing",
+});
+
+const sortOrder = ref("ASC");
 
 const sortedPlayerByGamePlayed = computed(() => {
   const players = [...formattedData.value]; // Clone to avoid modifying original array
@@ -90,115 +101,145 @@ const shortenTitle = (title, maxLength = 10) => {
 };
 
 const startNewGame = () => {
-  router.post(
-    `/games/create-game`,
-    {
-      party_id: 2, // Dummy party ID
-      game_type: "quadruple", // Game type: 'double' or 'quadruple'
-      players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
-      team1_start_side: "north", // Optional, defaults to 'north'
-      initial_shuttlecock_game: 1, // Optional, defaults to 0
-      process: "playing", // listing, playing
+  const playerCount = dropZones.Game.length;
+  form.value.game_type =
+    playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
+
+  if (!form.value.game_type) {
+    toast.add({
+      severity: "error",
+      summary: "ล้มเหลว",
+      detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)",
+      life: 3000,
+    });
+    return;
+  }
+
+  form.value.players = (dropZones.Game ?? []).map((player) => player.id);
+
+  form.value.process = "playing";
+  router.post(`/games/create-game`, form.value, {
+    preserveScroll: true,
+    headers: {
+      Accept: "application/json",
     },
-    {
-      preserveScroll: true,
-      headers: {
-        Accept: "application/json",
-      },
-      onSuccess: (res) => {
-        dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
-        dropZones.Game = [];
+    onSuccess: (res) => {
+      dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
+      dropZones.Game = [];
 
-        emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
+      form.value = {
+        party_id: localData.value.party.id,
+        game_type: "quadruple",
+        players: [], // Dynamically set from dropZones.Game
+        team1_start_side: "north",
+        initial_shuttlecock_game: 0, // Default value
+        process: "playing",
+      };
 
+      emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
+
+      toast.add({
+        severity: "success",
+        summary: "Game Created",
+        detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.",
+        life: 3000,
+      });
+    },
+    onError: (err) => {
+      if (err.notMatchType) {
         toast.add({
-          severity: "success",
-          summary: "Game Created",
-          detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.",
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
           life: 3000,
         });
-      },
-      onError: (err) => {
-        if (err.notMatchType) {
-          toast.add({
-            severity: "error",
-            summary: "ล้มเหลว",
-            detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
-            life: 3000,
-          });
-        }
-        if (err.existSettingGame) {
-          toast.add({
-            severity: "error",
-            summary: "ล้มเหลว",
-            detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
-            life: 3000,
-          });
-        }
-      },
-    }
-  );
+      }
+      if (err.existSettingGame) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
+          life: 3000,
+        });
+      }
+    },
+  });
 };
 
 const listNewGame = () => {
-  router.post(
-    `/games/create-game`,
-    {
-      party_id: 2, // Dummy party ID
-      game_type: "quadruple", // Game type: 'double' or 'quadruple'
-      players: dropZones.Game.map((player) => player.id), // Dummy player IDs (2 players for 'double')
-      team1_start_side: "north", // Optional, defaults to 'north'
-      initial_shuttlecock_game: 1, // Optional, defaults to 0
-      process: "listing", // listing, playing
+  const playerCount = dropZones.Game.length;
+  form.value.game_type =
+    playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
+
+  if (!form.value.game_type) {
+    toast.add({
+      severity: "error",
+      summary: "ล้มเหลว",
+      detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)",
+      life: 3000,
+    });
+    return;
+  }
+
+  form.value.players = (dropZones.Game ?? []).map((player) => player.id);
+
+  form.value.process = "listing";
+  router.post(`/games/create-game`, form.value, {
+    preserveScroll: true,
+    headers: {
+      Accept: "application/json",
     },
-    {
-      preserveScroll: true,
-      headers: {
-        Accept: "application/json",
-      },
-      onSuccess: (res) => {
-        dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
-        dropZones.Game = [];
+    onSuccess: (res) => {
+      dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
+      dropZones.Game = [];
 
-        emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
+      form.value = {
+        party_id: localData.value.party.id,
+        game_type: "quadruple",
+        players: [], // Dynamically set from dropZones.Game
+        team1_start_side: "north",
+        initial_shuttlecock_game: 0, // Default value
+        process: "playing",
+      };
 
+      emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
+
+      toast.add({
+        severity: "success",
+        summary: "Game Created",
+        detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.",
+        life: 3000,
+      });
+    },
+    onError: (err) => {
+      console.log(err);
+
+      if (err.notMatchType) {
         toast.add({
-          severity: "success",
-          summary: "Game Created",
-          detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.",
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
           life: 3000,
         });
-      },
-      onError: (err) => {
-        console.log(err);
-
-        if (err.notMatchType) {
-          toast.add({
-            severity: "error",
-            summary: "ล้มเหลว",
-            detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
-            life: 3000,
-          });
-        }
-        if (err.players) {
-          toast.add({
-            severity: "error",
-            summary: "ล้มเหลว",
-            detail: "โปรดกำหนดผู้เล่นให้ครบถ้วน",
-            life: 3000,
-          });
-        }
-        if (err.existSettingGame) {
-          toast.add({
-            severity: "error",
-            summary: "ล้มเหลว",
-            detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
-            life: 3000,
-          });
-        }
-      },
-    }
-  );
+      }
+      if (err.players) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "โปรดกำหนดผู้เล่นให้ครบถ้วน",
+          life: 3000,
+        });
+      }
+      if (err.existSettingGame) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
+          life: 3000,
+        });
+      }
+    },
+  });
 };
 
 watch(
@@ -209,8 +250,6 @@ watch(
     localData.value = newData;
 
     toggleSortOrder();
-
-    console.log(localData.value.readyPlayers);
   },
   { immediate: true } // Run immediately on initial mount
 );
@@ -232,6 +271,16 @@ onMounted(() => {
         <div class="flex align-items-center justify-content-between mb-3">
           <h3 class="text-lg font-bold text-primary">Game</h3>
           <div class="flex gap-1">
+            <div class="flex align-items-center justify-content-betwee gap-1">
+              <label>ขนไก่</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="w-2rem text-center"
+                v-model="form.initial_shuttlecock_game"
+              />
+            </div>
             <button
               @click="startNewGame"
               class="p-button p-button-primary p-button-sm rounded-full"
@@ -266,10 +315,11 @@ onMounted(() => {
           >
             <!-- Subtract Button -->
             <button
-              class="w-2rem h-2rem"
+              class="w-2rem h-2rem cursor-pointer"
               @mousedown.stop
               @mouseup.stop="handleMouseUp"
               @touchstart.stop="handleTouchStart"
+              @click.stop="handleClick(item, 'Game')"
               @touchend.stop="handleTouchEnd(item, 'Game')"
               @dblclick.stop="handleDoubleClick(item, 'Game')"
               :class="{
@@ -325,9 +375,10 @@ onMounted(() => {
                 @mousedown.stop
                 @mouseup.stop="handleMouseUp"
                 @touchstart.stop="handleTouchStart"
+                @click.stop="handleClick(item, 'Ready')"
                 @touchend.stop="handleTouchEnd(item, 'Ready')"
                 @dblclick.stop="handleDoubleClick(item, 'Ready')"
-                class="add-button w-2rem h-2rem"
+                class="add-button w-2rem h-2rem cursor-pointer"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -375,9 +426,10 @@ onMounted(() => {
                 @mousedown.stop
                 @mouseup.stop="handleMouseUp"
                 @touchstart.stop="handleTouchStart"
+                @click.stop="handleClick(item, 'Playing')"
                 @touchend.stop="handleTouchEnd(item, 'Playing')"
                 @dblclick.stop="handleDoubleClick(item, 'Playing')"
-                class="add-button w-2rem h-2rem"
+                class="add-button w-2rem h-2rem cursor-pointer"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -425,9 +477,10 @@ onMounted(() => {
                 @mousedown.stop
                 @mouseup.stop="handleMouseUp"
                 @touchstart.stop="handleTouchStart"
+                @click.stop="handleClick(item, 'Listing')"
                 @touchend.stop="handleTouchEnd(item, 'Listing')"
                 @dblclick.stop="handleDoubleClick(item, 'Listing')"
-                class="add-button w-2rem h-2rem"
+                class="add-button w-2rem h-2rem cursor-pointer"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -475,9 +528,10 @@ onMounted(() => {
                 @mousedown.stop
                 @mouseup.stop="handleMouseUp"
                 @touchstart.stop="handleTouchStart"
+                @click.stop="handleClick(item, 'Break')"
                 @touchend.stop="handleTouchEnd(item, 'Break')"
                 @dblclick.stop="handleDoubleClick(item, 'Break')"
-                class="add-button w-2rem h-2rem"
+                class="add-button w-2rem h-2rem cursor-pointer"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -525,9 +579,10 @@ onMounted(() => {
                 @mousedown.stop
                 @mouseup.stop="handleMouseUp"
                 @touchstart.stop="handleTouchStart"
+                @click.stop="handleClick(item, 'Finish')"
                 @touchend.stop="handleTouchEnd(item, 'Finish')"
                 @dblclick.stop="handleDoubleClick(item, 'Finish')"
-                class="add-button w-2rem h-2rem"
+                class="add-button w-2rem h-2rem cursor-pointer"
               >
                 <i class="pi pi-plus"></i>
               </button>
@@ -720,5 +775,15 @@ onMounted(() => {
 .hovered-item {
   background-color: var(--yellow-200) !important; /* Change to your desired hover color */
   transition: background-color 0.2s ease; /* Smooth transition */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Hides spinner buttons in Firefox */
 }
 </style>

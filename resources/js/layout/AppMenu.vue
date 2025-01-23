@@ -491,14 +491,14 @@ const model = ref([
             //     to: '/games'
             // },
             {
-                label: 'Party',
+                label: 'My Party',
                 icon: 'pi pi-play',
-                to: '/party'
+                to: '/my-parties'
             },
             {
                 label: 'Party Lists',
                 icon: 'pi pi-list',
-                to: '/party/lists'
+                to: '/party-lists'
             },
             // {
             //     label: 'Landing',

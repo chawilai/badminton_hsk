@@ -20,11 +20,32 @@
           :paginator="true"
           :rows="20"
         >
+          <Column field="id" header="ID" />
           <Column field="play_date" header="Play Date" />
           <Column field="court.name" header="Court Name" />
           <Column field="play_hours" header="Play Hours" />
-          <Column field="max_players" header="Max Players" />
+          <Column header="Members">
+            <template #body="slotProps">
+              {{ slotProps.data.members_count }}/{{ slotProps.data.max_players }}
+            </template>
+          </Column>
           <Column field="status" header="Status" />
+          <Column header="Action">
+            <template #body="slotProps">
+              <Button
+                v-if="!isUserInParty(slotProps.data.members)"
+                label="Join"
+                class="p-button-success"
+                @click="joinParty(slotProps.data.id)"
+              />
+              <Button
+                v-else
+                label="Enter"
+                class="p-button-primary"
+                @click="enterParty(slotProps.data.id)"
+              />
+            </template>
+          </Column>
         </DataTable>
       </div>
 
@@ -157,7 +178,7 @@ const parties = ref(page.props.parties ?? []); // Replace with API data
 const courts = ref(page.props.courts ?? []); // Court options from server
 const statuses = ["Open", "Full", "Over"]; // Status options
 
-console.log(parties);
+// console.log(parties);
 
 // Form with dynamic court bookings
 const form = ref({
@@ -175,6 +196,33 @@ const form = ref({
     },
   ],
 });
+
+// Authenticated user from backend
+const authUser = page.props.auth.user;
+
+const isUserInParty = (members) => {
+  return members.some((member) => member.user_id === authUser.id);
+};
+
+const joinParty = (partyId) => {
+  console.log(`Joining party ${partyId}`);
+  // Make API call to join the party
+  router.post(`/parties/${partyId}/join`, {}, {
+    onSuccess: () => {
+      // Refresh or show success message
+      console.log("Successfully joined the party");
+    },
+    onError: (error) => {
+      console.error("Error joining the party:", error);
+    },
+  });
+};
+
+const enterParty = (partyId) => {
+  console.log(`Entering party ${partyId}`);
+  // Navigate to the party page
+  router.get(`/party/${partyId}`);
+};
 
 // Add a new court booking
 const addCourtBooking = () => {
@@ -195,7 +243,7 @@ const removeCourtBooking = (index) => {
 const createParty = () => {
   console.log("Creating party:", form.value);
 
-  router.post("/party/create", form.value, {
+  router.post("/party-create", form.value, {
     preserveScroll: true,
     headers: {
       Accept: "application/json",

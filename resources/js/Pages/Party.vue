@@ -6,9 +6,9 @@ import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { reactive, ref, computed, onMounted, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
-import Crud from "@/Pages/Prime/Crud.vue";
+// import Crud from "@/Pages/Prime/Crud.vue";
 
-import { Realtime } from 'ably';
+// import { Realtime } from 'ably';
 
 import crown from "@/../assets/images/crown.png";
 
@@ -20,13 +20,12 @@ const page = usePage();
 const props = ref(page.props);
 
 const data = reactive({
-  party_id: "2",
   game_type: "quadruple",
   status: "setting",
   initial_shuttlecock_game: 0,
 });
 
-const parties = ref([]);
+const party = ref("");
 const selectedParty = ref({});
 const games = ref([]);
 const isSidebar = ref(true);
@@ -38,8 +37,11 @@ const game_data = reactive({
   ready_players: [],
 });
 
-parties.value = page.props.parties;
+party.value = page.props.party;
 games.value = page.props.games;
+
+data.party_id = party.value.id
+game_data.party_id = party.value.id
 
 // console.log(games.value)
 
@@ -149,23 +151,6 @@ watch(
   },
   { deep: true }
 );
-
-const sendMessage = (message) => {
-  router.post(
-    `/ably/${message}`,
-    { text: message },
-    {
-      preserveScroll: true,
-      headers: {
-        Accept: "application/json",
-      },
-      onSuccess: (response) => {
-        // console.log(response)
-      },
-      onError: (error) => {},
-    }
-  );
-};
 
 const getTeamBackground = (index, team) => {
   const set = sets.value[index];
@@ -319,7 +304,7 @@ const updateDisplayName = (partyMemberId, newName) => {
           life: 3000,
         });
 
-        parties.value = response.props.parties;
+        party.value = response.props.party;
       },
       onError: (error) => {
         toast.add({
@@ -850,7 +835,7 @@ const addPartyInitShuttleCock = (partyId) => {
         Accept: "application/json",
       },
       onSuccess: (res) => {
-        parties.value = res.props.parties;
+        party.value = res.props.party;
         data.initial_shuttlecock_game = initial_shuttlecock_party.value;
 
         if (res.props.flash.info && res.props.flash.info.length > 0) {
@@ -867,7 +852,7 @@ const addPartyInitShuttleCock = (partyId) => {
 };
 
 const selectParty = (partyId) => {
-  selectedParty.value = parties.value.filter((party) => party.id == partyId)[0];
+  selectedParty.value = party.value.filter((party) => party.id == partyId)[0];
   initial_shuttlecock_party.value = selectedParty.value.default_initial_shuttlecocks;
 
   data.initial_shuttlecock_game = initial_shuttlecock_party.value;
@@ -1155,80 +1140,12 @@ onMounted(() => {
           </div>
         </template>
         <ScrollPanel style="width: 100%; height: 85vh">
-          <Game :data="props" @gameCreated="partyReload" />
+          <Game :data="$page.props" @gameCreated="partyReload" />
         </ScrollPanel>
       </Sidebar>
     </div>
-    <button @click="sendMessage('sssss')">SendMessage</button>
     <!-- <div class="p-6 text-gray-900">You're logged in!</div> -->
     <ConfirmPopup></ConfirmPopup>
-    <div class="card p-fluid">
-      <button type="button" @click="createGame()">Create Game</button>
-
-      <select
-        name="party_id"
-        v-model="data.party_id"
-        @change="selectParty(data.party_id)"
-      >
-        <option></option>
-        <option v-for="party in parties" v-text="party.id"></option>
-      </select>
-      <select name="game_type" v-model="data.game_type">
-        <option></option>
-        <option v-for="game_type in ['double', 'quadruple']" v-text="game_type"></option>
-      </select>
-
-      <input
-        v-if="data.party_id"
-        v-model.number="initial_shuttlecock_party"
-        type="number"
-        min="0"
-        name="initial_shuttlecock_party"
-        @blur="addPartyInitShuttleCock(data.party_id)"
-      />
-      <input
-        v-if="data.party_id"
-        v-model.number="data.initial_shuttlecock_game"
-        type="number"
-        min="0"
-        name="initial_shuttlecock_game"
-      />
-
-      {{ selectedParty ? selectedParty.is_break_aftergame : "" }}
-      <br />
-
-      <select
-        name="game_id"
-        @change="fetchReadyPlayer(game_data.game_id)"
-        v-model="game_data.game_id"
-      >
-        <option></option>
-        <option
-          v-for="game in games"
-          :value="game.id"
-          v-text="`game:${game.id} party:${game.party_id} type:${game.game_type}`"
-        ></option>
-      </select>
-      <select name="party_member_id" v-model="game_data.party_member_id">
-        <option></option>
-        <option
-          v-for="(ready_player, index) in playerSortWaiting"
-          :value="ready_player.party_member_id"
-          v-text="
-            `${index + 1}: ${ready_player.badminton_rank} | ${ready_player.age} (${
-              ready_player.display_name
-            }) [played:${ready_player.finished_games_count}] [Wait Time: ${readAbleTime(
-              ready_player.waiting_time
-            )}]`
-          "
-        ></option>
-      </select>
-      <select name="team" v-model="game_data.team">
-        <option></option>
-        <option v-for="team in ['team1', 'team2']" v-text="team"></option>
-      </select>
-      <button type="button" @click="addPlayer()">Add Player</button>
-    </div>
     <!-- <ul v-if="$page.props.errors">
             <li
                 class="text-red-600"
@@ -1758,7 +1675,7 @@ onMounted(() => {
 
           <div class="overflow-auto whitespace-nowrap">
             <div
-              v-for="(member, index) in parties[0].members"
+              v-for="(member, index) in party.members"
               :key="member.id"
               class="flex flex-column mb-3"
             >

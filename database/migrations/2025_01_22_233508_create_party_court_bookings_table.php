@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('party_id')->constrained()->onDelete('cascade');
             $table->foreignId('court_id')->constrained()->onDelete('cascade');
-            $table->integer('court_field_number'); // Court field number (e.g., 1, 2, 3)
+            $table->integer('court_field_number')->nullable(); // Court field number (e.g., 1, 2, 3)
             $table->time('start_time'); // Start time for the booking
             $table->time('end_time');   // End time for the booking
             $table->timestamps();

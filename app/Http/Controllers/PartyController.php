@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Game;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\PartyCourtBooking;
 use App\Models\Court;
 use Illuminate\Http\Request;
@@ -48,6 +49,57 @@ class PartyController extends Controller
             'parties' => $parties,
             'games' => $games,
             'readyPlayers' => $readyPlayers
+        ]);
+    }
+
+    public function showParty(Request $request, $id)
+    {
+        // Check if the authenticated user is a member of the party
+        $isMember = PartyMember::where('party_id', $id)
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        // If the user is not a member, redirect them to the home page or show a 403 error
+        if (!$isMember) {
+            abort(403, 'คุณไม่ได้รับสิทธิในการเข้า Party นี้.');
+        }
+
+        // Fetch games for the party
+        $games = Game::with([
+            'gamePlayers.user',
+            'shuttlecocks',
+            'gameSets'
+        ])
+            ->withCount('gamePlayers')
+            ->with(['gamePlayers' => function ($query) use ($id) {
+                $query->leftJoin('games', 'game_players.game_id', '=', 'games.id') // Link game_players to games
+                    ->leftJoin('party_members', function ($join) use ($id) {
+                        $join->on('game_players.user_id', '=', 'party_members.user_id')
+                            ->on('party_members.party_id', '=', 'games.party_id') // Match the party
+                            ->where('party_members.party_id', $id); // Ensure it matches the current party
+                    })
+                    ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
+            }])
+            ->where('party_id', $id) // Filter games with the dynamic party_id
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // Fetch the current party and its members
+        $party = Party::with([
+            'members',
+            'members.user',
+        ])
+            ->withCount('members')
+            ->findOrFail($id);
+
+        // Fetch ready players for the party
+        $gameController = new GameController();
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID($id);
+
+        return Inertia::render('Party', [
+            'party' => $party,
+            'games' => $games,
+            'readyPlayers' => $readyPlayers,
         ]);
     }
 
@@ -111,6 +163,32 @@ class PartyController extends Controller
         $courts = Court::all();
 
         return Inertia::render('PartyLists', [
+            'parties' => $parties,
+            'courts' => $courts,
+        ]);
+    }
+
+    public function myParties(Request $request)
+    {
+        $userId = auth()->id();
+
+        // Fetch parties where the authenticated user is a member
+        $parties = Party::whereHas('members', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })
+            ->with([
+                'members',
+                'court',
+                'courtBookings',
+                'members.user',
+            ])
+            ->withCount('members')
+            ->get();
+
+        // Fetch all courts (optional)
+        $courts = Court::all();
+
+        return Inertia::render('PartyMyParties', [
             'parties' => $parties,
             'courts' => $courts,
         ]);

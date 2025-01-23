@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
-// $user = User::findOrFail(6);
-// Auth::login($user);
+$user = User::findOrFail(30);
+Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -44,7 +44,7 @@ use App\Http\Controllers\ChatController;
 
 Route::get('/', function () {
 
-    return redirect('/party');
+    return redirect('/party-lists');
 
     // return Inertia::render('Warrior', [
     //     'canLogin' => Route::has('login'),
@@ -183,7 +183,7 @@ Route::get('/landing', function () {
 });
 
 Route::get('/home', function () {
-    return redirect('/party');
+    return redirect('/party-lists');
 });
 
 Route::get('/crud', function () {
@@ -232,9 +232,11 @@ Route::get('login/{provider}/callback', [SocialController::class, 'handleProvide
 // OAuth Provider
 
 // party
-Route::get('/party/lists', [PartyController::class, 'partyLists'])->name('parties.lists');
+Route::get('/party-lists', [PartyController::class, 'partyLists'])->name('parties.lists');
+Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.my-parties');
+Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
-Route::post('/party/create', [PartyController::class, 'store'])->name('parties.create');
+Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
 Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
 Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 
