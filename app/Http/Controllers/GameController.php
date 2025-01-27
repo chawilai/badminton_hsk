@@ -454,6 +454,22 @@ class GameController extends Controller
             return back()->with('error', ['existSettingGame' => 'There is already a game in the setting status for this party.']);
         }
 
+        // Check if any selected players are already in a "playing" game in the same party
+        $playersInPlayingGame = GamePlayer::whereIn('user_id', $validatedData['players'])
+            ->join('games', 'game_players.game_id', '=', 'games.id')
+            ->join('users', 'game_players.user_id', '=', 'users.id') // Assuming you have a `users` table for player details
+            ->where('games.party_id', $validatedData['party_id']) // Same party
+            ->where('games.status', 'playing') // Only check for playing status
+            ->select('users.display_name') // Retrieve display names
+            ->get();
+
+        if ($playersInPlayingGame->isNotEmpty()) {
+            $playerNames = $playersInPlayingGame->pluck('display_name')->join(', ');
+            return back()->with('error', [
+                'activePlayers' => "ผู้เล่นบางคนยังเล่นอยู่ในเกมก่อนหน้า: $playerNames.",
+            ]);
+        }
+
         // Set game_start_date if process is playing
         $gameStartDate = $validatedData['process'] === 'playing' ? now() : null;
 

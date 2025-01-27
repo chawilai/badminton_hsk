@@ -131,7 +131,7 @@ Route::post('/webhook', function () {
     return Inertia::render('Test');
 });
 
-Route::post('/webhook', [LineMessagingController::class, 'webhook'])->name('createGame');
+Route::post('/webhook', [LineMessagingController::class, 'webhook']);
 
 
 Route::get('/primevue3', function () {
@@ -242,7 +242,7 @@ Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'u
 Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 
 Route::get('/dashboard', function () {
-    return redirect('/party');
+    return redirect('/party-lists');
 })->name('dashboard');
 
 Route::middleware('auth')->group(function () {

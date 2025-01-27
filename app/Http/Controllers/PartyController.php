@@ -16,6 +16,9 @@ class PartyController extends Controller
 {
     public function index(Request $request)
     {
+
+        return redirect('/party-lists');
+
         $games = Game::with([
             'gamePlayers.user',
             'shuttlecocks',
@@ -158,6 +161,9 @@ class PartyController extends Controller
         $partyId = $validated['party_id'];
         $userId = auth()->id();
 
+        // Retrieve the party
+        $party = Party::findOrFail($partyId);
+
         // Check if the user is already a member of the party
         $isAlreadyMember = PartyMember::where('party_id', $partyId)
             ->where('user_id', $userId)
@@ -169,13 +175,22 @@ class PartyController extends Controller
             ], 400);
         }
 
+        // Check the last party hosted by the same host (creator_id) where the user joined
+        $lastDisplayName = PartyMember::join('parties', 'party_members.party_id', '=', 'parties.id')
+            ->where('party_members.user_id', $userId)
+            ->where('parties.creator_id', $party->creator_id) // Same host
+            ->whereNotNull('party_members.display_name') // Ensure the display name exists
+            ->orderByDesc('party_members.created_at') // Most recent join
+            ->value('party_members.display_name'); // Get the display name
+
         // Add the user as a member of the party
         PartyMember::create([
             'party_id' => $partyId,
             'user_id' => $userId,
             'role' => 'member',
             'status' => 'Requesting',
-            'request_date' => now()
+            'request_date' => now(),
+            'display_name' => $lastDisplayName ?? null, // Set the previous display name if available
         ]);
 
         return back()->with('success', 'Party joined successfully!');

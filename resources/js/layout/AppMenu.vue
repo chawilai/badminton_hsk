@@ -225,7 +225,7 @@ const model_old = ref([
             {
                 label: 'Party',
                 icon: 'pi pi-fw pi-globe',
-                to: '/party'
+                to: '/party-lists'
             },
             // {
             //     label: 'Landing',
