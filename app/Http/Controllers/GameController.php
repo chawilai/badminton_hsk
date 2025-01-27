@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class GameController extends Controller
@@ -201,15 +202,12 @@ class GameController extends Controller
 
         $readyPlayers = $query->get();
 
-        // dd($readyPlayers);
-
-
         $mappedPlayers = $readyPlayers->map(function ($player) use ($game, $currentDateTime) {
             // $finishedGamesCount = $player->user->gamePlayers->where('game.status', 'finished')->count(); // Counting finished games associated with the user
 
             $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
                 ->whereHas('game', function ($query) use ($game) {
-                    $query->where('status', 'finished')
+                    $query->whereIn('status', ['finished', 'playing'])
                         ->where('party_id', $game->party_id);
                 })
                 ->count();
@@ -227,6 +225,24 @@ class GameController extends Controller
             $waitingTime = $lastGameEndTime ?
                 abs(round($currentDateTime->diffInSeconds($lastGameEndTime->game->game_end_date, false))) :
                 abs(round($currentDateTime->diffInSeconds($game->party->party_start_date, false)));
+
+            $waitingTimeReadable = $this->convertWaitingTimeToReadableFormat($waitingTime);
+
+            // Fetch the current game if the player is in a "playing" game
+            $currentGame = GamePlayer::where('user_id', $player->user_id)
+                ->join('games', 'game_players.game_id', '=', 'games.id')
+                ->where('games.party_id', $game->party_id)
+                ->where('games.status', 'playing') // Only include "playing" games
+                ->select(
+                    'games.id',
+                    'games.party_id',
+                    'games.game_type',
+                    'games.status',
+                    'games.game_start_date',
+                    'games.game_end_date',
+                    DB::raw('(SELECT COUNT(*) + 1 FROM games AS g WHERE g.party_id = games.party_id AND g.id < games.id) AS game_number')
+                    )
+                ->first();
 
             $gameDetails = $player->user->gamePlayers->filter(function ($gamePlayer) {
                 return $gamePlayer->game !== null; // Filter out null game instances
@@ -275,7 +291,9 @@ class GameController extends Controller
                 'game_status' => $player->game_status,
                 'finished_games_count' => $finishedGamesCount,
                 'games' => $gameDetails,  // Include game details for each player
-                'waiting_time' => $waitingTime
+                'waiting_time' => $waitingTime,
+                'waiting_time_readable' => $waitingTimeReadable,
+                'current_game' => $currentGame
             ];
         });
 
@@ -317,7 +335,7 @@ class GameController extends Controller
         return $readyPlayers->map(function ($player) use ($party, $currentDateTime) {
             $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
                 ->whereHas('game', function ($query) use ($party) {
-                    $query->where('status', 'finished')
+                    $query->whereIn('status', ['finished', 'playing'])
                         ->where('party_id', $party->id);
                 })
                 ->count();
@@ -336,6 +354,22 @@ class GameController extends Controller
 
             $waitingTimeReadable = $this->convertWaitingTimeToReadableFormat($waitingTime);
 
+            // Fetch the current game if the player is in a "playing" game
+            $currentGame = GamePlayer::where('user_id', $player->user_id)
+                ->join('games', 'game_players.game_id', '=', 'games.id')
+                ->where('games.party_id', $party->id)
+                ->where('games.status', 'playing') // Only include "playing" games
+                ->select(
+                    'games.id',
+                    'games.party_id',
+                    'games.game_type',
+                    'games.status',
+                    'games.game_start_date',
+                    'games.game_end_date',
+                    DB::raw('(SELECT COUNT(*) + 1 FROM games AS g WHERE g.party_id = games.party_id AND g.id < games.id) AS game_number')
+                    )
+                ->first();
+
             return [
                 'user_id' => $player->user->id,
                 'party_member_id' => $player->id,
@@ -351,6 +385,7 @@ class GameController extends Controller
                 'finished_games_count' => $finishedGamesCount,
                 'waiting_time' => $waitingTime,
                 'waiting_time_readable' => $waitingTimeReadable,
+                'current_game' => $currentGame
             ];
         });
     }
@@ -455,19 +490,31 @@ class GameController extends Controller
         }
 
         // Check if any selected players are already in a "playing" game in the same party
-        $playersInPlayingGame = GamePlayer::whereIn('user_id', $validatedData['players'])
+        $playersInPlayingGame = GamePlayer::whereIn('game_players.user_id', $validatedData['players']) // Specify the table for user_id
             ->join('games', 'game_players.game_id', '=', 'games.id')
-            ->join('users', 'game_players.user_id', '=', 'users.id') // Assuming you have a `users` table for player details
+            ->join('party_members', function ($join) {
+                $join->on('game_players.user_id', '=', 'party_members.user_id')
+                    ->on('games.party_id', '=', 'party_members.party_id'); // Match user and party
+            })
             ->where('games.party_id', $validatedData['party_id']) // Same party
-            ->where('games.status', 'playing') // Only check for playing status
-            ->select('users.display_name') // Retrieve display names
+            ->where('games.status', $validatedData['process'])
+            ->select('party_members.display_name') // Retrieve display names from party_members
             ->get();
 
+
         if ($playersInPlayingGame->isNotEmpty()) {
-            $playerNames = $playersInPlayingGame->pluck('display_name')->join(', ');
-            return back()->with('error', [
-                'activePlayers' => "ผู้เล่นบางคนยังเล่นอยู่ในเกมก่อนหน้า: $playerNames.",
-            ]);
+            if($validatedData['process'] === 'playing') {
+                $playerNames = $playersInPlayingGame->pluck('display_name')->join(', ');
+                return back()->with('error', [
+                    'activePlayers' => "ผู้เล่นบางคนยังเล่นอยู่ในเกมก่อนหน้าโปรดลีสเกมแทนเริ่มเกม: $playerNames.",
+                ]);
+            }
+            if($validatedData['process'] === 'listing') {
+                $playerNames = $playersInPlayingGame->pluck('display_name')->join(', ');
+                return back()->with('error', [
+                    'activePlayers' => "ผู้เล่นบางคนถูกลีสลงรายการรอเล่นแล้ว: $playerNames.",
+                ]);
+            }
         }
 
         // Set game_start_date if process is playing

@@ -131,9 +131,8 @@ import 'primevue/resources/themes/aura-light-cyan/theme.css'
 // import 'primevue/resources/themes/aura-light-noir/theme.css'
 
 import "primevue/resources/primevue.min.css";
-import "@/../css/custom.css";
-
 import "@/../assets/styles.scss";
+import "@/../css/custom.css";
 
 // Prime Vue
 

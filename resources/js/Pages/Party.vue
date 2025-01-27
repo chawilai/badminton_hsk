@@ -1540,19 +1540,13 @@ onMounted(() => {
             </thead>
             <tbody>
               <tr
-                v-for="game in games"
+                v-for="(game, game_index) in games"
                 :key="game.id"
                 :class="{
                   'bg-teal-200': isPlayerInGame(game),
                 }"
               >
-                <td class="px-2 py-1">{{ game.id }}</td>
-                <!-- <td class="px-2 py-1">
-                                                  {{ game.party_id }}
-                                              </td> -->
-                <!-- <td class="px-2 py-1">
-                                                  {{ game.game_type }}
-                                              </td> -->
+                <td class="px-2 py-1">{{ games.length - game_index }}</td>
                 <td class="px-2 py-1 relative">
                   <div
                     class="flex flex-row align-items-center justify-content-center gap-1 z-0"
@@ -1574,21 +1568,6 @@ onMounted(() => {
                   </button>
                 </td>
                 <td class="px-2 py-1" v-html="gameStatus(game.status)"></td>
-                <!-- <td class="px-2 py-1">
-                                                  {{ showTime(game.game_list_date) }}
-                                              </td> -->
-                <!-- <td class="px-2 py-1">
-                                                  {{ showTime(game.game_start_date) }}
-                                              </td> -->
-                <!-- <td class="px-2 py-1">
-                                                  {{ showTime(game.game_end_date) }}
-                                              </td> -->
-                <!-- <td class="px-2 py-1">
-                  <button @click="togglePlayers(game.id)">Show</button>
-                </td> -->
-                <!-- <td class="px-2 py-1">
-                                                  {{ shuttlecocksInit(game) }}
-                                              </td> -->
                 <td class="px-2 py-1 relative text-center">
                   {{ shuttlecocksTotal(game) }}
 

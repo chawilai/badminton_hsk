@@ -20,6 +20,8 @@ const emit = defineEmits(["gameCreated"]);
 
 const localData = ref({ ...props.data });
 
+console.log(localData)
+
 const {
   dropZones,
   draggedItem,
@@ -61,6 +63,7 @@ const formattedData = computed(() =>
     rank_level: item.badminton_level,
     waiting_time: item.waiting_time,
     played: item.finished_games_count,
+    current_game: item.current_game,
   }))
 );
 
@@ -144,6 +147,11 @@ const startNewGame = () => {
       });
     },
     onError: (err) => {
+
+    console.log(err)
+    console.log(dropZones)
+    dropZones.Game = [];
+
       if (err.notMatchType) {
         toast.add({
           severity: "error",
@@ -158,6 +166,14 @@ const startNewGame = () => {
           summary: "ล้มเหลว",
           detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
           life: 3000,
+        });
+      }
+      if (err.activePlayers) {
+        toast.add({
+          severity: "error",
+          summary: "ล้มเหลว",
+          detail: err.activePlayers,
+        //   life: 3000,
         });
       }
     },
@@ -346,8 +362,9 @@ onMounted(() => {
             <!-- Title -->
             <span class="text-center font-medium">{{ item.title }}</span>
             <span
-              class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-              v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+              class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
+              :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
+              v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
             ></span>
             <span
               class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
@@ -398,8 +415,9 @@ onMounted(() => {
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
               <span
-                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
+                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
+                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
               ></span>
               <span
                 class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
@@ -500,8 +518,9 @@ onMounted(() => {
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
               <span
-                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
+                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
+                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
               ></span>
               <span
                 class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
@@ -551,8 +570,9 @@ onMounted(() => {
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
               <span
-                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
+                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
+                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
               ></span>
               <span
                 class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
@@ -602,8 +622,9 @@ onMounted(() => {
               <!-- Title -->
               <span class="text-center font-medium">{{ item.title }}</span>
               <span
-                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
+                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
+                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
+                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
               ></span>
               <span
                 class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
