@@ -15,7 +15,7 @@
       <div class="p-col-12 lg:p-col-9">
         <h3>Party List</h3>
         <DataTable
-          :value="parties"
+          :value="filteredParties"
           class="p-datatable-responsive"
           :paginator="true"
           :rows="20"
@@ -54,8 +54,10 @@
         header="Create Party"
         :visible="showDialog"
         :modal="true"
-        :closable="true"
+        :closeButton="false"
+        :closeOnEscape="true"
         @hide="showDialog = false"
+        :draggable="false"
       >
         <form @submit.prevent="createParty">
           <div class="p-fluid">
@@ -168,7 +170,7 @@
 
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
@@ -205,12 +207,18 @@ const form = ref({
 // Authenticated user from backend
 const authUser = page.props.auth.user;
 
+// Filter parties based on the current date
+const filteredParties = computed(() => {
+  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  return parties.value.filter((party) => party.play_date >= today); // Filter for future or today's parties
+});
+
 const isUserInParty = (members) => {
   return members.some((member) => member.user_id === authUser.id);
 };
 
 const joinParty = (partyId) => {
-  console.log(`Joining party ${partyId}`);
+//   console.log(`Joining party ${partyId}`);
 
   // Make API call to join the party
   router.post(

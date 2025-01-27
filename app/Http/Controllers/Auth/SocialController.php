@@ -68,12 +68,12 @@ class SocialController extends Controller
             'badminton_rank_id' => $randomRank, // Assign a random rank
         ]);
 
-        \DB::table('party_members')->insert([
-            'user_id' => $newUser->id,
-            'party_id' => 2,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // \DB::table('party_members')->insert([
+        //     'user_id' => $newUser->id,
+        //     'party_id' => 2,
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
 
         return $newUser;
     }
@@ -129,12 +129,12 @@ class SocialController extends Controller
             'badminton_rank_id' => $randomRank, // Assign a random rank
         ]);
 
-        \DB::table('party_members')->insert([
-            'user_id' => $newUser->id,
-            'party_id' => 2,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // \DB::table('party_members')->insert([
+        //     'user_id' => $newUser->id,
+        //     'party_id' => 2,
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
 
         return $newUser;
     }

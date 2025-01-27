@@ -59,12 +59,12 @@ export function useDragDrop() {
     let lastTouchTime = 0; // To differentiate between touch and click events
 
     const handleClick = (item, currentZone) => {
-        if (isActionProcessed.value) return; // Prevent duplicate processing
-        isActionProcessed.value = true;
-        // console.log("Clicked!");
-        moveItem(item, currentZone);
+        // if (isActionProcessed.value) return; // Prevent duplicate processing
+        // isActionProcessed.value = true;
+        // // console.log("Clicked!");
+        // moveItem(item, currentZone);
 
-        setTimeout(() => (isActionProcessed.value = false), 300);
+        // setTimeout(() => (isActionProcessed.value = false), 300);
     };
 
     const handleDoubleClick = (item, currentZone) => {

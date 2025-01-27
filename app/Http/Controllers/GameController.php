@@ -29,7 +29,7 @@ class GameController extends Controller
                 $query->leftJoin('games', 'game_players.game_id', '=', 'games.id') // Link game_players to games
                     ->leftJoin('party_members', function ($join) {
                         $join->on('game_players.user_id', '=', 'party_members.user_id')
-                             ->on('party_members.party_id', '=', 'games.party_id'); // Match the party
+                            ->on('party_members.party_id', '=', 'games.party_id'); // Match the party
                     })
                     ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
@@ -217,9 +217,11 @@ class GameController extends Controller
             $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
                 ->join('games', 'game_players.game_id', '=', 'games.id')
                 ->where('games.status', 'finished')
+                ->where('games.party_id', $game->party_id) // Filter by the same party using $game->party_id
                 ->latest('games.game_end_date')
                 ->select('game_players.*', 'games.game_end_date as game_end_date') // Ensure to select game_end_date
                 ->first();
+
 
             // Calculate waiting time in seconds
             $waitingTime = $lastGameEndTime ?
@@ -298,13 +300,15 @@ class GameController extends Controller
         ])
             ->where('party_id', $party->id)
             ->where('game_status', 'ready')
-            ->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
-                $subQuery->whereIn('status', ['setting', 'listing']);
+            ->whereDoesntHave('user.gamePlayers.game', function ($subQuery) use ($party) {
+                $subQuery->where('party_id', $party->id) // Scope to the current party
+                    ->whereIn('status', ['setting', 'listing']);
             });
 
         if (!$party->is_inc_playing) {
-            $query->whereDoesntHave('user.gamePlayers.game', function ($subQuery) {
-                $subQuery->whereIn('status', ['playing']);
+            $query->whereDoesntHave('user.gamePlayers.game', function ($subQuery) use ($party) {
+                $subQuery->where('party_id', $party->id) // Scope to the current party
+                    ->whereIn('status', ['playing']);
             });
         }
 
@@ -321,8 +325,9 @@ class GameController extends Controller
             $lastGameEndTime = GamePlayer::where('user_id', $player->user_id)
                 ->join('games', 'game_players.game_id', '=', 'games.id')
                 ->where('games.status', 'finished')
+                ->where('games.party_id', $party->id) // Filter by the same party using $game->party_id
                 ->latest('games.game_end_date')
-                ->select('game_players.*', 'games.game_end_date as game_end_date')
+                ->select('game_players.*', 'games.game_end_date as game_end_date') // Ensure to select game_end_date
                 ->first();
 
             $waitingTime = $lastGameEndTime

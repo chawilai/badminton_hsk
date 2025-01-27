@@ -20,8 +20,6 @@ const emit = defineEmits(["gameCreated"]);
 
 const localData = ref({ ...props.data });
 
-console.log(localData);
-
 const {
   dropZones,
   draggedItem,
@@ -245,7 +243,7 @@ const listNewGame = () => {
 watch(
   () => props.data, // Watch the prop
   (newData) => {
-    console.log("Props data updated:", newData);
+    // console.log("Props data updated:", newData);
 
     localData.value = newData;
 
@@ -273,13 +271,24 @@ onMounted(() => {
           <div class="flex gap-1">
             <div class="flex align-items-center justify-content-betwee gap-1">
               <label>ขนไก่</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                class="w-2rem text-center"
+              <select
+                name="init_shuttle"
                 v-model="form.initial_shuttlecock_game"
-              />
+              >
+                <option v-for="i in [0, 1, 2, 3]" v-text="i"></option>
+              </select>
+              <!-- <SelectButton
+              style="w-2rem"
+              v-model="form.initial_shuttlecock_game"
+              :options="[
+                { label: 'Option 0', value: 0 },
+                { label: 'Option 1', value: 1 },
+                { label: 'Option 2', value: 2 },
+                { label: 'Option 3', value: 3 },
+              ]"
+              optionLabel="value"
+              optionValue="value"
+            /> -->
             </div>
             <button
               @click="startNewGame"

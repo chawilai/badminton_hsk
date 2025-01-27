@@ -30,10 +30,9 @@ class PartyController extends Controller
                     })
                     ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
-            ->where('party_id', 2) // Filter games with party_id = 2
+            ->where('party_id', $partyId)
             ->orderBy('id', 'desc')
             ->get();
-
 
         $parties = Party::with([
             'members',
@@ -43,7 +42,7 @@ class PartyController extends Controller
             ->get();
 
         $gameController = new GameController();
-        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(2);
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID($partyId);
 
         return Inertia::render('Party', [
             'parties' => $parties,
@@ -54,6 +53,7 @@ class PartyController extends Controller
 
     public function showParty(Request $request, $id)
     {
+
         // Check if the authenticated user is a member of the party
         $isMember = PartyMember::where('party_id', $id)
             ->where('user_id', auth()->id())
@@ -150,36 +150,36 @@ class PartyController extends Controller
     }
 
     public function joinParty(Request $request)
-{
-    $validated = $request->validate([
-        'party_id' => 'required|exists:parties,id',
-    ]);
+    {
+        $validated = $request->validate([
+            'party_id' => 'required|exists:parties,id',
+        ]);
 
-    $partyId = $validated['party_id'];
-    $userId = auth()->id();
+        $partyId = $validated['party_id'];
+        $userId = auth()->id();
 
-    // Check if the user is already a member of the party
-    $isAlreadyMember = PartyMember::where('party_id', $partyId)
-        ->where('user_id', $userId)
-        ->exists();
+        // Check if the user is already a member of the party
+        $isAlreadyMember = PartyMember::where('party_id', $partyId)
+            ->where('user_id', $userId)
+            ->exists();
 
-    if ($isAlreadyMember) {
-        return response()->json([
-            'message' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว',
-        ], 400);
+        if ($isAlreadyMember) {
+            return response()->json([
+                'message' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว',
+            ], 400);
+        }
+
+        // Add the user as a member of the party
+        PartyMember::create([
+            'party_id' => $partyId,
+            'user_id' => $userId,
+            'role' => 'member',
+            'status' => 'Requesting',
+            'request_date' => now()
+        ]);
+
+        return back()->with('success', 'Party joined successfully!');
     }
-
-    // Add the user as a member of the party
-    PartyMember::create([
-        'party_id' => $partyId,
-        'user_id' => $userId,
-        'role' => 'member',
-        'status' => 'Requesting',
-        'request_date' => now()
-    ]);
-
-    return back()->with('success', 'Party joined successfully!');
-}
 
     public function partyLists(Request $request)
     {
@@ -256,7 +256,7 @@ class PartyController extends Controller
                     })
                     ->select('game_players.*', 'party_members.display_name'); // Select relevant fields
             }])
-            ->where('party_id', 2) // Filter games with party_id = 2
+            ->where('party_id', $request->party_id)
             ->orderBy('id', 'desc')
             ->get();
 
@@ -271,7 +271,7 @@ class PartyController extends Controller
 
 
         $gameController = new GameController();
-        $readyPlayers = $gameController->fetchReadyPlayersByPartyID(2);
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID($request->party_id);
 
         return back()->with([
             'parties' => $parties,

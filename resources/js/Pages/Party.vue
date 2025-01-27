@@ -1067,13 +1067,17 @@ const enterScore = (gameId) => {
   });
 };
 
+const reloadPage = () => {
+    router.get(`/party/${party.value.id}`, {}, { preserveScroll: true })
+}
+
 const partyReload = (payload) => {
   console.log("Game Created");
   console.log(payload);
 
   router.post(
     `/fetch-party-data`,
-    {},
+    {party_id: party.value.id},
     {
       preserveScroll: true,
       headers: {
@@ -1136,8 +1140,10 @@ onMounted(() => {
         >
             asdfasdf
         </Sidebar> -->
-    <div class="card mt-4">
+    <div class="card mt-4 flex justify-content-between">
       <Button icon="pi pi-plus" label="Create New Game" @click="visibleTop = true" />
+
+      <button @click="reloadPage()"><i class="pi pi-refresh"></i> Reload</button>
 
       <Sidebar
         v-model:visible="visibleTop"

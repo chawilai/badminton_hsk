@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('address');
             $table->string('geolocation')->nullable();
+            $table->string('location')->nullable();
             $table->string('phone')->nullable();
             $table->string('contact_url')->nullable(); // Can be used for Facebook page or website
             $table->integer('field_total');
