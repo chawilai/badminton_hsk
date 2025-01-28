@@ -1,18 +1,20 @@
 <template>
+  <Head title="Party Lists" />
+
   <AppLayout>
     <div class="p-grid p-dir-col lg:p-dir-row p-m-3">
       <!-- Create Party Button -->
-      <div class="p-col-12 lg:p-col-3 mb-6">
+      <div class="col-12 lg:col-3 mb-6">
         <Button
           label="Create Party"
           icon="pi pi-plus"
-          class="p-button-raised p-mb-2"
+          class="p-button-raised mb-2"
           @click="showDialog = true"
         />
       </div>
 
       <!-- Party List -->
-      <div class="p-col-12 lg:p-col-9">
+      <div class="col-12 lg:col-9">
         <h3>Party List</h3>
         <DataTable
           :value="filteredParties"
@@ -50,109 +52,162 @@
       </div>
 
       <!-- Create Party Dialog -->
+      <!-- <Dialog
+      v-model:visible="visible"
+      header="บันทึกผลการแข่งขัน"
+      :style="{ width: '25rem', padding: '0px' }"
+      :position="position"
+      :modal="true"
+      :draggable="false"
+    > -->
       <Dialog
         header="Create Party"
-        :visible="showDialog"
+        v-model:visible="showDialog"
         :modal="true"
-        :closeButton="false"
         :closeOnEscape="true"
-        @hide="showDialog = false"
         :draggable="false"
+        class="create-party-dialog mx-2"
       >
         <form @submit.prevent="createParty">
-          <div class="p-fluid">
-            <!-- Party Details -->
-            <div class="p-field">
-              <label for="play_date">Play Date</label>
-              <Calendar id="play_date" v-model="form.play_date" dateFormat="yy-mm-dd" />
+          <div class="p-fluid w-full sm:w-30rem">
+            <!-- Party Details Section -->
+            <h3 class="section-title">Party Details</h3>
+            <div class="grid align-center justify-between">
+              <div class="field col-4 md-4">
+                <label for="play_date">Play Date</label>
+                <Calendar id="play_date" v-model="form.play_date" dateFormat="yy-mm-dd" />
+              </div>
+
+              <div class="field col-4 md-4">
+                <label for="max_players">Max Players</label>
+                <InputNumber id="max_players" v-model="form.max_players" :min="1" />
+              </div>
+
+              <div class="field col-4 md-4">
+                <label for="status">Status</label>
+                <Dropdown
+                  id="status"
+                  v-model="form.status"
+                  :options="statuses"
+                  placeholder="Select Status"
+                />
+              </div>
             </div>
 
-            <div class="p-field">
-              <label for="max_players">Max Players</label>
-              <InputNumber id="max_players" v-model="form.max_players" :min="1" />
+            <div class="grid align-center justify-between">
+              <div class="field col-12 md-6">
+                <label for="court_id">Court</label>
+                <Dropdown
+                  id="court_id"
+                  v-model="form.court_id"
+                  :options="courts"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select Court"
+                />
+              </div>
             </div>
 
-            <div class="p-field">
-              <label for="status">Status</label>
-              <Dropdown
-                id="status"
-                v-model="form.status"
-                :options="statuses"
-                placeholder="Select Status"
-              />
-            </div>
-
-            <div class="p-field">
-              <label for="court_id">Court</label>
-              <Dropdown
-                id="court_id"
-                v-model="form.court_id"
-                :options="courts"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Select Court"
-              />
-            </div>
-
-            <div class="p-field-checkbox mt-4">
-              <Checkbox inputId="is_private" v-model="form.is_private" />
+            <div class="field-checkbox mt-4">
+              <Checkbox
+                name="is_private"
+                v-model="form.is_private"
+                binary
+                inputId="is_private"
+              ></Checkbox>
               <label for="is_private">Private Party</label>
             </div>
 
             <!-- Court Bookings Section -->
-            <h3>Court Bookings</h3>
+            <h3 class="section-title">Court Bookings</h3>
             <div
               v-for="(booking, index) in form.court_bookings"
               :key="index"
-              class="p-fluid court-booking"
+              class="court-booking p-3 mb-2 border-round-lg shadow-2"
             >
-              <h4>Booking #{{ index + 1 }}</h4>
+              <h4 class="mb-2">Booking #{{ index + 1 }}</h4>
+              <div class="flex gap-4">
+                <div class="flex-1">
+                  <label for="court_field_number">คอร์ทที่</label>
 
-              <div class="p-field">
-                <label for="court_field_number">Court Field Number</label>
-                <InputNumber
-                  id="court_field_number"
-                  v-model="booking.court_field_number"
-                  :min="1"
-                />
-              </div>
+                  <Dropdown
+                    :options="[
+                      { name: 1 },
+                      { name: 2 },
+                      { name: 3 },
+                      { name: 4 },
+                      { name: 5 },
+                      { name: 6 },
+                      { name: 7 },
+                      { name: 8 },
+                      { name: 9 },
+                      { name: 10 },
+                      { name: 11 },
+                      { name: 12 },
+                    ]"
+                    id="court_field_number"
+                    name="court_field_number"
+                    optionLabel="name"
+                    optionValue="name"
+                    v-model="booking.court_field_number"
+                    checkmark
+                    :highlightOnSelect="false"
+                    class="w-full"
+                  />
+                </div>
+                <div class="flex-1">
+                  <label for="start_time">เวลาเริ่ม</label>
+                  <Dropdown
+                    :options="timeOptions"
+                    id="start_time"
+                    name="start_time"
+                    optionLabel="name"
+                    optionValue="name"
+                    v-model="booking.start_time"
+                    checkmark
+                    :highlightOnSelect="false"
+                    class="w-full"
+                  />
+                </div>
 
-              <div class="p-field">
-                <label for="start_time">Start Time</label>
-                <InputText
-                  id="start_time"
-                  v-model="booking.start_time"
-                  placeholder="HH:MM"
-                />
-              </div>
-
-              <div class="p-field">
-                <label for="end_time">End Time</label>
-                <InputText id="end_time" v-model="booking.end_time" placeholder="HH:MM" />
+                <div class="flex-1">
+                  <label for="end_time">เวลาจบ</label>
+                  <Dropdown
+                    :options="filteredEndTimeOptions(index)"
+                    id="end_time"
+                    name="end_time"
+                    optionLabel="name"
+                    optionValue="name"
+                    v-model="booking.end_time"
+                    checkmark
+                    :highlightOnSelect="false"
+                    class="w-full"
+                  />
+                </div>
               </div>
 
               <Button
-                label="Remove"
+                label="ลบคอร์ท"
                 icon="pi pi-minus"
-                class="p-button-danger p-mb-2"
+                class="p-button-danger mt-3"
                 @click="removeCourtBooking(index)"
               />
             </div>
 
             <Button
-              label="Add Booking"
+              label="เพิ่มคอร์ท"
               icon="pi pi-plus"
-              class="p-button-secondary p-mb-3"
+              class="p-button-secondary mt-3"
               @click="addCourtBooking"
             />
           </div>
 
           <!-- Submit and Cancel Buttons -->
-          <div class="p-mt-3">
+          <div class="mt-4 flex p-justify-end gap-2">
             <Button
               label="Create"
               icon="pi pi-check"
-              class="p-button-success p-mr-2"
+              class="p-button-success"
               type="submit"
             />
             <Button
@@ -171,7 +226,7 @@
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
 import { ref, computed } from "vue";
-import { usePage, router } from "@inertiajs/vue3";
+import { Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 
@@ -185,13 +240,11 @@ const parties = ref(page.props.parties ?? []); // Replace with API data
 const courts = ref(page.props.courts ?? []); // Court options from server
 const statuses = ["Open", "Full", "Over"]; // Status options
 
-// console.log(parties);
-
 // Form with dynamic court bookings
 const form = ref({
   play_date: null,
   court_id: null,
-  max_players: 4,
+  max_players: 18,
   status: "Open",
   is_private: false,
   court_bookings: [
@@ -213,12 +266,34 @@ const filteredParties = computed(() => {
   return parties.value.filter((party) => party.play_date >= today); // Filter for future or today's parties
 });
 
+const timeOptions = Array.from({ length: 24 }, (_, i) => ({
+  name: `${String(i + 1).padStart(2, "0")}:00`,
+}));
+
+// Computed property to filter end time options
+const filteredEndTimeOptions = (index) => {
+  if (!form.value.court_bookings[index].start_time) {
+    return timeOptions; // If no start time is selected, show all options
+  }
+
+  // Find the index of the selected start time
+  const startTimeIndex = timeOptions.findIndex(
+    (option) => option.name === form.value.court_bookings[index].start_time
+  );
+
+  // Allow only times within 12 hours after the selected start time
+  return timeOptions.filter((_, index) => {
+    const diff = (index - startTimeIndex + 24) % 24; // Calculate the circular difference
+    return diff <= 6; // Allow up to 12 hours after the start time
+  });
+};
+
 const isUserInParty = (members) => {
   return members.some((member) => member.user_id === authUser.id);
 };
 
 const joinParty = (partyId) => {
-//   console.log(`Joining party ${partyId}`);
+  //   console.log(`Joining party ${partyId}`);
 
   // Make API call to join the party
   router.post(
@@ -227,8 +302,8 @@ const joinParty = (partyId) => {
     {
       onSuccess: (res) => {
         // Show success message or refresh the party data
-        parties.value = res.props.parties
-        courts.value = res.props.courts
+        parties.value = res.props.parties;
+        courts.value = res.props.courts;
 
         toast.add({
           severity: "success",
@@ -254,7 +329,6 @@ const joinParty = (partyId) => {
   );
 };
 
-
 const enterParty = (partyId) => {
   console.log(`Entering party ${partyId}`);
   // Navigate to the party page
@@ -264,7 +338,7 @@ const enterParty = (partyId) => {
 // Add a new court booking
 const addCourtBooking = () => {
   form.value.court_bookings.push({
-    court_id: null,
+    court_id: form.court_id,
     court_field_number: null,
     start_time: "",
     end_time: "",

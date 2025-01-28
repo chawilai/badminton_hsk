@@ -123,7 +123,7 @@ Route::get('/warrior_home', function () {
 
 Route::get('/test', function () {
 
-    return Inertia::render('Test');
+    return Inertia::render('Prime/Card');
 });
 
 Route::post('/webhook', function () {
