@@ -8,6 +8,7 @@ use App\Models\Message;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Ably\AblyRest;
+use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
 {
@@ -24,10 +25,35 @@ class ChatController extends Controller
             'clientId' => auth()->user()->id ?? 'guest',
         ]);
 
+        // Ably
+        $apiKey = env('ABLY_KEY');  // Ensure your API key is in your .env file
+
+        // Basic auth credentials should be base64 encoded as username:password format
+        $basicAuth = base64_encode($apiKey);
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Basic ' . $basicAuth
+            ])->get('https://rest.ably.io/channels');
+
+            // // Check for successful response
+            // if ($response->successful()) {
+            //     return $response->json();  // Return the JSON response
+            // } else {
+            //     // Handle errors
+            //     return response()->json(['error' => 'Failed to fetch channels'], $response->status());
+            // }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
+        // Ably
+
         return Inertia::render('Chat', [
             'chat_id' => $chat->id, // Pass the chat ID
             'ably_key' => env('ABLY_KEY'),
             'ably_token' => $tokenRequest,
+            'ably_channels' => $response->json(),
         ]);
     }
 

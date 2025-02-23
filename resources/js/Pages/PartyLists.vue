@@ -15,7 +15,12 @@
 
       <!-- Party List -->
       <div class="col-12 lg:col-9">
-        <h3>Party List</h3>
+        <div class="flex justify-content-between align-items-center">
+            <h3>Party List</h3>
+            <button @click="reloadPage()" class="h-2rem"><i class="pi pi-refresh"></i> Reload</button>
+        </div>
+
+
         <DataTable
           :value="filteredParties"
           class="p-datatable-responsive"
@@ -75,7 +80,7 @@
             <div class="grid align-center justify-between">
               <div class="field col-4 md-4">
                 <label for="play_date">Play Date</label>
-                <Calendar id="play_date" v-model="form.play_date" dateFormat="yy-mm-dd" />
+                <Calendar v-model="form.play_date" showIcon iconDisplay="input" @date-select="formatDate" dateFormat="yy-mm-dd" />
               </div>
 
               <div class="field col-4 md-4">
@@ -266,9 +271,18 @@ const filteredParties = computed(() => {
   return parties.value.filter((party) => party.play_date >= today); // Filter for future or today's parties
 });
 
+const reloadPage = () => {
+    router.get(`/party-lists`, {}, { preserveScroll: true })
+}
+
 const timeOptions = Array.from({ length: 24 }, (_, i) => ({
   name: `${String(i + 1).padStart(2, "0")}:00`,
 }));
+
+const formatDate = (date) => {
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  form.value.play_date = offsetDate.toISOString().split("T")[0]; // Extract YYYY-MM-DD
+};
 
 // Computed property to filter end time options
 const filteredEndTimeOptions = (index) => {

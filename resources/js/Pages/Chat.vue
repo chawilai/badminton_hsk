@@ -19,12 +19,14 @@
 import AppLayout from "@/layout/AppLayout.vue";
 import { ref, onMounted } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
-import { Realtime } from "ably";
+import { Realtime, Rest } from "ably";
 
 const page = usePage();
 
 const messages = ref([]);
 const newMessage = ref("");
+
+console.log(page.props)
 
 // Get the Ably key and chat ID from Inertia's shared props
 const ablyKey = page.props.ably_key;

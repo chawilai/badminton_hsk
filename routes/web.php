@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
-// $user = User::findOrFail(5);
-// Auth::login($user);
+$user = User::findOrFail(1);
+Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -123,7 +123,7 @@ Route::get('/warrior_home', function () {
 
 Route::get('/test', function () {
 
-    return Inertia::render('Prime/Card');
+    return Inertia::render('MenuAnimate');
 });
 
 Route::post('/webhook', function () {
@@ -231,6 +231,8 @@ Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])-
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 // OAuth Provider
 
+Route::middleware('auth')->group(function () {
+
 // party
 Route::get('/party-lists', [PartyController::class, 'partyLists'])->name('parties.lists');
 Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.my-parties');
@@ -245,7 +247,6 @@ Route::get('/dashboard', function () {
     return redirect('/party-lists');
 })->name('dashboard');
 
-Route::middleware('auth')->group(function () {
     // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
