@@ -33,14 +33,14 @@ class SendIHRIApiSummaryEmail extends Command
     public function handle()
     {
         $sites = [
-            'https://www.caremat.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.mplus-cmi.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.mplus-cri.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.mplus-plk.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.rsat-bkk.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.rsat-cbi.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.rsat-ska.actse-clinic.com/api/ihri_data_api_send.php',
-            'https://www.rsat-ubn.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://caremat.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://mplus-cmi.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://mplus-cri.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://mplus-plk.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://rsat-bkk.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://rsat-cbi.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://rsat-ska.actse-clinic.com/api/ihri_data_api_send.php',
+            'https://rsat-ubn.actse-clinic.com/api/ihri_data_api_send.php',
         ];
 
         // $sites = [
@@ -131,7 +131,7 @@ class SendIHRIApiSummaryEmail extends Command
         Mail::html($htmlContent, function ($message) {
             $date = date("Y-m-d");
             $message->to('wat.chawilai@gmail.com')
-                ->cc(['it@ihri.org', 'pravit@ihri.org', 'pintusorn@ihri.org'])
+                ->cc(['it@ihri.org', 'pravit@ihri.org', 'pathompong.s@ihri.org', 'tidarat@ihri.org'])
                 ->subject("API Summary for Hormones Service : {$date} (Testing)");
         });
     }
