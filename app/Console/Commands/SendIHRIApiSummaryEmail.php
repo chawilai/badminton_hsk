@@ -132,7 +132,7 @@ class SendIHRIApiSummaryEmail extends Command
             $date = date("Y-m-d");
             $message->to('wat.chawilai@gmail.com')
                 ->cc(['it@ihri.org', 'pravit@ihri.org', 'pathompong.s@ihri.org', 'tidarat@ihri.org'])
-                ->subject("API Summary for Hormones Service : {$date} (Testing)");
+                ->subject("API Summary for Hormones Service : {$date}");
         });
     }
 }
