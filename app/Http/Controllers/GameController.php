@@ -532,7 +532,7 @@ class GameController extends Controller
 
         // Assign players to the game
         foreach ($validatedData['players'] as $index => $playerId) {
-            $team = ($index < $requiredPlayers / 2) ? 1 : 2; // Split players into two teams
+            $team = ($index < $requiredPlayers / 2) ? 'team1' : 'team2'; // Split players into two teams
             $game->gamePlayers()->create([
                 'user_id' => $playerId,
                 'team' => $team,
@@ -744,6 +744,8 @@ class GameController extends Controller
             'type' => 'additional',
             'quantity' => $quantity
         ]);
+
+        return back();
     }
 
     public function returnShuttlecocks(Game $game, Request $request)

@@ -26,14 +26,10 @@ class UserFactory extends Factory
     {
 
         $rankCount = BadmintonRank::count();
-        $rangeId = null;
-
-        if ($rankCount > 0) {
-            $mean = 12;
-            $stdDeviation = 5;
-            $rangeId = round($this->normalDistribution($mean, $stdDeviation));
-            $rangeId = max(1, min($rankCount, $rangeId));
-        }
+        $mean = 12;
+        $stdDeviation = 5;
+        $rangeId = round($this->normalDistribution($mean, $stdDeviation));
+        $rangeId = max(1, min(max($rankCount, 1), $rangeId));
 
         $currentYear = (int) date('Y');
         $minAge = 10;
