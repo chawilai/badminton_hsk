@@ -25,17 +25,19 @@ class UserFactory extends Factory
     public function definition(): array
     {
 
-        $mean = 12; // Center the distribution around the midpoint of range IDs
-        $stdDeviation = 5; // Increase to spread values across a broader range
+        $rankCount = BadmintonRank::count();
+        $rangeId = null;
 
-        $rangeId = round($this->normalDistribution($mean, $stdDeviation));
-        $rangeId = max(1, min(BadmintonRank::count(), $rangeId)); // Ensure the ID is within valid range
+        if ($rankCount > 0) {
+            $mean = 12;
+            $stdDeviation = 5;
+            $rangeId = round($this->normalDistribution($mean, $stdDeviation));
+            $rangeId = max(1, min($rankCount, $rangeId));
+        }
 
-
-        // date_of_birth
-        $currentYear = 2024;
-        $minAge = 10; // Minimum age in 2024
-        $maxAge = 70; // Maximum age in 2024
+        $currentYear = (int) date('Y');
+        $minAge = 10;
+        $maxAge = 70;
 
         $latestDob = new \DateTime(($currentYear - $minAge) . '-12-31');
         $earliestDob = new \DateTime(($currentYear - $maxAge) . '-01-01');
@@ -50,10 +52,10 @@ class UserFactory extends Factory
             'provider_id' => fake()->uuid(),
             'avatar' => fake()->imageUrl(100, 100),
             'profile_picture' => fake()->imageUrl(200, 200),
-            'gender' => fake()->randomElement(['male', 'female', 'other', null]),  // Randomly assign a gender or no gender
+            'gender' => fake()->randomElement(['male', 'female', 'other', null]),
             'date_of_birth' => fake()->dateTimeBetween($earliestDob, $latestDob)->format('Y-m-d'),
             'player_motto' => '',
-            'badminton_rank_id' => $rangeId
+            'badminton_rank_id' => $rangeId,
         ];
     }
 

@@ -18,8 +18,8 @@ const showingNavigationDropdown = ref(false);
 const menus = [
     {
         title: "Home",
-        component: "Warrior",
-        url: "/warrior_home",
+        component: "PartyLists",
+        url: "/party-lists",
         disabled: false,
         active: true,
     },
@@ -37,42 +37,6 @@ const menus = [
         disabled: true,
         active: false,
     },
-    // {
-    //     title: "แบบเรียน HSK",
-    //     component: "WarriorHSKTextbook",
-    //     url: "/warrior_textbook",
-    //     disabled: true,
-    //     active: false,
-    // },
-    // {
-    //     title: "แบบฝึกหัด HSK",
-    //     component: "WarriorHSKWorkbook",
-    //     url: "/warrior_workbook",
-    //     disabled: true,
-    //     active: false,
-    // },
-    // {
-    //     title: "ฝึกคำศัพท์",
-    //     component: "WarriorHSKWords",
-    //     url: "/chinese_words",
-    //     disabled: false,
-    //     active: false,
-    // },
-    // {
-    //     title: "เขียนจีน (Hànzì)",
-    //     component: "WarriorWriteHanzi",
-    //     url: "/warrior_writehanzi",
-    //     disabled: false,
-    //     active: false,
-    // },
-    // {
-    //     title: "การ์ดคำ",
-    //     component: "WarriorFlipCard",
-    //     url: "/warrior_flip_card",
-    //     disabled: false,
-    //     active: false,
-    // },
-    // {"title":"ทายคำศัพท์", "component": "WarriorHome","url": "/warrior_guessingwords", "disabled": false, "active": false},
 ];
 const sidebarOpen = ref(false);
 
@@ -94,13 +58,13 @@ onMounted(() => {
             class="tw-flex tw-justify-between tw-items-center tw-py-8 tw-px-6 tw-mx-auto tw-max-w-screen-xl lg:tw-px-12 lg:tw-px-16 xl:px-24"
         >
             <a
-                href="/warrior_home"
+                href="/party-lists"
                 class="tw-text-2xl tw-font-bold tw-tracking-wide tw-text-red-600"
             >
                 <div class="tw-flex tw-justify-center tw-items-center">
                     <img class="tw-w-20 tw-h-auto" :src="badminton_party" alt="" />
-                    <span>HSK</span>
-                    <span class="tw-text-black">Warrior</span>
+                    <span>Badminton</span>
+                    <span class="tw-text-black">Party</span>
                 </div>
             </a>
             <div

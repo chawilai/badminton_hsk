@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
-$user = User::findOrFail(1);
-Auth::login($user);
+// $user = User::findOrFail(1);
+// Auth::login($user);
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -117,9 +117,6 @@ Route::get('/broadcast', function () {
     return 'Message broadcasted successfully!';
 });
 
-Route::get('/warrior_home', function () {
-    return Inertia::render('Warrior');
-});
 
 Route::get('/test', function () {
 

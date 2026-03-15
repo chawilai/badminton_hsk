@@ -37,7 +37,7 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
                                 </div>
                                 <span
                                     class="tw-text-3xl tw-font-bold tw-text-transparent tw-bg-clip-text tw-bg-gradient-to-br tw-from-red-500 tw-to-gray-900"
-                                    >HSK Warrior</span
+                                    >Badminton Party</span
                                 >
                             </a>
                         </div>
@@ -101,57 +101,6 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
                                 ></span>
                             </Link>
 
-                            <Link
-                                href="/hsk_textbook"
-                                class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer tw-text-opacity-80 hover:tw-text-opacity-100 group md:tw-w-auto md:tw-h-auto md:tw-inline-block md:hover:-tw-rotate-3 active:tw-outline-none"
-                            >
-                                <span
-                                    class="tw-relative tw-z-20 tw-whitespace-nowrap"
-                                    >แบบเรียน HSK</span
-                                >
-                                <span
-                                    class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
-                                ></span>
-                            </Link>
-
-                            <Link
-                                href="/hsk_workbook"
-                                class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer tw-text-opacity-80 hover:tw-text-opacity-100 group md:tw-w-auto md:tw-h-auto md:tw-inline-block md:hover:-tw-rotate-3 active:tw-outline-none"
-                            >
-                                <span
-                                    class="tw-relative tw-z-20 tw-whitespace-nowrap"
-                                    >แบบฝึกหัด HSK</span
-                                >
-                                <span
-                                    class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
-                                ></span>
-                            </Link>
-
-                            <Link
-                                href="/hanzi_writing"
-                                class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer tw-text-opacity-80 hover:tw-text-opacity-100 group md:tw-w-auto md:tw-h-auto md:tw-inline-block md:hover:-tw-rotate-3 active:tw-outline-none"
-                            >
-                                <span
-                                    class="tw-relative tw-z-20 tw-whitespace-nowrap"
-                                    >เขียนจีน (Hànzì)</span
-                                >
-                                <span
-                                    class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
-                                ></span>
-                            </Link>
-
-                            <Link
-                                href="/hanzi_sound"
-                                class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer tw-text-opacity-80 hover:tw-text-opacity-100 group md:tw-w-auto md:tw-h-auto md:tw-inline-block md:hover:-tw-rotate-3 active:tw-outline-none"
-                            >
-                                <span
-                                    class="tw-relative tw-z-20 tw-whitespace-nowrap"
-                                    >ท่องศัพท์</span
-                                >
-                                <span
-                                    class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
-                                ></span>
-                            </Link>
 
                             <Link
                                 href="#login"
