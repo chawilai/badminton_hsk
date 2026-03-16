@@ -1,21 +1,11 @@
 <script setup>
 import { computed } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
-const props = defineProps({
-    status: {
-        type: String,
-    },
-});
-
+const props = defineProps({ status: { type: String } });
 const form = useForm({});
-
-const submit = () => {
-    form.post(route('verification.send'));
-};
-
+const submit = () => { form.post(route('verification.send')); };
 const verificationLinkSent = computed(() => props.status === 'verification-link-sent');
 </script>
 
@@ -23,31 +13,28 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
     <GuestLayout>
         <Head title="Email Verification" />
 
-        <div class="tw-mb-4 tw-text-sm tw-text-gray-600 dark:tw-text-gray-400">
-            Thanks for signing up! Before getting started, could you verify your email address by clicking on the link
-            we just emailed to you? If you didn't receive the email, we will gladly send you another.
+        <div class="tw-text-center tw-mb-6">
+            <div class="tw-inline-flex tw-items-center tw-justify-center tw-w-14 tw-h-14 tw-bg-court-100 tw-rounded-2xl tw-mb-3">
+                <i class="pi pi-envelope tw-text-2xl tw-text-court-600"></i>
+            </div>
+            <h1 class="tw-text-2xl tw-font-bold tw-text-gray-900 tw-m-0">ยืนยัน Email</h1>
+            <p class="tw-text-sm tw-text-gray-500 tw-mt-2 tw-m-0">กรุณายืนยัน Email ของท่าน โดยคลิกลิงก์ที่ส่งไป ถ้ายังไม่ได้รับสามารถกดส่งใหม่ได้</p>
         </div>
 
-        <div
-            class="tw-mb-4 tw-font-medium tw-text-sm tw-text-green-600 dark:tw-text-green-400"
-            v-if="verificationLinkSent"
-        >
-            A new verification link has been sent to the email address you provided during registration.
+        <div v-if="verificationLinkSent" class="tw-mb-4 tw-p-3 tw-rounded-xl tw-bg-court-50 tw-text-court-700 tw-text-sm tw-text-center">
+            ส่งลิงก์ยืนยันไปยัง Email แล้ว
         </div>
 
-        <form @submit.prevent="submit">
-            <div class="tw-mt-4 tw-flex tw-items-center tw-justify-between">
-                <PrimaryButton :class="{ 'tw-opacity-25': form.processing }" :disabled="form.processing">
-                    Resend Verification Email
-                </PrimaryButton>
+        <form @submit.prevent="submit" class="tw-space-y-4">
+            <button type="submit" :disabled="form.processing"
+                class="tw-w-full tw-py-2.5 tw-px-4 tw-bg-court-600 hover:tw-bg-court-700 tw-text-white tw-font-semibold tw-rounded-xl tw-border-0 tw-transition-all tw-cursor-pointer active:tw-scale-[0.98] tw-shadow-sm disabled:tw-opacity-50 tw-text-sm">
+                ส่งลิงก์ยืนยันอีกครั้ง
+            </button>
 
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="tw-underline tw-text-sm tw-text-gray-600 dark:tw-text-gray-400 hover:tw-text-gray-900 dark:hover:tw-text-gray-100 tw-rounded-md focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-indigo-500 dark:focus:tw-ring-offset-gray-800"
-                >
-                    Log Out
+            <div class="tw-text-center">
+                <Link :href="route('logout')" method="post" as="button"
+                    class="tw-text-sm tw-text-gray-500 hover:tw-text-gray-700 tw-no-underline tw-bg-transparent tw-border-0 tw-cursor-pointer tw-font-sans">
+                    ออกจากระบบ
                 </Link>
             </div>
         </form>

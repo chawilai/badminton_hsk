@@ -119,24 +119,21 @@ import VirtualScroller from "primevue/virtualscroller";
 
 // import BlockViewer from "@/components/BlockViewer.vue";
 
-// import 'primevue/resources/themes/aura-light-blue/theme.css'
-// import 'primevue/resources/themes/aura-light-indigo/theme.css'
-// import 'primevue/resources/themes/aura-light-purple/theme.css'
-// import "primevue/resources/themes/aura-light-teal/theme.css";
-// import 'primevue/resources/themes/aura-light-green/theme.css'
-// import 'primevue/resources/themes/aura-light-amber/theme.css'
-import 'primevue/resources/themes/aura-light-cyan/theme.css'
-// import 'primevue/resources/themes/aura-light-pink/theme.css'
-// import 'primevue/resources/themes/aura-light-lime/theme.css'
-// import 'primevue/resources/themes/aura-light-noir/theme.css'
+// Apply dark class early to prevent flash
+if (localStorage.getItem('badminton-dark-mode') === 'true') {
+    document.documentElement.classList.add('dark', 'tw-dark');
+}
+// PrimeVue theme — light-green base, dark mode handled via CSS overrides in badminton-theme.css
+import 'primevue/resources/themes/aura-light-green/theme.css';
 
 import "primevue/resources/primevue.min.css";
 import "@/../assets/styles.scss";
 import "@/../css/custom.css";
+import "@/../css/badminton-theme.css";
 
 // Prime Vue
 
-// import "@/../css/app.css";
+import "@/../css/app.css";
 // import "primeicons/primeicons.css";
 import "paper-css/paper.min.css";
 

@@ -1,289 +1,122 @@
 <script setup>
-// import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from "@/layout/AppLayout.vue";
-import Game from "@/Pages/Game2.vue";
-import { Link, Head, usePage, router } from "@inertiajs/vue3";
-import { reactive, ref, computed, onMounted, watch } from "vue";
-import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import UserAvatar from "@/Components/UserAvatar.vue";
+import { Head, usePage, router } from "@inertiajs/vue3";
+import { ref, onMounted } from "vue";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import crown from "@/../assets/images/crown.png";
 
 Chart.register(...registerables);
 Chart.register(ChartDataLabels);
 
-const toast = useToast();
-const confirmPopup = useConfirm();
-
 const page = usePage();
-
-const props = ref(page.props);
-
-const profile = ref({
-    name: "John Doe",
-    avatar: null,
-    gender: null,
-    birthday: null,
-});
-
-const playedSummary = ref({
-    totalGames: 25,
-    totalParties: 10,
-    skillLevel: "Advanced",
-});
-
-const gameHistory = ref([
-    { date: "2025-01-01", opponent: "Player A", result: "Win" },
-]);
-
-const partyHistory = ref([
-    { partyName: "Weekend Smash", date: "2025-01-01", role: "Participant" },
-    { partyName: "Holiday Bash", date: "2025-01-02", role: "Organizer" },
-]);
+const user = page.props.auth.user;
 
 const skillData = ref({
-    labels: [
-        "ความเร็ว",
-        "พลัง",
-        "แม่นยำ",
-        "กลยุทธ์",
-        "เทคนิค",
-        "ประสบการณ์",
-        "การลวง",
-    ],
-    datasets: [
-        {
-            label: "Player A Skills",
-            data: [8, 7, 2, 8.5, 7.5, 9, 6.5],
-            backgroundColor: "rgba(54, 162, 235, 0.2)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1,
-        },
-    ],
+    labels: ["ความเร็ว", "พลัง", "แม่นยำ", "กลยุทธ์", "เทคนิค", "ประสบการณ์", "การลวง"],
+    datasets: [{
+        label: "Skills",
+        data: [8, 7, 2, 8.5, 7.5, 9, 6.5],
+        backgroundColor: "rgba(16, 185, 129, 0.15)",
+        borderColor: "#10b981",
+        borderWidth: 2,
+        pointBackgroundColor: "#10b981",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+    }],
 });
 
 onMounted(() => {
-    const ctx = document.getElementById("skillRadarChart").getContext("2d");
-    new Chart(ctx, {
-        type: "radar",
-        data: skillData.value,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false, // This hides the dataset group indicators
-                },
-                tooltip: {
-                    enabled: true, // Ensures tooltips are shown
-                    callbacks: {
-                        label: function (context) {
-                            return `${context.raw}`; // Customizes the label format
-                        },
+    const canvas = document.getElementById("skillRadarChart");
+    if (canvas) {
+        new Chart(canvas.getContext("2d"), {
+            type: "radar",
+            data: skillData.value,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: "#6b7280",
+                        font: { size: 11, weight: "bold" },
+                        formatter: (value) => value,
                     },
                 },
-                datalabels: {
-                    display: true, // Show labels on data points
-                    color: "black", // Label color
-                    font: {
-                        size: 12, // Font size
-                        weight: "bold", // Font weight
+                scales: {
+                    r: {
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        grid: { color: "rgba(16, 185, 129, 0.1)" },
+                        angleLines: { color: "rgba(16, 185, 129, 0.1)" },
+                        pointLabels: { font: { size: 12 }, color: "#6b7280" },
                     },
-                    formatter: (value) => value, // Show the value directly
                 },
             },
-            scales: {
-                r: {
-                    suggestedMin: 0,
-                    suggestedMax: 10,
-                },
-            },
-        },
-    });
+        });
+    }
 });
 </script>
 
 <template>
-    <Head title="Party Home" />
+    <Head title="Home" />
 
     <AppLayout>
-        <div class="profile-page">
-            <div class="profile-section">
-                <h2>Profile</h2>
-                <div class="profile-details">
-                    <!-- Avatar Section -->
-                    <div class="avatar-section">
-                        <Avatar
-                            v-if="profile.avatar"
-                            :image="profile.avatar"
-                            shape="circle"
-                            size="large"
-                        />
-                        <Avatar
-                            v-else
-                            label="?"
-                            shape="circle"
-                            size="large"
-                            class="p-mr-2"
-                        />
-                        <Button
-                            label="Edit Avatar"
-                            icon="pi pi-camera"
-                            class="p-button-outlined p-mt-2"
-                        />
+        <div class="tw-space-y-4">
+            <!-- Profile Card -->
+            <div class="tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-overflow-hidden">
+                <div class="tw-h-20 tw-bg-gradient-to-r tw-from-court-500 tw-to-court-400"></div>
+                <div class="tw-px-4 tw-pb-4 tw--mt-10">
+                    <div class="tw-flex tw-items-end tw-gap-3 tw-mb-3">
+                        <UserAvatar :src="user?.avatar" :name="user?.name" size="xl" rounded="2xl" class="tw-border-4 tw-border-white dark:tw-border-court-900" />
+                        <div class="tw-pb-1">
+                            <h2 class="tw-text-lg tw-font-bold tw-text-gray-900 dark:tw-text-gray-100 tw-m-0">{{ user?.name }}</h2>
+                            <p class="tw-text-sm tw-text-gray-500 tw-m-0">{{ user?.email }}</p>
+                        </div>
                     </div>
-                    <!-- Name Section -->
-                    <div class="name-section">
-                        <h3>{{ profile.name }}</h3>
-                        <Button
-                            label="Edit Name"
-                            icon="pi pi-pencil"
-                            class="p-button-outlined"
-                        />
-                    </div>
-                    <!-- Gender Section -->
-                    <div class="gender-section">
-                        <p>Gender: {{ profile.gender || "Not Set" }}</p>
-                        <Button
-                            label="Edit Gender"
-                            icon="pi pi-pencil"
-                            class="p-button-outlined"
-                        />
-                    </div>
-                    <!-- Birthday Section -->
-                    <div class="birthday-section">
-                        <p>Birthday: {{ profile.birthday || "Not Set" }}</p>
-                        <Button
-                            label="Edit Birthday"
-                            icon="pi pi-pencil"
-                            class="p-button-outlined"
-                        />
-                    </div>
+                    <p v-if="user?.player_motto" class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-400 tw-m-0 tw-italic">"{{ user.player_motto }}"</p>
                 </div>
             </div>
 
-            <Divider />
-
-            <div class="summary-section">
-                <h2>Played Summary</h2>
-                <div class="summary-stats">
-                    <div class="stat-item">
-                        <h3>Total Games</h3>
-                        <p>{{ playedSummary.totalGames }}</p>
+            <!-- Quick Actions -->
+            <div class="tw-grid tw-grid-cols-2 tw-gap-3">
+                <button @click="router.get('/party-lists')"
+                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
+                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                        <i class="pi pi-list tw-text-court-600 dark:tw-text-court-400"></i>
                     </div>
-                    <div class="stat-item">
-                        <h3>Total Parties</h3>
-                        <p>{{ playedSummary.totalParties }}</p>
+                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Party Lists</span>
+                </button>
+                <button @click="router.get('/my-parties')"
+                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
+                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                        <i class="pi pi-play tw-text-court-600 dark:tw-text-court-400"></i>
                     </div>
-                    <div class="stat-item">
-                        <h3>Skill Level</h3>
-                        <p>{{ playedSummary.skillLevel }}</p>
+                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">My Parties</span>
+                </button>
+                <button @click="router.get('/chat')"
+                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
+                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                        <i class="pi pi-comments tw-text-court-600 dark:tw-text-court-400"></i>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="skill-chart w-30rem">
-                        <h3>กราฟคุณสมบัติ</h3>
-                        <canvas id="skillRadarChart"></canvas>
+                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Chat</span>
+                </button>
+                <button @click="router.get('/profile')"
+                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
+                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                        <i class="pi pi-user tw-text-court-600 dark:tw-text-court-400"></i>
                     </div>
-                </div>
+                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Profile</span>
+                </button>
             </div>
 
-            <Divider />
-
-            <div class="history-section">
-                <h2>Game History</h2>
-                <DataTable :value="gameHistory" responsiveLayout="scroll">
-                    <Column field="date" header="Date"></Column>
-                    <Column field="opponent" header="Opponent"></Column>
-                    <Column field="result" header="Result"></Column>
-                </DataTable>
-            </div>
-
-            <Divider />
-
-            <div class="party-section">
-                <h2>Party History</h2>
-                <DataTable :value="partyHistory" responsiveLayout="scroll">
-                    <Column field="partyName" header="Party Name"></Column>
-                    <Column field="date" header="Date"></Column>
-                    <Column field="role" header="Role"></Column>
-                </DataTable>
+            <!-- Skill Radar Chart -->
+            <div class="tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-p-4">
+                <h3 class="tw-text-base tw-font-bold tw-text-gray-900 dark:tw-text-gray-100 tw-m-0 tw-mb-3">กราฟคุณสมบัติ</h3>
+                <div class="tw-max-w-sm tw-mx-auto">
+                    <canvas id="skillRadarChart"></canvas>
+                </div>
             </div>
         </div>
     </AppLayout>
 </template>
-
-<style scope>
-.p-slider .p-slider-handle::before {
-    content: attr(data-value);
-    color: #000000;
-    font-size: 12px;
-    font-weight: bold;
-    width: 16px;
-    height: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none; /* Prevent blocking interaction */
-    background-color: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0px 0.5px 0px 0px rgba(0, 0, 0, 0.08),
-        0px 1px 1px 0px rgba(0, 0, 0, 0.14);
-}
-
-.p-sidebar-content {
-    padding: 0.8rem;
-}
-
-.p-slider .p-slider-handle:hover::before {
-    transform: scale(2); /* Adjust the scale as needed */
-    transition: transform 0.2s ease; /* Smooth scaling effect */
-    background-color: green;
-    color: #ffffff;
-}
-
-.bg-gold {
-    background-color: gold;
-}
-
-.profile-page {
-    padding: 1rem;
-}
-
-.profile-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.avatar-section {
-    text-align: center;
-}
-
-.name-section,
-.gender-section,
-.birthday-section {
-    margin-top: 1rem;
-}
-
-.summary-stats {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-}
-
-.stat-item {
-    text-align: center;
-    flex: 1;
-    min-width: 120px;
-}
-
-.skill-chart {
-    margin-top: 2rem;
-}
-
-.history-section,
-.party-section {
-    margin-top: 1.5rem;
-}
-</style>

@@ -4,6 +4,7 @@ import { useLayout } from "@/layout/composables/layout";
 import AppSidebar from "@/layout/AppSidebar.vue";
 import { usePrimeVue } from "primevue/config";
 import { Link } from "@inertiajs/vue3";
+import { useBadmintonLayout } from "@/layout/composables/badmintonLayout";
 
 import avatar from "@/../assets/layout/images/avatar-m-1.jpg"
 
@@ -64,6 +65,11 @@ const onConfigButtonClick = () => {
 const onSidebarButtonClick = () => {
   showSidebar();
 };
+
+const { switchTemplate } = useBadmintonLayout();
+const switchToBadminton = () => {
+  switchTemplate('badminton');
+};
 </script>
 
 <template>
@@ -115,6 +121,17 @@ const onSidebarButtonClick = () => {
             </IconField>
           </ul>
         </li> -->
+        <li class="topbar-item">
+          <Button
+            type="button"
+            icon="pi pi-palette"
+            class="flex-shrink-0"
+            text
+            severity="secondary"
+            v-tooltip.bottom="'Switch to Badminton Theme'"
+            @click="switchToBadminton()"
+          ></Button>
+        </li>
         <li class="topbar-item">
           <a
             v-styleclass="{

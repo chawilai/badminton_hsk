@@ -1,21 +1,28 @@
 <script setup>
-import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import { Link } from "@inertiajs/vue3";
 import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-column align-items-center pt-8 bg-red-50">
-        <div>
+    <div class="tw-min-h-screen tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-8 tw-bg-gradient-to-br tw-from-court-50 tw-via-white tw-to-court-100">
+        <!-- Background decoration -->
+        <div class="tw-fixed tw-inset-0 tw-overflow-hidden tw-pointer-events-none">
+            <div class="tw-absolute tw--top-40 tw--right-40 tw-w-80 tw-h-80 tw-bg-court-200/30 tw-rounded-full tw-blur-3xl"></div>
+            <div class="tw-absolute tw--bottom-40 tw--left-40 tw-w-80 tw-h-80 tw-bg-court-300/20 tw-rounded-full tw-blur-3xl"></div>
+        </div>
+
+        <!-- Logo -->
+        <div class="tw-relative tw-z-10 tw-mb-6 tw-animate-fade-in">
             <Link href="/">
-                <img class="w-16rem h-auto" :src="badminton_party" alt="" />
+                <img class="tw-w-48 tw-h-auto tw-drop-shadow-lg" :src="badminton_party" alt="Badminton Party" />
             </Link>
         </div>
 
-        <div
-            class="max-w-max mt-6 mx-3 p-8 px-6 py-4 bg-white overflow-hidden sm:border-round-lg shadow-2 hover:shadow-xl bg-white/40 hover:bg-white/80"
-        >
-            <slot />
+        <!-- Card -->
+        <div class="tw-relative tw-z-10 tw-w-full tw-max-w-md tw-animate-slide-up">
+            <div class="tw-bg-white/70 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-lg tw-border tw-border-white/50 tw-p-8 tw-transition-shadow hover:tw-shadow-xl">
+                <slot />
+            </div>
         </div>
     </div>
 </template>

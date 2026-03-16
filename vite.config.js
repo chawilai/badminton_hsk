@@ -21,6 +21,13 @@ export default defineConfig({
         }),
         // svgLoader(),
     ],
+    css: {
+        preprocessorOptions: {
+            scss: {
+                silenceDeprecations: ['import', 'global-builtin', 'legacy-js-api'],
+            },
+        },
+    },
     optimizeDeps: {
         include: ['@braks/revue-draggable'],
     },

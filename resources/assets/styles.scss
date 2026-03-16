@@ -207,5 +207,9 @@
 }
 
 body {
-    background: #efefef !important;
+    background: #efefef;
+}
+html.dark body,
+html.tw-dark body {
+    background: #022c22;
 }

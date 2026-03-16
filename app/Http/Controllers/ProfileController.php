@@ -18,7 +18,11 @@ class ProfileController extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('Profile');
+        $user = $request->user()->load('badmintonRank');
+
+        return Inertia::render('Profile', [
+            'profileUser' => $user,
+        ]);
     }
 
     public function edit(Request $request): Response

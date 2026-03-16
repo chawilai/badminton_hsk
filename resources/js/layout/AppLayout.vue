@@ -1,102 +1,27 @@
 <script setup>
-import { computed, watch, ref, onBeforeUnmount } from 'vue';
-import AppTopbar from './AppTopbar.vue';
-import AppConfig from './AppConfig.vue';
-import AppRightMenu from './AppRightMenu.vue';
-import AppBreadcrumb from './AppBreadcrumb.vue';
-import { usePrimeVue } from 'primevue/config';
-import { useLayout } from '@/layout/composables/layout';
+import { computed } from 'vue';
+import AppLayoutClassic from './AppLayoutClassic.vue';
+import BadmintonLayout from './BadmintonLayout.vue';
+import { useBadmintonLayout } from '@/layout/composables/badmintonLayout';
 
-const $primevue = usePrimeVue();
-const { layoutConfig, layoutState, isSidebarActive } = useLayout();
-const outsideClickListener = ref(null);
-const topbarRef = ref(null);
+const { currentTemplate } = useBadmintonLayout();
 
-watch(isSidebarActive, (newVal) => {
-    if (newVal) {
-        bindOutsideClickListener();
-    } else {
-        unbindOutsideClickListener();
-    }
+// Read from localStorage directly for initial render (before initTheme runs)
+const storedTemplate = localStorage.getItem('badminton-template');
+if (storedTemplate) {
+    currentTemplate.value = storedTemplate;
+}
+
+const activeLayout = computed(() => {
+    return currentTemplate.value === 'classic' ? AppLayoutClassic : BadmintonLayout;
 });
-
-onBeforeUnmount(() => {
-    unbindOutsideClickListener();
-});
-
-const containerClass = computed(() => {
-    return [
-        {
-            'layout-light': layoutConfig.colorScheme.value === 'light',
-            'layout-dark': layoutConfig.colorScheme.value === 'dark',
-            'layout-light-menu': layoutConfig.menuTheme.value === 'light',
-            'layout-dark-menu': layoutConfig.menuTheme.value === 'dark',
-            'layout-light-topbar': layoutConfig.topbarTheme.value === 'light',
-            'layout-dark-topbar': layoutConfig.topbarTheme.value === 'dark',
-            'layout-transparent-topbar': layoutConfig.topbarTheme.value === 'transparent',
-            'layout-overlay': layoutConfig.menuMode.value === 'overlay',
-            'layout-static': layoutConfig.menuMode.value === 'static',
-            'layout-slim': layoutConfig.menuMode.value === 'slim',
-            'layout-slim-plus': layoutConfig.menuMode.value === 'slim-plus',
-            'layout-horizontal': layoutConfig.menuMode.value === 'horizontal',
-            'layout-reveal': layoutConfig.menuMode.value === 'reveal',
-            'layout-drawer': layoutConfig.menuMode.value === 'drawer',
-            'layout-static-inactive': layoutState.staticMenuDesktopInactive.value && layoutConfig.menuMode.value === 'static',
-            'layout-overlay-active': layoutState.overlayMenuActive.value,
-            'layout-mobile-active': layoutState.staticMenuMobileActive.value,
-            'p-ripple-disabled': $primevue.config.ripple === false,
-            'layout-sidebar-active': layoutState.sidebarActive.value,
-            'layout-sidebar-anchored': layoutState.anchored.value
-        }
-    ];
-});
-
-const bindOutsideClickListener = () => {
-    if (!outsideClickListener.value) {
-        outsideClickListener.value = (event) => {
-            if (isOutsideClicked(event)) {
-                layoutState.overlayMenuActive.value = false;
-                layoutState.overlaySubmenuActive.value = false;
-                layoutState.staticMenuMobileActive.value = false;
-                layoutState.menuHoverActive.value = false;
-            }
-        };
-        document.addEventListener('click', outsideClickListener.value);
-    }
-};
-const unbindOutsideClickListener = () => {
-    if (outsideClickListener.value) {
-        document.removeEventListener('click', outsideClickListener);
-        outsideClickListener.value = null;
-    }
-};
-const isOutsideClicked = (event) => {
-    if (!topbarRef.value) return;
-
-    const sidebarEl = topbarRef?.value.$el.querySelector('.layout-sidebar');
-    const topbarEl = topbarRef?.value.$el.querySelector('.topbar-start > button');
-
-    return !(sidebarEl.isSameNode(event.target) || sidebarEl.contains(event.target) || topbarEl.isSameNode(event.target) || topbarEl.contains(event.target));
-};
 </script>
 
 <template>
-    <div class="layout-container" :class="containerClass">
-        <AppTopbar ref="topbarRef"></AppTopbar>
-        <!-- <AppConfig></AppConfig> -->
-        <div class="layout-content-wrapper">
-            <div class="layout-content">
-                <!-- <AppBreadcrumb></AppBreadcrumb> -->
-                <!-- <router-view></router-view> -->
-                <slot name="header" />
-                <slot />
-            </div>
-        </div>
-        <AppRightMenu></AppRightMenu>
-
-        <div class="layout-mask"></div>
-    </div>
-    <Toast></Toast>
+    <component :is="activeLayout">
+        <template #header>
+            <slot name="header" />
+        </template>
+        <slot />
+    </component>
 </template>
-
-<style lang="scss"></style>
