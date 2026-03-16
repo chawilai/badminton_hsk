@@ -1,8 +1,13 @@
 <script setup>
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { usePage } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
 
 const page = usePage();
+
+const activeFilter = ref('all');
+
+const statusOrder = { playing: 0, setting: 1, listing: 2, finished: 3 };
 
 const props = defineProps({
   games: { type: Array, required: true },
@@ -29,7 +34,7 @@ const gameStatus = (status) => {
   if (status === "setting")
     return `<span class='px-2 py-1 bg-warning text-warning-content rounded-md'>${status}</span>`;
   if (status === "listing")
-    return `<span class='px-2 py-1 bg-secondary text-secondary-content rounded-md'>${status}</span>`;
+    return `<span class='px-2 py-1 bg-orange-500 text-white rounded-md'>${status}</span>`;
   if (status === "playing")
     return `<span class='px-2 py-1 bg-success text-success-content rounded-md'>${status}</span>`;
   if (status === "finished")
@@ -76,6 +81,48 @@ const playTime = (startDate, endDate) => {
   result += `${seconds} วิ`;
   return result.trim();
 };
+
+const hasScore = (game) => game.status === 'finished' && game.game_sets?.[0]?.winning_team;
+const noScore = (game) => game.status === 'finished' && !game.game_sets?.[0]?.winning_team;
+
+const gameWinner = (game) => {
+  if (!hasScore(game) || !game.game_sets?.length) return null;
+  let t1 = 0, t2 = 0;
+  game.game_sets.forEach(s => {
+    if (s.winning_team === 'team1') t1++;
+    else if (s.winning_team === 'team2') t2++;
+  });
+  if (t1 > t2) return 'team1';
+  if (t2 > t1) return 'team2';
+  return null;
+};
+
+const sortedGames = computed(() => {
+  return [...props.games].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
+});
+
+const filteredGames = computed(() => {
+  if (activeFilter.value === 'all') return sortedGames.value;
+  if (activeFilter.value === 'no_score') return sortedGames.value.filter(g => noScore(g));
+  return sortedGames.value.filter(g => g.status === activeFilter.value);
+});
+
+const statusCounts = computed(() => {
+  const counts = { playing: 0, setting: 0, listing: 0, finished: 0, no_score: 0 };
+  props.games.forEach(g => {
+    if (counts[g.status] !== undefined) counts[g.status]++;
+    if (noScore(g)) counts.no_score++;
+  });
+  return counts;
+});
+
+const filters = [
+  { key: 'all', label: 'ทั้งหมด', idle: 'bg-base-200 text-base-content/70', active: 'bg-base-content text-base-100' },
+  { key: 'playing', label: 'กำลังเล่น', idle: 'bg-success/15 text-success', active: 'bg-success text-success-content' },
+  { key: 'listing', label: 'รอเล่น', idle: 'bg-orange-100 text-orange-600', active: 'bg-orange-500 text-white' },
+  { key: 'no_score', label: 'รอลงผล', idle: 'bg-warning/15 text-warning', active: 'bg-warning text-warning-content' },
+  { key: 'finished', label: 'จบแล้ว', idle: 'bg-info/15 text-info', active: 'bg-info text-info-content' },
+];
 </script>
 
 <template>
@@ -84,25 +131,57 @@ const playTime = (startDate, endDate) => {
       <h2 class="text-lg font-bold text-base-content m-0">Games <span class="text-sm font-normal text-base-content/50">({{ games.length }})</span></h2>
     </div>
 
+    <!-- Filter buttons -->
+    <div class="flex flex-wrap gap-1.5 mb-3">
+      <button
+        v-for="f in filters"
+        :key="f.key"
+        class="px-3 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all duration-200 flex items-center gap-1"
+        :class="activeFilter === f.key ? f.active : f.idle"
+        @click="activeFilter = f.key"
+      >
+        {{ f.label }}
+        <span class="text-[10px] font-bold opacity-80">{{ f.key === 'all' ? games.length : statusCounts[f.key] }}</span>
+      </button>
+    </div>
+
     <div v-if="games.length === 0" class="text-center py-10 bg-base-100 rounded-2xl border border-base-300">
       <span class="text-4xl">🏸</span>
       <p class="text-sm text-base-content/50 mt-3 m-0">ยังไม่มีเกม กด + New Game เพื่อเริ่มเลย!</p>
     </div>
 
+    <div v-else-if="filteredGames.length === 0" class="text-center py-8 bg-base-100 rounded-2xl border border-base-300">
+      <p class="text-sm text-base-content/50 m-0">ไม่มีเกมในสถานะนี้</p>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div
-        v-for="(game, game_index) in games"
+        v-for="game in filteredGames"
         :key="game.id"
-        class="badminton-card bg-base-100 rounded-2xl border overflow-hidden transition-all"
-        :class="isPlayerInGame(game) ? 'border-primary/40 shadow-sm' : 'border-base-300'"
+        class="badminton-card rounded-2xl border overflow-hidden transition-all"
+        :class="{
+          'shadow-sm': isPlayerInGame(game),
+          'border-warning/40': game.status === 'setting',
+          'border-orange-300': game.status === 'listing',
+          'border-success/40': game.status === 'playing',
+          'border-info/40': hasScore(game),
+          'border-warning/40': noScore(game) || game.status === 'setting',
+          'border-orange-300': game.status === 'listing',
+          'border-success/40': game.status === 'playing',
+          'bg-warning/8': game.status === 'setting',
+          'bg-[#FFF3E0]': game.status === 'listing',
+          'bg-success/8': game.status === 'playing',
+          'bg-info/5': hasScore(game),
+          'bg-warning/5': noScore(game),
+        }"
       >
         <!-- Status bar top accent -->
         <div class="h-1"
           :class="{
-            'bg-warning': game.status === 'setting',
-            'bg-secondary': game.status === 'listing',
+            'bg-warning': game.status === 'setting' || noScore(game),
+            'bg-orange-500': game.status === 'listing',
             'bg-success': game.status === 'playing',
-            'bg-info': game.status === 'finished',
+            'bg-info': hasScore(game),
           }"
         ></div>
 
@@ -111,8 +190,9 @@ const playTime = (startDate, endDate) => {
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-base-content/40">GAME</span>
-              <span class="text-lg font-bold text-base-content">#{{ games.length - game_index }}</span>
+              <span class="text-lg font-bold text-base-content">#{{ games.length - games.indexOf(game) }}</span>
               <span v-html="gameStatus(game.status)"></span>
+              <span v-if="noScore(game)" class="px-2 py-1 bg-error/15 text-error text-xs font-semibold rounded-md">รอลงผล</span>
             </div>
             <div class="flex items-center gap-1 bg-base-200 rounded-lg px-2 py-1">
               <button @click="emit('returnShuttlecock', game.id)" class="w-5 h-5 rounded flex items-center justify-center bg-error/10 text-error border-0 cursor-pointer text-[10px] font-bold hover:bg-error/20 transition-colors">−</button>
@@ -124,8 +204,11 @@ const playTime = (startDate, endDate) => {
           <!-- Teams display -->
           <div class="flex items-stretch gap-2 mb-3">
             <!-- Team 1 -->
-            <div class="flex-1 bg-base-200/60 rounded-xl p-2.5 flex flex-col items-center">
-              <div class="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-2">Team 1</div>
+            <div class="flex-1 rounded-xl p-2.5 flex flex-col items-center relative"
+              :class="gameWinner(game) === 'team1' ? 'bg-warning/10 border border-warning/30' : 'bg-base-200/60'">
+              <span v-if="gameWinner(game) === 'team1'" class="absolute -top-3.5 -left-2 text-2xl -rotate-[25deg]">👑</span>
+              <div class="text-[10px] font-semibold uppercase tracking-wider mb-2"
+                :class="gameWinner(game) === 'team1' ? 'text-warning font-bold' : 'text-base-content/40'">Team 1</div>
               <div class="flex items-center justify-center gap-2.5 flex-1">
                 <template v-for="player in game.game_players?.filter(p => isTeam1(p.team))" :key="player.id">
                   <div class="flex flex-col items-center gap-0.5">
@@ -151,8 +234,11 @@ const playTime = (startDate, endDate) => {
             </div>
 
             <!-- Team 2 -->
-            <div class="flex-1 bg-base-200/60 rounded-xl p-2.5 flex flex-col items-center">
-              <div class="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-2">Team 2</div>
+            <div class="flex-1 rounded-xl p-2.5 flex flex-col items-center relative"
+              :class="gameWinner(game) === 'team2' ? 'bg-warning/10 border border-warning/30' : 'bg-base-200/60'">
+              <span v-if="gameWinner(game) === 'team2'" class="absolute -top-3.5 -right-2 text-2xl rotate-[25deg]">👑</span>
+              <div class="text-[10px] font-semibold uppercase tracking-wider mb-2"
+                :class="gameWinner(game) === 'team2' ? 'text-warning font-bold' : 'text-base-content/40'">Team 2</div>
               <div class="flex items-center justify-center gap-2.5 flex-1">
                 <template v-for="player in game.game_players?.filter(p => isTeam2(p.team))" :key="player.id">
                   <div class="flex flex-col items-center gap-0.5">
@@ -207,7 +293,7 @@ const playTime = (startDate, endDate) => {
               <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs">Delete</button>
               <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs">Finish</button>
               <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs">ลงผล</button>
-              <span v-if="game.status === 'finished' && !game.game_sets?.[0]?.winning_team && !isPlayerInGame(game)" class="text-[10px] text-base-content/40">รอลงผล</span>
+              <span v-if="game.status === 'finished' && !game.game_sets?.[0]?.winning_team && !isPlayerInGame(game)" class="text-[10px] text-base-content/40">รอผู้เล่นลงผล</span>
             </div>
           </div>
         </div>

@@ -108,6 +108,89 @@ const isBalanced = computed(() => levelDiff.value <= 3);
 
 const allGamePlayers = () => [...dropZones.Team1, ...dropZones.Team2];
 
+// ===== Auto-balance algorithm =====
+const autoSetPlayers = () => {
+  // 1) Release current team players back to Ready first
+  releaseAllItems();
+
+  const ready = [...dropZones.Ready].filter(p => !p.current_game);
+  if (ready.length < 4) {
+    toast.add({ severity: "error", summary: "ล้มเหลว", detail: `ผู้เล่นพร้อมไม่พอ (${ready.length}/4)`, life: 3000 });
+    return;
+  }
+
+  // 2) Score each player — higher = should play sooner
+  //    - waiting_time (seconds): longer wait → higher priority
+  //    - played (games): fewer games → higher priority
+  const maxWait = Math.max(...ready.map(p => p.waiting_time || 0), 1);
+  const maxPlayed = Math.max(...ready.map(p => p.played || 0), 1);
+
+  const scored = ready.map(p => ({
+    ...p,
+    // Normalize 0-1: waiting (higher=better), played (lower=better)
+    score: ((p.waiting_time || 0) / maxWait) * 0.5
+         + (1 - (p.played || 0) / maxPlayed) * 0.5,
+  }));
+
+  // 3) Sort by score descending, pick top 4
+  scored.sort((a, b) => b.score - a.score);
+  const picked = scored.slice(0, 4);
+
+  // 4) Find the best team split (minimize level diff)
+  //    With 4 players there are only 3 ways to split into 2v2
+  const combos = [
+    [[0, 1], [2, 3]],
+    [[0, 2], [1, 3]],
+    [[0, 3], [1, 2]],
+  ];
+
+  let bestSplit = combos[0];
+  let bestDiff = Infinity;
+
+  for (const [t1Idx, t2Idx] of combos) {
+    const t1Lvl = t1Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
+    const t2Lvl = t2Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
+    const diff = Math.abs(t1Lvl - t2Lvl);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestSplit = [t1Idx, t2Idx];
+    }
+  }
+
+  // 5) Move players from Ready to Team1/Team2
+  const [t1Indices, t2Indices] = bestSplit;
+
+  for (const i of t1Indices) {
+    const player = picked[i];
+    const idx = dropZones.Ready.findIndex(p => p.id === player.id);
+    if (idx > -1) {
+      const [removed] = dropZones.Ready.splice(idx, 1);
+      originalZones[removed.id] = 'Ready';
+      dropZones.Team1.push(removed);
+    }
+  }
+
+  for (const i of t2Indices) {
+    const player = picked[i];
+    const idx = dropZones.Ready.findIndex(p => p.id === player.id);
+    if (idx > -1) {
+      const [removed] = dropZones.Ready.splice(idx, 1);
+      originalZones[removed.id] = 'Ready';
+      dropZones.Team2.push(removed);
+    }
+  }
+
+  const t1Lvl = dropZones.Team1.reduce((s, p) => s + (p.rank_level || 0), 0);
+  const t2Lvl = dropZones.Team2.reduce((s, p) => s + (p.rank_level || 0), 0);
+
+  toast.add({
+    severity: "success",
+    summary: "Auto Balance",
+    detail: `จัดทีมแล้ว (Lv ${t1Lvl} vs ${t2Lvl}, diff ${Math.abs(t1Lvl - t2Lvl)})`,
+    life: 3000,
+  });
+};
+
 const clearTeamZones = () => {
   dropZones.Team1.splice(0, dropZones.Team1.length);
   dropZones.Team2.splice(0, dropZones.Team2.length);
@@ -237,6 +320,10 @@ const zoneBadgeClass = (zone) => {
             </select>
           </div>
           <!-- Actions -->
+          <button @click="autoSetPlayers" class="btn btn-info btn-xs gap-0.5" title="Auto Balance">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+            Auto
+          </button>
           <div class="join">
             <button @click="startNewGame" class="btn btn-success btn-xs join-item" title="Start Game">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>

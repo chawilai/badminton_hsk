@@ -278,7 +278,7 @@ export function useDragDrop() {
         dropZoneActive.value = zone || "";
 
         // Detect hovered item, excluding the dragged item
-        const itemElement = element?.closest(".draggable-item");
+        const itemElement = element?.closest(".player-card, .draggable-item");
         if (itemElement) {
             const itemId = Number(itemElement.dataset.id);
 
@@ -384,6 +384,9 @@ export function useDragDrop() {
                 // Case 2: Moving to a different drop zone
                 if (hoveredIndex > -1) {
                     // Swap items between zones
+                    const draggedName = draggedItem.value.title;
+                    const hoveredName = hoveredItem.value.title;
+
                     const [removedDraggedItem] = fromZone.splice(
                         draggedIndex,
                         1
@@ -393,13 +396,20 @@ export function useDragDrop() {
                         1,
                         removedDraggedItem
                     );
-                    fromZone.splice(draggedIndex, 0, removedHoveredItem); // Place the hovered item back to the dragged item's original position
+                    fromZone.splice(draggedIndex, 0, removedHoveredItem);
+
+                    // Track originalZones for items entering team zones
+                    if (TEAM_ZONES.includes(dropZoneActive.value) && !originalZones[removedDraggedItem.id]) {
+                        originalZones[removedDraggedItem.id] = draggedFrom.value;
+                    }
+                    if (TEAM_ZONES.includes(draggedFrom.value) && !originalZones[removedHoveredItem.id]) {
+                        originalZones[removedHoveredItem.id] = dropZoneActive.value;
+                    }
 
                     toast.add({
                         severity: "info",
                         summary: "สลับผู้เล่น",
-                        detail: `สลับตำแหน่ง ${draggedItem.value.title} กับ ${hoveredItem.value.title} สำเร็จ`,
-                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                        detail: `สลับ ${draggedName} กับ ${hoveredName} สำเร็จ`,
                         life: 1500,
                     });
                 } else {
@@ -454,13 +464,15 @@ export function useDragDrop() {
                     const [removedItem] = fromZone.splice(draggedIndex, 1);
                     toZone.push(removedItem);
 
-                    console.log(dropZones.Game);
+                    // Track originalZone for items entering team zones
+                    if (TEAM_ZONES.includes(dropZoneActive.value) && !originalZones[removedItem.id]) {
+                        originalZones[removedItem.id] = draggedFrom.value;
+                    }
 
                     toast.add({
                         severity: "info",
                         summary: "ย้ายผู้เล่น",
                         detail: `ย้าย ${draggedItem.value.title} จาก ${draggedFrom.value} ไป ${dropZoneActive.value} สำเร็จ`,
-                        // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
                         life: 1500,
                     });
                 }
