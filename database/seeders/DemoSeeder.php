@@ -349,7 +349,7 @@ class DemoSeeder extends Seeder
 
                 $game = Game::create([
                     'party_id' => $party->id,
-                    'game_type' => 'double',
+                    'game_type' => 'quadruple',
                     'status' => $status,
                     'game_create_date' => $gameCreateDate,
                     'game_list_date' => in_array($status, ['listing', 'playing', 'finished']) ? $gameCreateDate->copy()->addMinutes(1) : null,
@@ -364,8 +364,8 @@ class DemoSeeder extends Seeder
                     'quantity' => rand(1, 3),
                 ]);
 
+                // Assign players to teams (skip for 'setting' status — team is required enum)
                 if ($status !== 'setting') {
-                    // Assign players to teams
                     foreach ($team1 as $member) {
                         GamePlayer::create([
                             'game_id' => $game->id,

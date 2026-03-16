@@ -1,6 +1,4 @@
 <script setup>
-import Sidebar from "primevue/sidebar";
-import { usePrimeVue } from "primevue/config";
 import { ref, watch, computed } from "vue";
 import { useLayout } from "@/layout/composables/layout";
 
@@ -18,10 +16,6 @@ defineProps({
     default: false,
   },
 });
-
-const $primevue = usePrimeVue();
-const rippleActive = computed(() => $primevue.config.ripple);
-const inputStyle = computed(() => $primevue.config.inputStyle || "outlined");
 
 const themes = ref([
   { name: "avocado", color: "#AEC523" },
@@ -46,16 +40,16 @@ watch(layoutConfig.menuMode, (newVal) => {
 
 const colorScheme = ref(layoutConfig.colorScheme.value);
 
-const changeColorScheme = (colorScheme) => {
+const changeColorScheme = (scheme) => {
   const themeLink = document.getElementById("theme-link");
   const themeLinkHref = themeLink.getAttribute("href");
   const currentColorScheme = "theme-" + layoutConfig.colorScheme.value.toString();
-  const newColorScheme = "theme-" + colorScheme;
+  const newColorScheme = "theme-" + scheme;
   const newHref = themeLinkHref.replace(currentColorScheme, newColorScheme);
 
   replaceLink(themeLink, newHref, () => {
-    layoutConfig.colorScheme.value = colorScheme;
-    layoutConfig.menuTheme.value = colorScheme;
+    layoutConfig.colorScheme.value = scheme;
+    layoutConfig.menuTheme.value = scheme;
   });
 };
 
@@ -104,12 +98,9 @@ const incrementScale = () => {
 const applyScale = () => {
   document.documentElement.style.fontSize = layoutConfig.scale.value + "px";
 };
-const onInputStyleChange = (value) => {
-  $primevue.config.inputStyle = value;
-};
-const onRippleChange = (value) => {
-  $primevue.config.ripple = value;
-};
+
+// Drawer ID for DaisyUI
+const configDrawerId = 'config-sidebar-drawer';
 </script>
 
 <template>
@@ -120,241 +111,275 @@ const onRippleChange = (value) => {
   >
     <i class="pi pi-cog"></i>
   </button>
-  <Sidebar
-    v-model:visible="layoutState.configSidebarVisible.value"
-    position="right"
-    class="layout-config-sidebar w-18rem"
-    :pt="{
-      closeButton: 'ml-auto',
-    }"
-  >
-    <h5>Color Scheme</h5>
-    <div class="flex flex-wrap row-gap-3">
-      <div class="flex align-items-center gap-2 w-6">
-        <RadioButton
-          name="colorScheme"
-          value="light"
-          v-model="colorScheme"
-          id="theme3"
-          @change="changeColorScheme('light')"
-        ></RadioButton>
-        <label for="theme3">Light</label>
-      </div>
 
-      <div class="flex align-items-center gap-2 w-6 pl-2">
-        <RadioButton
-          name="colorScheme"
-          value="dark"
-          v-model="colorScheme"
-          id="theme1"
-          @change="changeColorScheme('dark')"
-        ></RadioButton>
-        <label for="theme1">Dark</label>
+  <!-- DaisyUI Drawer for Config Sidebar -->
+  <div class="drawer drawer-end z-50" :class="{ 'pointer-events-none': !layoutState.configSidebarVisible.value }">
+    <input
+      :id="configDrawerId"
+      type="checkbox"
+      class="drawer-toggle"
+      :checked="layoutState.configSidebarVisible.value"
+      @change="layoutState.configSidebarVisible.value = $event.target.checked"
+    />
+    <div class="drawer-side" :class="{ 'pointer-events-auto': layoutState.configSidebarVisible.value }">
+      <label :for="configDrawerId" class="drawer-overlay" @click="layoutState.configSidebarVisible.value = false"></label>
+      <div class="menu bg-base-100 text-base-content min-h-full w-72 p-4">
+        <div class="flex justify-end mb-2">
+          <button class="btn btn-sm btn-ghost btn-circle" @click="layoutState.configSidebarVisible.value = false">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <h5>Color Scheme</h5>
+        <div class="flex flex-wrap gap-y-3">
+          <div class="flex items-center gap-2 w-1/2">
+            <input
+              type="radio"
+              name="colorScheme"
+              value="light"
+              class="radio radio-primary"
+              :checked="colorScheme === 'light'"
+              id="theme3"
+              @change="colorScheme = 'light'; changeColorScheme('light')"
+            />
+            <label for="theme3">Light</label>
+          </div>
+
+          <div class="flex items-center gap-2 w-1/2 pl-2">
+            <input
+              type="radio"
+              name="colorScheme"
+              value="dark"
+              class="radio radio-primary"
+              :checked="colorScheme === 'dark'"
+              id="theme1"
+              @change="colorScheme = 'dark'; changeColorScheme('dark')"
+            />
+            <label for="theme1">Dark</label>
+          </div>
+        </div>
+
+        <h5>Themes</h5>
+        <div class="flex flex-wrap gap-y-3">
+          <div v-for="(theme, i) in themes" :key="i" class="w-1/4">
+            <button
+              class="cursor-pointer w-8 h-8 rounded-full shrink-0 flex items-center justify-center p-0 border-0"
+              @click="() => changeTheme(theme.name)"
+              :style="{ 'background-color': theme.color, 'border-color': theme.color }"
+            >
+              <i
+                v-if="theme.name === layoutConfig.theme.value"
+                class="pi pi-check text-white"
+              ></i>
+            </button>
+          </div>
+        </div>
+
+        <h5>Scale</h5>
+        <div class="flex items-center">
+          <button
+            type="button"
+            class="btn btn-ghost btn-circle btn-sm mr-2"
+            @click="decrementScale()"
+            :disabled="layoutConfig.scale.value === scales[0]"
+          >
+            <i class="pi pi-minus"></i>
+          </button>
+          <div class="flex gap-2 items-center">
+            <i
+              class="pi pi-circle-fill text-gray-300"
+              v-for="s in scales"
+              :key="s"
+              :class="{ 'text-emerald-500': s === layoutConfig.scale.value }"
+            ></i>
+          </div>
+          <button
+            type="button"
+            class="btn btn-ghost btn-circle btn-sm ml-2"
+            @click="incrementScale()"
+            :disabled="layoutConfig.scale.value === scales[scales.length - 1]"
+          >
+            <i class="pi pi-plus"></i>
+          </button>
+        </div>
+
+        <template v-if="!simple">
+          <h5>Menu Type</h5>
+          <div class="flex flex-wrap gap-y-3">
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="static"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode1"
+              />
+              <label for="mode1">Static</label>
+            </div>
+
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="overlay"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode2"
+              />
+              <label for="mode2">Overlay</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="slim"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode3"
+              />
+              <label for="mode3">Slim</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="slim-plus"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode4"
+              />
+              <label for="mode4">Slim+</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="reveal"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode5"
+              />
+              <label for="mode5">Reveal</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="drawer"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode6"
+              />
+              <label for="mode6">Drawer</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuMode"
+                value="horizontal"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuMode.value"
+                id="mode7"
+              />
+              <label for="mode7">Horizontal</label>
+            </div>
+          </div>
+
+          <h5>Menu Theme</h5>
+          <div class="flex flex-wrap gap-y-3">
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="menuTheme"
+                value="light"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuTheme.value"
+                :disabled="layoutConfig.colorScheme.value == 'dark' || isHorizontal.value"
+                id="menutheme-light"
+              />
+              <label for="menutheme-light">Light</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2 pl-2">
+              <input
+                type="radio"
+                name="menuTheme"
+                value="dark"
+                class="radio radio-primary"
+                v-model="layoutConfig.menuTheme.value"
+                :disabled="layoutConfig.colorScheme == 'dark' || isHorizontal.value"
+                id="menutheme-dark"
+              />
+              <label for="menutheme-dark">Dark</label>
+            </div>
+          </div>
+
+          <h5>Topbar Theme</h5>
+          <div class="flex flex-wrap gap-y-3">
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="topbarTheme"
+                value="light"
+                class="radio radio-primary"
+                v-model="layoutConfig.topbarTheme.value"
+                :disabled="layoutConfig.colorScheme.value == 'dark'"
+                id="topbartheme-light"
+              />
+              <label for="topbartheme-light">Light</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2 pl-2">
+              <input
+                type="radio"
+                name="topbarTheme"
+                value="dark"
+                class="radio radio-primary"
+                v-model="layoutConfig.topbarTheme.value"
+                id="topbartheme-dark"
+              />
+              <label for="topbartheme-dark">Dark</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="topbarTheme"
+                value="transparent"
+                class="radio radio-primary"
+                v-model="layoutConfig.topbarTheme.value"
+                id="topbartheme-transparent"
+              />
+              <label for="topbartheme-transparent">Transparent</label>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="!simple">
+          <h5>Input Style</h5>
+          <div class="flex flex-wrap gap-y-3">
+            <div class="flex items-center gap-2 w-1/2">
+              <input
+                type="radio"
+                name="inputStyle"
+                value="outlined"
+                class="radio radio-primary"
+                id="outlined_input"
+                checked
+              />
+              <label for="outlined_input">Outlined</label>
+            </div>
+            <div class="flex items-center gap-2 w-1/2 pl-2">
+              <input
+                type="radio"
+                name="inputStyle"
+                value="filled"
+                class="radio radio-primary"
+                id="filled_input"
+              />
+              <label for="filled_input">Filled</label>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
-
-    <h5>Themes</h5>
-    <div class="flex flex-wrap row-gap-3">
-      <div v-for="(theme, i) in themes" :key="i" class="w-3">
-        <Button
-          class="cursor-pointer p-link w-2rem h-2rem border-circle flex-shrink-0 flex align-items-center justify-content-center p-0"
-          @click="() => changeTheme(theme.name)"
-          :style="{ 'background-color': theme.color, 'border-color': theme.color }"
-        >
-          <i
-            v-if="theme.name === layoutConfig.theme.value"
-            class="pi pi-check text-white"
-          ></i>
-        </Button>
-      </div>
-    </div>
-
-    <h5>Scale</h5>
-    <div class="flex align-items-center">
-      <Button
-        icon="pi pi-minus"
-        type="button"
-        @click="decrementScale()"
-        class="w-2rem h-2rem mr-2"
-        text
-        rounded
-        :disabled="layoutConfig.scale.value === scales[0]"
-      ></Button>
-      <div class="flex gap-2 align-items-center">
-        <i
-          class="pi pi-circle-fill text-300"
-          v-for="s in scales"
-          :key="s"
-          :class="{ 'text-primary-500': s === layoutConfig.scale.value }"
-        ></i>
-      </div>
-      <Button
-        icon="pi pi-plus"
-        type="button"
-        @click="incrementScale()"
-        class="w-2rem h-2rem ml-2"
-        text
-        rounded
-        :disabled="layoutConfig.scale.value === scales[scales.length - 1]"
-      ></Button>
-    </div>
-
-    <template v-if="!simple">
-      <h5>Menu Type</h5>
-      <div class="flex flex-wrap row-gap-3">
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="static"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode1"
-          ></RadioButton>
-          <label for="mode1">Static</label>
-        </div>
-
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="overlay"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode2"
-          ></RadioButton>
-          <label for="mode2">Overlay</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="slim"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode3"
-          ></RadioButton>
-          <label for="mode3">Slim</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="slim-plus"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode4"
-          ></RadioButton>
-          <label for="mode4">Slim+</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="reveal"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode5"
-          ></RadioButton>
-          <label for="mode5">Reveal</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="drawer"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode6"
-          ></RadioButton>
-          <label for="mode6">Drawer</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuMode"
-            value="horizontal"
-            v-model="layoutConfig.menuMode.value"
-            inputId="mode7"
-          ></RadioButton>
-          <label for="mode7">Horizontal</label>
-        </div>
-      </div>
-
-      <h5>Menu Theme</h5>
-      <div class="flex flex-wrap row-gap-3">
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="menuTheme"
-            value="light"
-            v-model="layoutConfig.menuTheme.value"
-            :disabled="layoutConfig.colorScheme.value == 'dark' || isHorizontal.value"
-            inputId="menutheme-light"
-          ></RadioButton>
-          <label for="menutheme-light">Light</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6 pl-2">
-          <RadioButton
-            name="menuTheme"
-            value="dark"
-            v-model="layoutConfig.menuTheme.value"
-            :disabled="layoutConfig.colorScheme == 'dark' || isHorizontal.value"
-            inputId="menutheme-dark"
-          ></RadioButton>
-          <label for="menutheme-dark">Dark</label>
-        </div>
-      </div>
-
-      <h5>Topbar Theme</h5>
-      <div class="flex flex-wrap row-gap-3">
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="topbarTheme"
-            value="light"
-            v-model="layoutConfig.topbarTheme.value"
-            :disabled="layoutConfig.colorScheme.value == 'dark'"
-            inputId="topbartheme-light"
-          ></RadioButton>
-          <label for="topbartheme-light">Light</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6 pl-2">
-          <RadioButton
-            name="topbarTheme"
-            value="dark"
-            v-model="layoutConfig.topbarTheme.value"
-            inputId="topbartheme-dark"
-          ></RadioButton>
-          <label for="topbartheme-dark">Dark</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            name="topbarTheme"
-            value="transparent"
-            v-model="layoutConfig.topbarTheme.value"
-            inputId="topbartheme-transparent"
-          ></RadioButton>
-          <label for="topbartheme-transparent">Transparent</label>
-        </div>
-      </div>
-    </template>
-
-    <template v-if="!simple">
-      <h5>Input Style</h5>
-      <div class="flex flex-wrap row-gap-3">
-        <div class="flex align-items-center gap-2 w-6">
-          <RadioButton
-            :modelValue="inputStyle"
-            name="inputStyle"
-            value="outlined"
-            inputId="outlined_input"
-            @update:modelValue="onInputStyleChange"
-          ></RadioButton>
-          <label for="outlined_input">Outlined</label>
-        </div>
-        <div class="flex align-items-center gap-2 w-6 pl-2">
-          <RadioButton
-            :modelValue="inputStyle"
-            name="inputStyle"
-            value="filled"
-            inputId="filled_input"
-            @update:modelValue="onInputStyleChange"
-          ></RadioButton>
-          <label for="filled_input">Filled</label>
-        </div>
-      </div>
-
-      <h5>Ripple Effect</h5>
-      <InputSwitch
-        :modelValue="rippleActive"
-        @update:modelValue="onRippleChange"
-      ></InputSwitch>
-    </template>
-  </Sidebar>
+  </div>
 </template>

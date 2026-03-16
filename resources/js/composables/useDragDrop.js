@@ -1,6 +1,6 @@
 import { ref, reactive } from "vue";
 
-import { useToast } from "primevue/usetoast";
+import { useToast } from "@/composables/useToast";
 
 export function useDragDrop() {
     const toast = useToast();

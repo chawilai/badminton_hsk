@@ -8,48 +8,48 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 <template>
     <div class="">
         <img
-            class="tw-absolute tw-w-full"
+            class="absolute w-full"
             src="/storage/images/intersect.svg"
             alt=""
         />
 
         <section
-            class="tw-h-auto md:tw-h-svh tw-font-sans tw-bg-gradient-to-b tw-from-gray-50 tw-to-white"
+            class="h-auto md:h-svh font-sans bg-gradient-to-b from-gray-50 to-white"
         >
             <header
-                class="tw-relative tw-z-50 tw-h-24 md:tw-mt-0 md:tw-translate-y-0 tw-bg-gray-50"
+                class="relative z-50 h-24 md:mt-0 md:translate-y-0 bg-gray-50"
             >
                 <div
-                    class="tw-flex tw-items-center tw-w-full tw-h-full tw-px-6 tw-mx-auto tw-max-w-7xl md:tw-px-8"
+                    class="flex items-center w-full h-full px-6 mx-auto max-w-7xl md:px-8"
                 >
                     <div
-                        class="tw-relative tw-flex tw-items-center tw-justify-between tw-w-full tw-h-auto"
+                        class="relative flex items-center justify-between w-full h-auto"
                     >
-                        <div class="tw-flex-shrink-0">
+                        <div class="shrink-0">
                             <a
                                 href="/"
-                                class="tw-flex tw-items-center tw-justify-center tw-rounded tw-outline-none active:tw-outline-none"
+                                class="flex items-center justify-center rounded outline-hidden active:outline-hidden"
                             >
                                 <div
-                                    class="tw-relative tw-w-12 tw-h-12 tw-mr-2"
+                                    class="relative w-12 h-12 mr-2"
                                 >
                                     <img :src="badminton_party" alt="" />
                                 </div>
                                 <span
-                                    class="tw-text-3xl tw-font-bold tw-text-transparent tw-bg-clip-text tw-bg-gradient-to-br tw-from-red-500 tw-to-gray-900"
+                                    class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-500 to-gray-900"
                                     >Badminton Party</span
                                 >
                             </a>
                         </div>
-                        <div class="tw-flex md:tw-hidden">
+                        <div class="flex md:hidden">
                             <button
                                 id="open-menu"
-                                onclick="document.getElementById('menu').classList.remove('tw-hidden'); document.getElementById('close-menu').classList.remove('tw-hidden'); this.classList.add('tw-hidden');"
+                                onclick="document.getElementById('menu').classList.remove('hidden'); document.getElementById('close-menu').classList.remove('hidden'); this.classList.add('hidden');"
                                 type="button"
-                                class="tw-text-gray-900"
+                                class="text-gray-900"
                             >
                                 <svg
-                                    class="tw-w-7 tw-h-7"
+                                    class="w-7 h-7"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -65,12 +65,12 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
                             </button>
                             <button
                                 id="close-menu"
-                                onclick="document.getElementById('menu').classList.add('tw-hidden'); document.getElementById('open-menu').classList.remove('tw-hidden'); this.classList.add('tw-hidden');"
+                                onclick="document.getElementById('menu').classList.add('hidden'); document.getElementById('open-menu').classList.remove('hidden'); this.classList.add('hidden');"
                                 type="button"
-                                class="tw-hidden tw-text-gray-900"
+                                class="hidden text-gray-900"
                             >
                                 <svg
-                                    class="tw-w-7 tw-h-7"
+                                    class="w-7 h-7"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -86,18 +86,18 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 
                         <div
                             id="menu"
-                            class="tw-fixed tw-top-0 tw-left-0 tw-z-20 tw-flex-col tw-hidden tw-w-full tw-h-auto tw-translate-y-24 tw-shadow-sm md:tw-absolute md:tw-inset-y-0 md:tw-flex md:tw-flex-row md:tw-top-auto md:tw-translate-y-0 md:tw-h-full md:tw-w-auto tw-bg-gray-50 md:tw-shadow-none md:tw-bg-transparent md:tw-items-center md:tw-justify-center md:tw-space-x-12 md:-tw-translate-x-1/2 md:tw-left-1/2"
+                            class="fixed top-0 left-0 z-20 flex-col hidden w-full h-auto translate-y-24 shadow-xs md:absolute md:inset-y-0 md:flex md:flex-row md:top-auto md:translate-y-0 md:h-full md:w-auto bg-gray-50 md:shadow-none md:bg-transparent md:items-center md:justify-center md:space-x-12 md:-translate-x-1/2 md:left-1/2"
                         >
                             <Link
                                 href="/home"
-                                class="tw-relative tw-flex tw-items-center tw-justify-center tw-w-full tw-h-16 tw-px-1 tw-text-base tw-text-gray-900 tw-text-opacity-100 tw-transition-all tw-duration-300 tw-rounded tw-outline-none tw-cursor-pointer group md:tw-w-auto md:tw-h-auto md:tw-inline-block md:hover:-tw-rotate-3 active:tw-ring-0 active:tw-outline-none"
+                                class="relative flex items-center justify-center w-full h-16 px-1 text-base text-gray-900 transition-all duration-300 rounded outline-hidden cursor-pointer group md:w-auto md:h-auto md:inline-block md:hover:-rotate-3 active:ring-0 active:outline-hidden"
                             >
                                 <span
-                                    class="tw-relative tw-z-20 tw-whitespace-nowrap"
+                                    class="relative z-20 whitespace-nowrap"
                                     >Home</span
                                 >
                                 <span
-                                    class="tw-absolute tw-bottom-0 tw-left-0 tw-z-10 tw-w-0 tw-h-2 tw-transition-all tw-duration-300 tw-ease-out tw-skew-x-12 group-hover:tw-w-full tw-bg-red-400"
+                                    class="absolute bottom-0 left-0 z-10 w-0 h-2 transition-all duration-300 ease-out skew-x-12 group-hover:w-full bg-red-400"
                                 ></span>
                             </Link>
 
@@ -106,19 +106,19 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
                                 href="#login"
                                 target="_blank"
                                 title=""
-                                class="tw-flex tw-items-center tw-justify-center tw-h-16 tw-px-5 tw-text-base tw-font-semibold tw-leading-7 tw-text-center tw-text-white tw-transition-all tw-duration-200 tw-duration-300 tw-ease-out md:tw-hidden tw-bg-red-400 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-gray-900 hover:tw-bg-red-500 hover:tw-text-white focus:tw-bg-red-500 focus:tw-text-white"
+                                class="flex items-center justify-center h-16 px-5 text-base font-semibold leading-7 text-center text-white transition-all duration-200 duration-300 ease-out md:hidden bg-red-400 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 hover:bg-red-500 hover:text-white focus:bg-red-500 focus:text-white"
                                 role="button"
                                 >เข้าสู่ระบบ</Link
                             >
                         </div>
 
                         <div
-                            class="tw-hidden md:tw-flex md:tw-items-center md:tw-justify-center"
+                            class="hidden md:flex md:items-center md:justify-center"
                         >
                             <Link
                                 href="#login"
                                 title=""
-                                class="tw-px-5 tw-py-2 hover:-tw-rotate-3 tw-transition-all tw-ease-out tw-duration-300 tw-text-base tw-font-semibold tw-leading-7 tw-text-gray-900 tw-duration-200 tw-bg-transparent tw-border tw-border-gray-200 tw-rounded-md focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-sky-500 hover:tw-bg-red-500 hover:tw-text-white sm:tw-w-auto hover:tw-scale-[1.01] focus:tw-bg-red-500 focus:tw-text-white"
+                                class="px-5 py-2 hover:-rotate-3 transition-all ease-out duration-300 text-base font-semibold leading-7 text-gray-900 duration-200 bg-transparent border border-gray-200 rounded-md focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 hover:bg-red-500 hover:text-white sm:w-auto hover:scale-[1.01] focus:bg-red-500 focus:text-white"
                                 role="button"
                                 >เข้าสู่ระบบ</Link
                             >
@@ -126,7 +126,7 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
                     </div>
                 </div>
             </header>
-            <div class="tw-overflow-x-hidden">
+            <div class="overflow-x-hidden">
                 <slot />
             </div>
             <!-- Powered By Tails Badge -->
@@ -134,17 +134,17 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
         </section>
 
         <section>
-            <footer class="tw-bg-gray-100 tw-text-sm tw-py-3">
+            <footer class="bg-gray-100 text-sm py-3">
                 <div
-                    class="tw-container tw-mx-auto tw-flex tw-justify-between tw-items-center tw-px-4"
+                    class="container mx-auto flex justify-between items-center px-4"
                 >
                     <p>&copy; 2024 Chawilai. All rights reserved.</p>
                     <div>
-                        <!-- <a href="#" class="hover:tw-underline">Privacy Policy</a>
-                  <span class="tw-mx-2">|</span>
-                  <a href="#" class="hover:tw-underline">Terms of Service</a>
-                  <span class="tw-mx-2">|</span> -->
-                        <a href="#" class="hover:tw-underline">Contact Us</a>
+                        <!-- <a href="#" class="hover:underline">Privacy Policy</a>
+                  <span class="mx-2">|</span>
+                  <a href="#" class="hover:underline">Terms of Service</a>
+                  <span class="mx-2">|</span> -->
+                        <a href="#" class="hover:underline">Contact Us</a>
                     </div>
                 </div>
             </footer>

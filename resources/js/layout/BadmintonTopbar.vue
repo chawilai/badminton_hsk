@@ -5,12 +5,10 @@ import { useBadmintonLayout } from '@/layout/composables/badmintonLayout';
 import LayoutSwitcher from '@/Components/LayoutSwitcher.vue';
 import UserAvatar from '@/Components/UserAvatar.vue';
 
-const { isDarkMode, toggleDarkMode } = useBadmintonLayout();
 const page = usePage();
 
 const profileMenuVisible = ref(false);
 
-// Close dropdown on outside click
 const onDocumentClick = (e) => {
     if (!e.target.closest('.profile-dropdown')) {
         profileMenuVisible.value = false;
@@ -20,10 +18,10 @@ onMounted(() => document.addEventListener('click', onDocumentClick));
 onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick));
 
 const navLinks = [
-    { label: 'Party Lists', href: '/party-lists', icon: 'pi pi-list' },
-    { label: 'My Parties', href: '/my-parties', icon: 'pi pi-play' },
-    { label: 'Chat', href: '/chat', icon: 'pi pi-comments' },
-    { label: 'Profile', href: '/profile', icon: 'pi pi-user' },
+    { label: 'Party Lists', href: '/party-lists', icon: 'home' },
+    { label: 'My Parties', href: '/my-parties', icon: 'play' },
+    { label: 'Chat', href: '/chat', icon: 'chat' },
+    { label: 'Profile', href: '/profile', icon: 'user' },
 ];
 
 const isActive = (href) => {
@@ -40,52 +38,46 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
 </script>
 
 <template>
-    <header class="topbar-accent tw-sticky tw-top-0 tw-z-50 tw-h-14 lg:tw-h-16 tw-flex tw-items-center tw-px-4 lg:tw-px-8 tw-bg-white/80 dark:tw-bg-court-950/80 tw-backdrop-blur-xl tw-border-b tw-border-gray-200 dark:tw-border-court-800">
+    <header class="topbar-accent sticky top-0 z-50 h-14 lg:h-16 flex items-center px-4 lg:px-8 bg-base-100/80 backdrop-blur-xl border-b border-base-300">
         <!-- Left: Logo -->
-        <div class="tw-flex tw-items-center tw-gap-3 tw-shrink-0">
-            <Link href="/home" class="tw-flex tw-items-center tw-gap-2 tw-no-underline">
-                <span class="tw-text-2xl">🏸</span>
-                <span class="tw-font-bold tw-text-lg tw-text-court-600 dark:tw-text-court-400 tw-hidden sm:tw-inline">
+        <div class="flex items-center gap-3 shrink-0">
+            <Link href="/home" class="flex items-center gap-2 no-underline">
+                <span class="text-2xl">🏸</span>
+                <span class="font-bold text-lg text-primary hidden sm:inline">
                     Badminton Party
                 </span>
             </Link>
         </div>
 
         <!-- Center: Desktop nav links -->
-        <nav class="tw-hidden lg:tw-flex tw-items-center tw-gap-1 tw-mx-auto">
+        <nav class="hidden lg:flex items-center gap-1 mx-auto">
             <Link
                 v-for="link in navLinks"
                 :key="link.href"
                 :href="link.href"
-                class="tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors tw-duration-200"
+                class="px-4 py-2 rounded-lg text-sm font-medium no-underline transition-colors duration-200"
                 :class="isActive(link.href)
-                    ? 'tw-bg-court-100 dark:tw-bg-court-900 tw-text-court-700 dark:tw-text-court-300'
-                    : 'tw-text-gray-600 dark:tw-text-gray-400 hover:tw-bg-gray-100 dark:hover:tw-bg-court-900/50 hover:tw-text-gray-900 dark:hover:tw-text-gray-200'"
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-base-content/60 hover:bg-base-200 hover:text-base-content'"
             >
-                <i :class="link.icon" class="tw-mr-2 tw-text-xs"></i>
+                <svg v-if="link.icon === 'home'" class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                <svg v-else-if="link.icon === 'play'" class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg v-else-if="link.icon === 'chat'" class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <svg v-else-if="link.icon === 'user'" class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 {{ link.label }}
             </Link>
         </nav>
 
         <!-- Right: Actions -->
-        <div class="tw-flex tw-items-center tw-gap-2 tw-ml-auto lg:tw-ml-0 tw-shrink-0">
-            <!-- Dark mode toggle -->
-            <button
-                @click="toggleDarkMode"
-                class="tw-w-9 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-text-gray-500 dark:tw-text-gray-400 hover:tw-bg-gray-100 dark:hover:tw-bg-court-900 tw-transition-colors tw-border-0 tw-bg-transparent tw-cursor-pointer"
-                :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-            >
-                <i :class="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'" class="tw-text-base"></i>
-            </button>
-
-            <!-- Layout switcher -->
+        <div class="flex items-center gap-2 ml-auto lg:ml-0 shrink-0">
+            <!-- Theme switcher -->
             <LayoutSwitcher />
 
             <!-- Profile dropdown -->
-            <div class="profile-dropdown tw-relative" @click.stop>
+            <div class="profile-dropdown relative" @click.stop>
                 <button
                     @click="toggleProfileMenu"
-                    class="tw-rounded-full tw-overflow-hidden tw-border-2 tw-border-court-300 dark:tw-border-court-700 tw-cursor-pointer tw-p-0 tw-bg-transparent tw-transition-all hover:tw-border-court-500"
+                    class="rounded-full overflow-hidden border-2 border-primary/30 cursor-pointer p-0 bg-transparent transition-all hover:border-primary"
                 >
                     <UserAvatar :src="userAvatar" :name="userName" size="md" rounded="full" />
                 </button>
@@ -93,27 +85,27 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
                 <transition name="page-fade">
                     <div
                         v-if="profileMenuVisible"
-                        class="tw-absolute tw-right-0 tw-top-full tw-mt-2 tw-w-48 tw-bg-white dark:tw-bg-court-900 tw-rounded-xl tw-shadow-lg tw-border tw-border-gray-200 dark:tw-border-court-800 tw-py-2 tw-z-50 tw-animate-slide-up"
+                        class="absolute right-0 top-full mt-2 w-48 bg-base-100 rounded-xl shadow-lg border border-base-300 py-2 z-50 animate-slide-up"
                     >
-                        <div class="tw-px-4 tw-py-2 tw-border-b tw-border-gray-100 dark:tw-border-court-800">
-                            <p class="tw-text-sm tw-font-medium tw-text-gray-900 dark:tw-text-gray-100 tw-m-0">{{ userName }}</p>
+                        <div class="px-4 py-2 border-b border-base-200">
+                            <p class="text-sm font-medium text-base-content m-0">{{ userName }}</p>
                         </div>
                         <Link
                             href="/profile"
-                            class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-text-gray-700 dark:tw-text-gray-300 hover:tw-bg-gray-50 dark:hover:tw-bg-court-800 tw-no-underline tw-transition-colors"
+                            class="flex items-center gap-2 px-4 py-2 text-sm text-base-content/70 hover:bg-base-200 no-underline transition-colors"
                             @click="profileMenuVisible = false"
                         >
-                            <i class="pi pi-user tw-text-xs"></i>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             Profile
                         </Link>
                         <Link
                             as="button"
                             :href="route('logout')"
                             method="post"
-                            class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-text-gray-700 dark:tw-text-gray-300 hover:tw-bg-gray-50 dark:hover:tw-bg-court-800 tw-no-underline tw-transition-colors tw-w-full tw-border-0 tw-bg-transparent tw-text-left tw-cursor-pointer tw-font-sans"
+                            class="flex items-center gap-2 px-4 py-2 text-sm text-base-content/70 hover:bg-base-200 no-underline transition-colors w-full border-0 bg-transparent text-left cursor-pointer font-sans"
                             @click="profileMenuVisible = false"
                         >
-                            <i class="pi pi-sign-out tw-text-xs"></i>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                             Logout
                         </Link>
                     </div>

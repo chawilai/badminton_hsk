@@ -2,12 +2,13 @@
 import { useDragDrop } from "@/composables/useDragDrop";
 import { ref, watch, computed, onMounted, defineProps, defineEmits } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
-import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "@/composables/useToast";
+import { useConfirm } from "@/composables/useConfirm";
 
 const toast = useToast();
-const confirmPopup = useConfirm();
+const { confirm } = useConfirm();
 
 let props = defineProps({
   data: {
@@ -15,12 +16,9 @@ let props = defineProps({
   },
 });
 
-// Define the emits
 const emit = defineEmits(["gameCreated"]);
 
 const localData = ref({ ...props.data });
-
-console.log(localData)
 
 const {
   dropZones,
@@ -70,16 +68,16 @@ const formattedData = computed(() =>
 const form = ref({
   party_id: localData.value.party.id,
   game_type: "quadruple",
-  players: [], // Dynamically set from dropZones.Game
+  players: [],
   team1_start_side: "north",
-  initial_shuttlecock_game: 0, // Default value
+  initial_shuttlecock_game: 0,
   process: "playing",
 });
 
 const sortOrder = ref("ASC");
 
 const sortedPlayerByGamePlayed = computed(() => {
-  const players = [...formattedData.value]; // Clone to avoid modifying original array
+  const players = [...formattedData.value];
   return players.sort((a, b) => {
     if (sortOrder.value === "ASC") {
       return a.played - b.played;
@@ -91,15 +89,23 @@ const sortedPlayerByGamePlayed = computed(() => {
 
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
-  dropZones.Ready = [...sortedPlayerByGamePlayed.value]; // Ensure value is evaluated
+  dropZones.Ready = [...sortedPlayerByGamePlayed.value];
 };
 
-const shortenTitle = (title, maxLength = 10) => {
+const shortenTitle = (title, maxLength = 14) => {
   if (title.length > maxLength) {
     return `${title.slice(0, maxLength)}...`;
   }
   return title;
 };
+
+// Team split: first 2 = Team 1, next 2 = Team 2
+const team1Players = computed(() => dropZones.Game.slice(0, 2));
+const team2Players = computed(() => dropZones.Game.slice(2, 4));
+const team1Level = computed(() => team1Players.value.reduce((sum, p) => sum + (p.rank_level || 0), 0));
+const team2Level = computed(() => team2Players.value.reduce((sum, p) => sum + (p.rank_level || 0), 0));
+const levelDiff = computed(() => Math.abs(team1Level.value - team2Level.value));
+const isBalanced = computed(() => levelDiff.value <= 3);
 
 const startNewGame = () => {
   const playerCount = dropZones.Game.length;
@@ -117,65 +123,22 @@ const startNewGame = () => {
   }
 
   form.value.players = (dropZones.Game ?? []).map((player) => player.id);
-
   form.value.process = "playing";
   router.post(`/games/create-game`, form.value, {
     preserveScroll: true,
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
     onSuccess: (res) => {
       dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
       dropZones.Game = [];
-
-      form.value = {
-        party_id: localData.value.party.id,
-        game_type: "quadruple",
-        players: [], // Dynamically set from dropZones.Game
-        team1_start_side: "north",
-        initial_shuttlecock_game: 0, // Default value
-        process: "playing",
-      };
-
+      form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
       emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
-
-      toast.add({
-        severity: "success",
-        summary: "Game Created",
-        detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.",
-        life: 3000,
-      });
+      toast.add({ severity: "success", summary: "Game Created", detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.", life: 3000 });
     },
     onError: (err) => {
-
-    console.log(err)
-    console.log(dropZones)
-    dropZones.Game = [];
-
-      if (err.notMatchType) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
-          life: 3000,
-        });
-      }
-      if (err.existSettingGame) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
-          life: 3000,
-        });
-      }
-      if (err.activePlayers) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: err.activePlayers,
-        //   life: 3000,
-        });
-      }
+      dropZones.Game = [];
+      if (err.notMatchType) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม", life: 3000 });
+      if (err.existSettingGame) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว", life: 3000 });
+      if (err.activePlayers) toast.add({ severity: "error", summary: "ล้มเหลว", detail: err.activePlayers });
     },
   });
 };
@@ -186,634 +149,284 @@ const listNewGame = () => {
     playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
 
   if (!form.value.game_type) {
-    toast.add({
-      severity: "error",
-      summary: "ล้มเหลว",
-      detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)",
-      life: 3000,
-    });
+    toast.add({ severity: "error", summary: "ล้มเหลว", detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)", life: 3000 });
     return;
   }
 
   form.value.players = (dropZones.Game ?? []).map((player) => player.id);
-
   form.value.process = "listing";
   router.post(`/games/create-game`, form.value, {
     preserveScroll: true,
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
     onSuccess: (res) => {
       dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
       dropZones.Game = [];
-
-      form.value = {
-        party_id: localData.value.party.id,
-        game_type: "quadruple",
-        players: [], // Dynamically set from dropZones.Game
-        team1_start_side: "north",
-        initial_shuttlecock_game: 0, // Default value
-        process: "playing",
-      };
-
+      form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
       emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
-
-      toast.add({
-        severity: "success",
-        summary: "Game Created",
-        detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.",
-        life: 3000,
-      });
+      toast.add({ severity: "success", summary: "Game Created", detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.", life: 3000 });
     },
     onError: (err) => {
-      console.log(err);
-
-      if (err.notMatchType) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม",
-          life: 3000,
-        });
-      }
-      if (err.players) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: "โปรดกำหนดผู้เล่นให้ครบถ้วน",
-          life: 3000,
-        });
-      }
-      if (err.existSettingGame) {
-        toast.add({
-          severity: "error",
-          summary: "ล้มเหลว",
-          detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว",
-          life: 3000,
-        });
-      }
+      if (err.notMatchType) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม", life: 3000 });
+      if (err.players) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "โปรดกำหนดผู้เล่นให้ครบถ้วน", life: 3000 });
+      if (err.existSettingGame) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว", life: 3000 });
     },
   });
 };
 
 watch(
-  () => props.data, // Watch the prop
+  () => props.data,
   (newData) => {
-    // console.log("Props data updated:", newData);
-
     localData.value = newData;
-
     toggleSortOrder();
   },
-  { immediate: true } // Run immediately on initial mount
+  { immediate: true }
 );
 
 onMounted(() => {
   toggleSortOrder();
 });
+
+const zoneConfig = {
+  Game:    { label: 'Game',    color: 'emerald', borderColor: '#86efac', bgColor: '#f0fdf4' },
+  Ready:   { label: 'Ready',   color: 'blue',    borderColor: '#93c5fd', bgColor: '#eff6ff' },
+  Playing: { label: 'Playing', color: 'teal',    borderColor: '#5eead4', bgColor: '#f0fdfa' },
+  Listing: { label: 'Listing', color: 'pink',    borderColor: '#f9a8d4', bgColor: '#fdf2f8' },
+  Break:   { label: 'Break',   color: 'amber',   borderColor: '#fde047', bgColor: '#fefce8' },
+  Finish:  { label: 'Finish',  color: 'purple',  borderColor: '#c4b5fd', bgColor: '#faf5ff' },
+};
+
+const zoneBadgeClass = (zone) => {
+  const map = {
+    Game: 'badge-success', Ready: 'badge-info', Playing: 'badge-accent',
+    Listing: 'badge-secondary', Break: 'badge-warning', Finish: 'badge-neutral',
+  };
+  return map[zone] || 'badge-ghost';
+};
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-column sm:flex-row justify-content-center gap-4">
-      <!-- Game Zone -->
-      <div
-        class="col-12 sm:w-24rem h-30rem drop-zone-game p-card flex flex-column gap-3 shadow-lg"
-        data-zone="Game"
-        :class="{ 'drop-zone-active': dropZoneActive === 'Game' }"
-      >
-        <div class="flex align-items-center justify-content-between mb-3">
-          <h3 class="text-lg font-bold text-primary">Game</h3>
-          <div class="flex gap-1">
-            <div class="flex align-items-center justify-content-betwee gap-1">
-              <label>ขนไก่</label>
-              <select
-                name="init_shuttle"
-                v-model="form.initial_shuttlecock_game"
-              >
-                <option v-for="i in [0, 1, 2, 3]" v-text="i"></option>
-              </select>
-              <!-- <SelectButton
-              style="w-2rem"
-              v-model="form.initial_shuttlecock_game"
-              :options="[
-                { label: 'Option 0', value: 0 },
-                { label: 'Option 1', value: 1 },
-                { label: 'Option 2', value: 2 },
-                { label: 'Option 3', value: 3 },
-              ]"
-              optionLabel="value"
-              optionValue="value"
-            /> -->
-            </div>
-            <button
-              @click="startNewGame"
-              class="p-button p-button-primary p-button-sm rounded-full"
-            >
-              <i class="pi pi-play"></i>
-            </button>
-            <button
-              @click="listNewGame"
-              class="p-button p-button-warning p-button-sm rounded-full"
-            >
-              <i class="pi pi-list"></i>
-            </button>
-            <button
-              @click="releaseAllItems"
-              class="p-button p-button-danger p-button-sm rounded-full"
-            >
-              <i class="pi pi-refresh"></i>
-            </button>
-          </div>
+  <div class="space-y-3">
+    <!-- ===== GAME ZONE (Top) ===== -->
+    <div
+      class="game-zone-card rounded-2xl p-4 border-2 border-dashed transition-all"
+      :style="{ borderColor: dropZoneActive === 'Game' ? '#67e8f9' : '#86efac', backgroundColor: dropZoneActive === 'Game' ? '#cffafe' : '#f0fdf4' }"
+      data-zone="Game"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="badge badge-success badge-lg font-bold gap-1">🏸 Game</span>
+          <span class="text-xs text-base-content/50">{{ dropZones.Game.length }}/4</span>
         </div>
-        <div
-          class="game-items-gridxx flex flex-wrap justify-content-evenly bg-green-100 w-full max-w-20rem h-20rem mx-auto p-3 gap-3 border-round-xl"
-        >
-          <div
-            v-for="item in dropZones.Game"
-            :key="item.id"
-            class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-            :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-            :data-id="item.id"
-            @mousedown.prevent="handleDragStart($event, item, 'Game')"
-            @touchstart.prevent="handleDragStart($event, item, 'Game')"
-          >
-            <!-- Subtract Button -->
-            <button
-              class="w-2rem h-2rem cursor-pointer"
-              @mousedown.stop
-              @mouseup.stop="handleMouseUp"
-              @touchstart.stop="handleTouchStart"
-              @click.stop="handleClick(item, 'Game')"
-              @touchend.stop="handleTouchEnd(item, 'Game')"
-              @dblclick.stop="handleDoubleClick(item, 'Game')"
-              :class="{
-                'subtract-button': dropZones.Game.includes(item),
-              }"
-            >
-              <i
-                :class="dropZones.Game.includes(item) ? 'pi pi-minus' : 'pi pi-plus'"
-              ></i>
+        <div class="flex items-center gap-1.5">
+          <!-- Shuttle select -->
+          <div class="flex items-center gap-1 bg-base-100/80 rounded-lg px-2 py-1">
+            <span class="text-xs text-base-content/60">🪶</span>
+            <select v-model="form.initial_shuttlecock_game" class="select select-ghost select-xs w-12 min-h-0 h-6 px-1">
+              <option v-for="i in [0, 1, 2, 3]" :key="i" :value="i">{{ i }}</option>
+            </select>
+          </div>
+          <!-- Actions -->
+          <div class="join">
+            <button @click="startNewGame" class="btn btn-success btn-xs join-item" title="Start Game">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             </button>
-
-            <!-- Avatar -->
-            <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-            <!-- Title -->
-            <span class="text-center font-medium">{{ item.title }}</span>
-            <span
-              class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
-              :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
-              v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
-            ></span>
-            <span
-              class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-              v-text="`${item.played} เกม`"
-            ></span>
-            <span
-              class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-              v-text="`LV: ${item.rank_level}`"
-            ></span>
+            <button @click="listNewGame" class="btn btn-warning btn-xs join-item" title="List Game">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button @click="releaseAllItems" class="btn btn-error btn-xs join-item" title="Reset">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Ready Zone -->
-      <div class="flex-1 flex flex-column justify-content-center w-full gap-3">
-        <div
-          class="col-12 drop-zone-ready p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
-          data-zone="Ready"
-          :class="{ 'drop-zone-active': dropZoneActive === 'Ready' }"
-        >
-          <h3 class="text-lg font-bold text-primary mb-3">Ready</h3>
-          <div class="flex flex-wrap justify-content-center gap-3 sm:gap-4">
-            <div
-              v-for="item in dropZones.Ready"
-              :key="item.id"
-              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-              :data-id="item.id"
-              @mousedown.prevent="handleDragStart($event, item, 'Ready')"
-              @touchstart.prevent="handleDragStart($event, item, 'Ready')"
-            >
-              <!-- Add Button -->
-              <button
-                @mousedown.stop
-                @mouseup.stop="handleMouseUp"
-                @touchstart.stop="handleTouchStart"
-                @click.stop="handleClick(item, 'Ready')"
-                @touchend.stop="handleTouchEnd(item, 'Ready')"
-                @dblclick.stop="handleDoubleClick(item, 'Ready')"
-                class="add-button w-2rem h-2rem cursor-pointer"
+      <!-- Balance indicator -->
+      <div v-if="dropZones.Game.length >= 3" class="flex items-center justify-center gap-2 mb-2">
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+          :class="isBalanced ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'"
+        >{{ isBalanced ? 'Balanced' : `Diff ${levelDiff}` }}</span>
+      </div>
+
+      <!-- Team split layout -->
+      <div class="flex items-stretch gap-2 min-h-[10rem]">
+        <!-- Team 1 -->
+        <div class="flex-1 rounded-xl border-2 border-dashed border-accent/40 bg-accent/5 p-2.5 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold text-accent uppercase tracking-wider">Team 1</span>
+            <span v-if="team1Players.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">Lv {{ team1Level }}</span>
+          </div>
+          <div class="flex flex-col gap-2 flex-1">
+            <template v-for="item in team1Players" :key="item.id">
+              <div
+                class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
+                :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+                :data-id="item.id"
+                @mousedown.prevent="handleDragStart($event, item, 'Game')"
+                @touchstart.prevent="handleDragStart($event, item, 'Game')"
               >
-                <i class="pi pi-plus"></i>
-              </button>
-
-              <!-- Avatar -->
-              <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-              <!-- Title -->
-              <span class="text-center font-medium">{{ item.title }}</span>
-              <span
-                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
-                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
-                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
-              ></span>
-              <span
-                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`${item.played} เกม`"
-              ></span>
-              <span
-                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`LV: ${item.rank_level}`"
-              ></span>
+                <button
+                  class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-error-content text-[10px] flex items-center justify-center cursor-pointer hover:bg-error/80 z-10"
+                  @mousedown.stop @mouseup.stop="handleMouseUp" @touchstart.stop="handleTouchStart"
+                  @click.stop="handleClick(item, 'Game')" @touchend.stop="handleTouchEnd(item, 'Game')"
+                  @dblclick.stop="handleDoubleClick(item, 'Game')"
+                >✕</button>
+                <div class="flex items-center gap-2 p-2.5">
+                  <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-accent/30 shrink-0" />
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
+                    <div class="flex items-center gap-1 mt-0.5">
+                      <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
+                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }}G</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
+                  :class="item.current_game ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning'"
+                >{{ item.current_game ? `กำลังเล่น` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)} น.` }}</div>
+              </div>
+            </template>
+            <!-- Empty slot(s) for Team 1 -->
+            <div
+              v-for="n in Math.max(0, 2 - team1Players.length)"
+              :key="'t1-empty-' + n"
+              class="rounded-xl border-2 border-dashed border-accent/20 flex items-center justify-center min-h-[4.5rem] text-accent/20"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </div>
           </div>
         </div>
 
-        <!-- Playing Zone -->
-        <div
-          class="col-12 drop-zone-playing p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
-          data-zone="Playing"
-          :class="{ 'drop-zone-active': dropZoneActive === 'Playing' }"
-        >
-          <h3 class="text-lg font-bold text-primary mb-3">Playing</h3>
-          <div class="flex flex-wrap gap-3">
-            <div
-              v-for="item in dropZones.Playing"
-              :key="item.id"
-              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-              :data-id="item.id"
-              @mousedown.prevent="handleDragStart($event, item, 'Playing')"
-              @touchstart.prevent="handleDragStart($event, item, 'Playing')"
-            >
-              <!-- Add Button -->
-              <button
-                @mousedown.stop
-                @mouseup.stop="handleMouseUp"
-                @touchstart.stop="handleTouchStart"
-                @click.stop="handleClick(item, 'Playing')"
-                @touchend.stop="handleTouchEnd(item, 'Playing')"
-                @dblclick.stop="handleDoubleClick(item, 'Playing')"
-                class="add-button w-2rem h-2rem cursor-pointer"
-              >
-                <i class="pi pi-plus"></i>
-              </button>
-
-              <!-- Avatar -->
-              <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-              <!-- Title -->
-              <span class="text-center font-medium">{{ item.title }}</span>
-              <span
-                class="text-center absolute bottom-0 left-0 bg-red-100 border-round-lg px-1 text-xs"
-                v-text="`กำลังเล่น`"
-              ></span>
-              <span
-                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`${item.played} เกม`"
-              ></span>
-              <span
-                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`LV: ${item.rank_level}`"
-              ></span>
-            </div>
-          </div>
+        <!-- VS divider -->
+        <div class="shrink-0 flex flex-col items-center justify-center px-1">
+          <span class="text-xs font-black text-base-content/20">VS</span>
         </div>
 
-        <!-- Listing Zone -->
-        <div
-          class="col-12 drop-zone-listing p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
-          data-zone="Listing"
-          :class="{ 'drop-zone-active': dropZoneActive === 'Listing' }"
-        >
-          <h3 class="text-lg font-bold text-primary mb-3">Listing</h3>
-          <div class="flex flex-wrap gap-3">
-            <div
-              v-for="item in dropZones.Listing"
-              :key="item.id"
-              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-              :data-id="item.id"
-              @mousedown.prevent="handleDragStart($event, item, 'Listing')"
-              @touchstart.prevent="handleDragStart($event, item, 'Listing')"
-            >
-              <!-- Add Button -->
-              <button
-                @mousedown.stop
-                @mouseup.stop="handleMouseUp"
-                @touchstart.stop="handleTouchStart"
-                @click.stop="handleClick(item, 'Listing')"
-                @touchend.stop="handleTouchEnd(item, 'Listing')"
-                @dblclick.stop="handleDoubleClick(item, 'Listing')"
-                class="add-button w-2rem h-2rem cursor-pointer"
-              >
-                <i class="pi pi-plus"></i>
-              </button>
-
-              <!-- Avatar -->
-              <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-              <!-- Title -->
-              <span class="text-center font-medium">{{ item.title }}</span>
-              <span
-                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
-                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
-                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
-              ></span>
-              <span
-                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`${item.played} เกม`"
-              ></span>
-              <span
-                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`LV: ${item.rank_level}`"
-              ></span>
-            </div>
+        <!-- Team 2 -->
+        <div class="flex-1 rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 p-2.5 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Team 2</span>
+            <span v-if="team2Players.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary/15 text-secondary">Lv {{ team2Level }}</span>
           </div>
-        </div>
-
-        <!-- Break Zone -->
-        <div
-          class="col-12 drop-zone-break p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
-          data-zone="Break"
-          :class="{ 'drop-zone-active': dropZoneActive === 'Break' }"
-        >
-          <h3 class="text-lg font-bold text-primary mb-3">Break</h3>
-          <div class="flex flex-wrap gap-3">
-            <div
-              v-for="item in dropZones.Break"
-              :key="item.id"
-              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-              :data-id="item.id"
-              @mousedown.prevent="handleDragStart($event, item, 'Break')"
-              @touchstart.prevent="handleDragStart($event, item, 'Break')"
-            >
-              <!-- Add Button -->
-              <button
-                @mousedown.stop
-                @mouseup.stop="handleMouseUp"
-                @touchstart.stop="handleTouchStart"
-                @click.stop="handleClick(item, 'Break')"
-                @touchend.stop="handleTouchEnd(item, 'Break')"
-                @dblclick.stop="handleDoubleClick(item, 'Break')"
-                class="add-button w-2rem h-2rem cursor-pointer"
+          <div class="flex flex-col gap-2 flex-1">
+            <template v-for="item in team2Players" :key="item.id">
+              <div
+                class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
+                :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+                :data-id="item.id"
+                @mousedown.prevent="handleDragStart($event, item, 'Game')"
+                @touchstart.prevent="handleDragStart($event, item, 'Game')"
               >
-                <i class="pi pi-plus"></i>
-              </button>
-
-              <!-- Avatar -->
-              <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-              <!-- Title -->
-              <span class="text-center font-medium">{{ item.title }}</span>
-              <span
-                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
-                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
-                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
-              ></span>
-              <span
-                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`${item.played} เกม`"
-              ></span>
-              <span
-                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`LV: ${item.rank_level}`"
-              ></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Finish Zone -->
-        <div
-          class="col-12 drop-zone-finish p-1 sm:p-3 p-card flex flex-column gap-3 shadow-md"
-          data-zone="Finish"
-          :class="{ 'drop-zone-active': dropZoneActive === 'Finish' }"
-        >
-          <h3 class="text-lg font-bold text-primary mb-3">Finish</h3>
-          <div class="flex flex-wrap gap-3">
+                <button
+                  class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-error-content text-[10px] flex items-center justify-center cursor-pointer hover:bg-error/80 z-10"
+                  @mousedown.stop @mouseup.stop="handleMouseUp" @touchstart.stop="handleTouchStart"
+                  @click.stop="handleClick(item, 'Game')" @touchend.stop="handleTouchEnd(item, 'Game')"
+                  @dblclick.stop="handleDoubleClick(item, 'Game')"
+                >✕</button>
+                <div class="flex items-center gap-2 p-2.5">
+                  <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-secondary/30 shrink-0" />
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
+                    <div class="flex items-center gap-1 mt-0.5">
+                      <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
+                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }}G</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
+                  :class="item.current_game ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning'"
+                >{{ item.current_game ? `กำลังเล่น` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)} น.` }}</div>
+              </div>
+            </template>
+            <!-- Empty slot(s) for Team 2 -->
             <div
-              v-for="item in dropZones.Finish"
-              :key="item.id"
-              class="draggable-item flex flex-column w-7rem h-8rem align-items-center p-2 gap-1 bg-white"
-              :class="{ 'hovered-item': hoveredItem?.id === item.id }"
-              :data-id="item.id"
-              @mousedown.prevent="handleDragStart($event, item, 'Finish')"
-              @touchstart.prevent="handleDragStart($event, item, 'Finish')"
+              v-for="n in Math.max(0, 2 - team2Players.length)"
+              :key="'t2-empty-' + n"
+              class="rounded-xl border-2 border-dashed border-secondary/20 flex items-center justify-center min-h-[4.5rem] text-secondary/20"
             >
-              <!-- Add Button -->
-              <button
-                @mousedown.stop
-                @mouseup.stop="handleMouseUp"
-                @touchstart.stop="handleTouchStart"
-                @click.stop="handleClick(item, 'Finish')"
-                @touchend.stop="handleTouchEnd(item, 'Finish')"
-                @dblclick.stop="handleDoubleClick(item, 'Finish')"
-                class="add-button w-2rem h-2rem cursor-pointer"
-              >
-                <i class="pi pi-plus"></i>
-              </button>
-
-              <!-- Avatar -->
-              <img :src="item.avatar" alt="Avatar" class="avatar" />
-
-              <!-- Title -->
-              <span class="text-center font-medium">{{ item.title }}</span>
-              <span
-                class="text-center absolute bottom-0 left-0 border-round-lg px-1 text-xs"
-                :class="item.current_game ? 'bg-teal-300': 'bg-red-100'"
-                v-text="item.current_game ? `เล่นเกม ${item.played}` : `${convertWaitingTimeToMinutes(item.waiting_time)} นาที`"
-              ></span>
-              <span
-                class="text-center absolute bottom-0 right-0 bg-blue-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`${item.played} เกม`"
-              ></span>
-              <span
-                class="text-center absolute top-0 left-0 bg-green-100 border-round-lg px-1 text-xs font-bold"
-                v-text="`LV: ${item.rank_level}`"
-              ></span>
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Dragging Feedback -->
+    <!-- ===== OTHER ZONES ===== -->
+    <template v-for="zone in ['Ready', 'Playing', 'Listing', 'Break', 'Finish']" :key="zone">
+      <div
+        v-if="dropZones[zone].length > 0 || zone === 'Ready'"
+        class="rounded-2xl p-3 border-2 border-dashed transition-all"
+        :style="{
+          borderColor: dropZoneActive === zone ? '#67e8f9' : zoneConfig[zone].borderColor,
+          backgroundColor: dropZoneActive === zone ? '#cffafe' : zoneConfig[zone].bgColor,
+        }"
+        :data-zone="zone"
+      >
+        <div class="flex items-center gap-2 mb-2">
+          <span class="badge badge-sm font-bold" :class="zoneBadgeClass(zone)">{{ zoneConfig[zone].label }}</span>
+          <span class="text-xs text-base-content/50">{{ dropZones[zone].length }}</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div
+            v-for="item in dropZones[zone]"
+            :key="item.id"
+            class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
+            :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+            :data-id="item.id"
+            @mousedown.prevent="handleDragStart($event, item, zone)"
+            @touchstart.prevent="handleDragStart($event, item, zone)"
+          >
+            <button
+              class="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary text-primary-content text-[10px] flex items-center justify-center cursor-pointer hover:bg-primary/80 z-10"
+              @mousedown.stop @mouseup.stop="handleMouseUp" @touchstart.stop="handleTouchStart"
+              @click.stop="handleClick(item, zone)" @touchend.stop="handleTouchEnd(item, zone)"
+              @dblclick.stop="handleDoubleClick(item, zone)"
+            >+</button>
+            <div class="flex items-center gap-2 p-2.5">
+              <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-base-200 shrink-0" />
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-medium">L{{ item.rank_level }}</span>
+                  <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-medium">{{ item.played }}G</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
+              :class="item.current_game
+                ? 'bg-accent/10 text-accent'
+                : (zone === 'Playing' ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning')"
+            >{{ item.current_game ? `เกม ${item.played}` : (zone === 'Playing' ? 'กำลังเล่น' : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}m`) }}</div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ===== DRAGGING FEEDBACK ===== -->
     <div
       v-if="isDragging"
-      class="drag-feedback"
+      class="fixed pointer-events-none z-[1000] flex flex-col items-center gap-1 bg-base-100 p-2 border-2 border-emerald-400 rounded-xl shadow-xl"
       :style="{
         left: `${dragPosition.x}px`,
         top: `${dragPosition.y}px`,
-        ...dragStyles,
+        transform: 'translate(-50%, -50%)',
         transition: returnToOriginal ? 'all 0.3s ease' : 'none',
       }"
     >
-      <img :src="draggedItem.avatar" alt="Dragging Avatar" class="avatar drag-avatar" />
-      <span class="text-center font-medium" v-text="draggedItem.title"></span>
+      <UserAvatar :src="draggedItem.avatar" :name="draggedItem.display_name || draggedItem.name" size="md" rounded="full" class="border-2 border-primary" />
+      <span class="text-xs font-semibold text-base-content/80">{{ draggedItem.title }}</span>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Drop Zone Styles */
-.drop-zone-game {
-  border: 3px dashed var(--green-300);
-  background-color: var(--green-50);
-  padding: 20px;
-  border-radius: 10px;
-}
-
-.drop-zone-ready {
-  border: 3px dashed var(--blue-300);
-  background-color: var(--blue-50);
-  border-radius: 10px;
-}
-
-.drop-zone-playing {
-  border: 3px dashed var(--teal-300);
-  background-color: var(--teal-50);
-  border-radius: 10px;
-}
-
-.drop-zone-listing {
-  border: 3px dashed var(--pink-300);
-  background-color: var(--pink-50);
-  border-radius: 10px;
-}
-
-.drop-zone-break {
-  border: 3px dashed var(--yellow-300);
-  background-color: var(--yellow-50);
-  border-radius: 10px;
-}
-
-.drop-zone-finish {
-  border: 3px dashed var(--purple-300);
-  background-color: var(--purple-50);
-  border-radius: 10px;
-}
-
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 2px solid var(--surface-border);
-}
-
-.game-zone {
-  background-color: var(--surface-c); /* Different background for the game zone */
-}
-
-.game-items-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns */
-  grid-template-rows: repeat(2, 1fr); /* 2 rows */
-  gap: 16px; /* Adjust spacing between items */
-  padding: 8px; /* Padding inside the grid */
-  border: 2px dashed var(--surface-border);
-  border-radius: 8px;
-  min-height: 200px; /* Ensure minimum height */
-}
-
-.draggable-item {
-  position: relative;
-  background-color: var(--surface-a);
-  border: 1px solid var(--surface-border);
-  border-radius: 6px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.draggable-item:hover {
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.add-button {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: var(--blue-500);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.add-button:hover {
-  background-color: var(--blue-600);
-  transform: scale(1.1);
-}
-
-.subtract-button {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: var(--red-500); /* Red color for subtract */
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.subtract-button:hover {
-  background-color: var(--red-600); /* Darker red on hover */
-  transform: scale(1.1);
-}
-
-.drop-zone-active {
-  background-color: var(--cyan-100);
-  border: 3px dashed var(--cyan-300);
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-}
-
-.drag-feedback {
-  position: fixed;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px; /* Space between avatar and text */
-  background-color: var(--surface-a);
-  padding: 8px 12px;
-  border: 2px solid var(--surface-border);
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.drag-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid var(--blue-500);
-}
-
-.hovered-item {
-  background-color: var(--yellow-200) !important; /* Change to your desired hover color */
-  transition: background-color 0.2s ease; /* Smooth transition */
-}
-
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 input[type="number"] {
-  -moz-appearance: textfield; /* Hides spinner buttons in Firefox */
+  -moz-appearance: textfield;
 }
 </style>

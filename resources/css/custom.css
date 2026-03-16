@@ -23,7 +23,7 @@
 .animate-border:after,
 .animate-border:before {
     animation: clippath 3s linear infinite;
-    border: 2px solid var(--primary-color);
+    border: 2px solid #10b981;
     border-radius: 10px;
     bottom: -2px;
     content: "";

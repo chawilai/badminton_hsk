@@ -91,6 +91,7 @@ class PartyController extends Controller
         $party = Party::with([
             'members',
             'members.user',
+            'court',
         ])
             ->withCount('members')
             ->findOrFail($id);

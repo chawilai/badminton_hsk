@@ -1,52 +1,76 @@
 import { ref } from 'vue';
 
-const isDarkMode = ref(false);
-const currentTemplate = ref('badminton');
+const currentTheme = ref('badminton');
+
+const availableThemes = [
+    { name: 'badminton', label: '🏸 Badminton', dark: false },
+    { name: 'badminton-dark', label: '🏸 Badminton Dark', dark: true },
+    { name: 'light', label: '☀️ Light', dark: false },
+    { name: 'dark', label: '🌙 Dark', dark: true },
+    { name: 'cupcake', label: '🧁 Cupcake', dark: false },
+    { name: 'bumblebee', label: '🐝 Bumblebee', dark: false },
+    { name: 'emerald', label: '💎 Emerald', dark: false },
+    { name: 'corporate', label: '🏢 Corporate', dark: false },
+    { name: 'synthwave', label: '🌆 Synthwave', dark: true },
+    { name: 'retro', label: '📺 Retro', dark: false },
+    { name: 'cyberpunk', label: '🤖 Cyberpunk', dark: false },
+    { name: 'valentine', label: '💖 Valentine', dark: false },
+    { name: 'halloween', label: '🎃 Halloween', dark: true },
+    { name: 'garden', label: '🌿 Garden', dark: false },
+    { name: 'forest', label: '🌲 Forest', dark: true },
+    { name: 'aqua', label: '💧 Aqua', dark: false },
+    { name: 'lofi', label: '🎵 Lo-Fi', dark: false },
+    { name: 'pastel', label: '🎨 Pastel', dark: false },
+    { name: 'fantasy', label: '🧚 Fantasy', dark: false },
+    { name: 'wireframe', label: '📐 Wireframe', dark: false },
+    { name: 'black', label: '⬛ Black', dark: true },
+    { name: 'luxury', label: '👑 Luxury', dark: true },
+    { name: 'dracula', label: '🧛 Dracula', dark: true },
+    { name: 'cmyk', label: '🖨️ CMYK', dark: false },
+    { name: 'autumn', label: '🍂 Autumn', dark: false },
+    { name: 'business', label: '💼 Business', dark: true },
+    { name: 'acid', label: '🧪 Acid', dark: false },
+    { name: 'lemonade', label: '🍋 Lemonade', dark: false },
+    { name: 'night', label: '🌃 Night', dark: true },
+    { name: 'coffee', label: '☕ Coffee', dark: true },
+    { name: 'winter', label: '❄️ Winter', dark: false },
+    { name: 'dim', label: '🔅 Dim', dark: true },
+    { name: 'nord', label: '🧊 Nord', dark: false },
+    { name: 'sunset', label: '🌅 Sunset', dark: true },
+    { name: 'caramellatte', label: '🍮 Caramel Latte', dark: false },
+    { name: 'silk', label: '🧵 Silk', dark: false },
+    { name: 'abyss', label: '🌊 Abyss', dark: true },
+];
 
 export function useBadmintonLayout() {
     const initTheme = () => {
-        // Restore dark mode preference
-        const storedDark = localStorage.getItem('badminton-dark-mode');
-        if (storedDark !== null) {
-            isDarkMode.value = storedDark === 'true';
+        const storedTheme = localStorage.getItem('badminton-theme');
+        if (storedTheme) {
+            currentTheme.value = storedTheme;
+        }
+        applyTheme(currentTheme.value);
+    };
+
+    const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        const isDark = availableThemes.find(t => t.name === theme)?.dark ?? false;
+        if (isDark) {
+            document.documentElement.classList.add('dark');
         } else {
-            isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        applyDarkClass(isDarkMode.value);
-
-        // Restore template preference
-        const storedTemplate = localStorage.getItem('badminton-template');
-        if (storedTemplate) {
-            currentTemplate.value = storedTemplate;
+            document.documentElement.classList.remove('dark');
         }
     };
 
-    const applyDarkClass = (dark) => {
-        const html = document.documentElement;
-        if (dark) {
-            html.classList.add('dark', 'tw-dark');
-        } else {
-            html.classList.remove('dark', 'tw-dark');
-        }
-    };
-
-    const toggleDarkMode = () => {
-        isDarkMode.value = !isDarkMode.value;
-        localStorage.setItem('badminton-dark-mode', isDarkMode.value.toString());
-        applyDarkClass(isDarkMode.value);
-    };
-
-    const switchTemplate = (template) => {
-        currentTemplate.value = template;
-        localStorage.setItem('badminton-template', template);
-        window.location.reload();
+    const switchTheme = (theme) => {
+        currentTheme.value = theme;
+        localStorage.setItem('badminton-theme', theme);
+        applyTheme(theme);
     };
 
     return {
-        isDarkMode,
-        currentTemplate,
+        currentTheme,
+        availableThemes,
         initTheme,
-        toggleDarkMode,
-        switchTemplate,
+        switchTheme,
     };
 }

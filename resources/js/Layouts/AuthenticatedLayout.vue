@@ -13,21 +13,21 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="tw-min-h-screen tw-bg-gray-100 dark:tw-bg-gray-900">
+        <div class="min-h-screen bg-base-200">
             <nav
-                class="tw-bg-white dark:tw-bg-gray-800 tw-border-b tw-border-gray-100 dark:tw-border-gray-700"
+                class="bg-base-100 border-b border-base-200"
             >
                 <!-- Primary Navigation Menu -->
                 <div
-                    class="tw-max-w-7xl tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8"
+                    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
                 >
-                    <div class="tw-flex tw-justify-between tw-h-16">
-                        <div class="tw-flex">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
                             <!-- Logo -->
-                            <div class="tw-shrink-0 tw-flex tw-items-center">
+                            <div class="shrink-0 flex items-center">
                                 <Link :href="route('home')">
                                     <img
-                                        class="tw-w-14 tw-h-auto"
+                                        class="w-14 h-auto"
                                         :src="badminton_party"
                                         alt=""
                                     />
@@ -36,7 +36,7 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="tw-hidden tw-space-x-8 sm:-tw-my-px sm:tw-ms-10 sm:tw-flex"
+                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
                                     :href="route('home')"
@@ -48,23 +48,23 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div
-                            class="tw-hidden sm:tw-flex sm:tw-items-center sm:tw-ms-6"
+                            class="hidden sm:flex sm:items-center sm:ms-6"
                         >
                             <!-- Settings Dropdown -->
-                            <div class="tw-ms-3 tw-relative">
+                            <div class="ms-3 relative">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span
-                                            class="tw-inline-flex tw-rounded-md"
+                                            class="inline-flex rounded-md"
                                         >
                                             <button
                                                 type="button"
-                                                class="tw-inline-flex tw-items-center tw-px-3 tw-py-2 tw-border tw-border-transparent tw-text-sm tw-leading-4 tw-font-medium tw-rounded-md tw-text-gray-500 dark:tw-text-gray-400 tw-bg-white dark:tw-bg-gray-800 hover:tw-text-gray-700 dark:hover:tw-text-gray-300 focus:tw-outline-none tw-transition tw-ease-in-out tw-duration-150"
+                                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-base-content/60 bg-base-100 hover:text-base-content/80 focus:outline-hidden transition ease-in-out duration-150"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
                                                 <svg
-                                                    class="tw-ms-2 -tw-me-0.5 tw-h-4 tw-w-4"
+                                                    class="ms-2 -me-0.5 h-4 w-4"
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="0 0 20 20"
                                                     fill="currentColor"
@@ -99,25 +99,25 @@ const showingNavigationDropdown = ref(false);
 
                         <!-- Hamburger -->
                         <div
-                            class="-tw-me-2 tw-flex tw-items-center sm:tw-hidden"
+                            class="-me-2 flex items-center sm:hidden"
                         >
                             <button
                                 @click="
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
-                                class="tw-inline-flex tw-items-center tw-justify-center tw-p-2 tw-rounded-md tw-text-gray-400 dark:tw-text-gray-500 hover:tw-text-gray-500 dark:hover:tw-text-gray-400 hover:tw-bg-gray-100 dark:hover:tw-bg-gray-900 focus:tw-outline-none focus:tw-bg-gray-100 dark:focus:tw-bg-gray-900 focus:tw-text-gray-500 dark:focus:tw-text-gray-400 tw-transition tw-duration-150 tw-ease-in-out"
+                                class="inline-flex items-center justify-center p-2 rounded-md text-base-content/50 hover:text-base-content/60 hover:bg-base-200 focus:outline-hidden focus:bg-base-200 focus:text-base-content/60 transition duration-150 ease-in-out"
                             >
                                 <svg
-                                    class="tw-h-6 tw-w-6"
+                                    class="h-6 w-6"
                                     stroke="currentColor"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                 >
                                     <path
                                         :class="{
-                                            'tw-hidden': showingNavigationDropdown,
-                                            'tw-inline-flex':
+                                            'hidden': showingNavigationDropdown,
+                                            'inline-flex':
                                                 !showingNavigationDropdown,
                                         }"
                                         stroke-linecap="round"
@@ -127,8 +127,8 @@ const showingNavigationDropdown = ref(false);
                                     />
                                     <path
                                         :class="{
-                                            'tw-hidden': !showingNavigationDropdown,
-                                            'tw-inline-flex':
+                                            'hidden': !showingNavigationDropdown,
+                                            'inline-flex':
                                                 showingNavigationDropdown,
                                         }"
                                         stroke-linecap="round"
@@ -145,12 +145,12 @@ const showingNavigationDropdown = ref(false);
                 <!-- Responsive Navigation Menu -->
                 <div
                     :class="{
-                        'tw-block': showingNavigationDropdown,
-                        'tw-hidden': !showingNavigationDropdown,
+                        'block': showingNavigationDropdown,
+                        'hidden': !showingNavigationDropdown,
                     }"
-                    class="sm:tw-hidden"
+                    class="sm:hidden"
                 >
-                    <div class="tw-pt-2 tw-pb-3 tw-space-y-1">
+                    <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink
                             :href="route('home')"
                             :active="route().current('home')"
@@ -161,22 +161,22 @@ const showingNavigationDropdown = ref(false);
 
                     <!-- Responsive Settings Options -->
                     <div
-                        class="tw-pt-4 tw-pb-1 tw-border-t tw-border-gray-200 dark:tw-border-gray-600"
+                        class="pt-4 pb-1 border-t border-base-300"
                     >
-                        <div class="tw-px-4">
+                        <div class="px-4">
                             <div
-                                class="tw-font-medium tw-text-base tw-text-gray-800 dark:tw-text-gray-200"
+                                class="font-medium text-base text-base-content"
                             >
                                 {{ $page.props.auth.user.name }}
                             </div>
                             <div
-                                class="tw-font-medium tw-text-sm tw-text-gray-500"
+                                class="font-medium text-sm text-base-content/60"
                             >
                                 {{ $page.props.auth.user.email }}
                             </div>
                         </div>
 
-                        <div class="tw-mt-3 tw-space-y-1">
+                        <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.edit')">
                                 Profile
                             </ResponsiveNavLink>
@@ -194,11 +194,11 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Heading -->
             <header
-                class="tw-bg-white dark:tw-bg-gray-800 tw-shadow"
+                class="bg-base-100 shadow"
                 v-if="$slots.header"
             >
                 <div
-                    class="tw-max-w-7xl tw-mx-auto tw-py-6 tw-px-4 sm:tw-px-6 lg:tw-px-8"
+                    class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8"
                 >
                     <slot name="header" />
                 </div>

@@ -1,23 +1,156 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200&family=Source+Code+Pro:wght@800&display=swap");
-/* from oganic */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
-/* from oganic */
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ===== DaisyUI ===== */
+@plugin "daisyui" {
+  themes: all;
+}
 
+/* ===== Custom Badminton Theme ===== */
+@plugin "daisyui/theme" {
+  name: "badminton";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98.462% 0.0018 248.571);
+  --color-base-300: oklch(96.696% 0.0030 264.510);
+  --color-base-content: oklch(27.808% 0.0296 256.858);
+  --color-primary: oklch(69.586% 0.1491 162.505);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(59.596% 0.1274 163.251);
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(83.687% 0.1643 84.431);
+  --color-accent-content: oklch(0% 0 0);
+  --color-neutral: oklch(37.804% 0.0730 168.968);
+  --color-neutral-content: oklch(95.045% 0.0507 163.145);
+  --color-info: oklch(62.306% 0.1881 259.821);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(69.586% 0.1491 162.505);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(76.861% 0.1646 70.077);
+  --color-warning-content: oklch(0% 0 0);
+  --color-error: oklch(63.686% 0.2078 25.322);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ===== Custom Badminton Dark Theme ===== */
+@plugin "daisyui/theme" {
+  name: "badminton-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(37.804% 0.0730 168.968);
+  --color-base-200: oklch(32.844% 0.0621 170.009);
+  --color-base-300: oklch(27.333% 0.0501 171.264);
+  --color-base-content: oklch(95.045% 0.0507 163.145);
+  --color-primary: oklch(77.294% 0.1535 163.251);
+  --color-primary-content: oklch(26.210% 0.0487 172.582);
+  --color-secondary: oklch(69.586% 0.1491 162.505);
+  --color-secondary-content: oklch(26.210% 0.0487 172.582);
+  --color-accent: oklch(83.687% 0.1643 84.431);
+  --color-accent-content: oklch(26.210% 0.0487 172.582);
+  --color-neutral: oklch(26.210% 0.0487 172.582);
+  --color-neutral-content: oklch(90.494% 0.0895 164.202);
+  --color-info: oklch(75.350% 0.1391 232.679);
+  --color-info-content: oklch(26.210% 0.0487 172.582);
+  --color-success: oklch(80.034% 0.1820 151.734);
+  --color-success-content: oklch(26.210% 0.0487 172.582);
+  --color-warning: oklch(83.687% 0.1643 84.431);
+  --color-warning-content: oklch(26.210% 0.0487 172.582);
+  --color-error: oklch(71.920% 0.1690 13.412);
+  --color-error-content: oklch(26.210% 0.0487 172.582);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ===== Dark mode with class ===== */
+@custom-variant dark (&:is(.dark *));
+
+/* ===== Source paths ===== */
+@source "../js/**/*.vue";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+@source "../views/**/*.blade.php";
+
+/* ===== Custom Theme Extensions ===== */
+@theme {
+  --font-sans: "Prompt", "DM Sans", "Figtree", "Source Code Pro", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-green: #71B214;
+  --color-red: #B71F1F;
+  --color-gray-600: #606060;
+
+  --color-court-50: #ecfdf5;
+  --color-court-100: #d1fae5;
+  --color-court-200: #a7f3d0;
+  --color-court-300: #6ee7b7;
+  --color-court-400: #34d399;
+  --color-court-500: #10b981;
+  --color-court-600: #059669;
+  --color-court-700: #047857;
+  --color-court-800: #065f46;
+  --color-court-900: #064e3b;
+  --color-court-950: #022c22;
+
+  --color-shuttle: #fbbf24;
+  --color-shuttle-light: #fcd34d;
+
+  --spacing-13: 3.25rem;
+  --spacing-15: 3.75rem;
+  --spacing-26: 6.5rem;
+
+  --shadow-primary: 0px 9.9px 21.6px rgba(136, 202, 41, 0.41);
+  --shadow-hsk: 0px 10px 22px rgb(224, 65, 65, 0.4);
+
+  --animate-up-down: up-down 3s ease-in-out infinite;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-press: press 0.15s ease-in-out;
+}
+
+@keyframes up-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes press {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+}
+
+/* ===== Custom Styles ===== */
 .typewriter-cursor {
-  color: black; /* Change this to your desired cursor color */
+  color: black;
   animation: blink 1s step-end infinite;
 }
 
 @keyframes blink {
-  from,
-  to {
-    color: transparent;
-  }
-  50% {
-    color: black;
-  } /* Change this to match the cursor color */
+  from, to { color: transparent; }
+  50% { color: black; }
 }

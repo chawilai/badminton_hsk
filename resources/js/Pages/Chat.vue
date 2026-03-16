@@ -2,60 +2,60 @@
     <Head title="Chat" />
 
     <AppLayout>
-        <div class="tw-flex tw-flex-col tw-h-[calc(100vh-8rem)] lg:tw-h-[calc(100vh-5rem)] tw-bg-white dark:tw-bg-court-900/80 tw-rounded-2xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-shadow-sm tw-overflow-hidden tw--mx-1 sm:tw-mx-0">
+        <div class="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)] bg-base-100 rounded-2xl border border-base-300 shadow-xs overflow-hidden -mx-1 sm:mx-0">
             <!-- Chat Header -->
-            <div class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-border-b tw-border-gray-200 dark:tw-border-court-800 tw-shrink-0 tw-bg-gray-50/80 dark:tw-bg-court-950/50">
-                <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                    <i class="pi pi-comments tw-text-court-600 dark:tw-text-court-400"></i>
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-base-300 shrink-0 bg-base-200/80">
+                <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <i class="pi pi-comments text-primary"></i>
                 </div>
                 <div>
-                    <h1 class="tw-text-base tw-font-bold tw-text-gray-900 dark:tw-text-gray-100 tw-m-0">Chat Room</h1>
-                    <p class="tw-text-xs tw-text-gray-400 tw-m-0">{{ messages.length }} messages</p>
+                    <h1 class="text-base font-bold text-base-content m-0">Chat Room</h1>
+                    <p class="text-xs text-base-content/50 m-0">{{ messages.length }} messages</p>
                 </div>
             </div>
 
             <!-- Messages Area -->
-            <div ref="messagesContainer" class="tw-flex-1 tw-overflow-y-auto tw-py-4 tw-px-4 tw-space-y-3 tw-min-h-0 tw-bg-gray-50/50 dark:tw-bg-court-950/30">
+            <div ref="messagesContainer" class="flex-1 overflow-y-auto py-4 px-4 space-y-3 min-h-0 bg-base-200/50">
                 <!-- Empty State -->
-                <div v-if="messages.length === 0" class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-h-full tw-text-center">
-                    <div class="tw-w-16 tw-h-16 tw-bg-court-100 dark:tw-bg-court-900 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-3">
-                        <span class="tw-text-3xl">💬</span>
+                <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-center">
+                    <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-3">
+                        <span class="text-3xl">💬</span>
                     </div>
-                    <p class="tw-text-sm tw-text-gray-500 tw-m-0">No messages yet. Say hello!</p>
+                    <p class="text-sm text-base-content/60 m-0">No messages yet. Say hello!</p>
                 </div>
 
                 <!-- Message Bubbles -->
                 <div
                     v-for="(msg, index) in messages"
                     :key="index"
-                    class="tw-flex tw-gap-2"
-                    :class="isMyMessage(msg) ? 'tw-flex-row-reverse' : 'tw-flex-row'"
+                    class="flex gap-2"
+                    :class="isMyMessage(msg) ? 'flex-row-reverse' : 'flex-row'"
                 >
                     <!-- Avatar (other person only) -->
-                    <div v-if="!isMyMessage(msg)" class="tw-shrink-0">
+                    <div v-if="!isMyMessage(msg)" class="shrink-0">
                         <UserAvatar :src="msg.sender?.avatar" :name="msg.sender?.name" size="sm" rounded="full" />
                     </div>
 
                     <!-- Bubble -->
-                    <div class="tw-max-w-[75%]">
+                    <div class="max-w-[75%]">
                         <!-- Sender name (other person, show if different from prev) -->
                         <p
                             v-if="!isMyMessage(msg) && showSenderName(index)"
-                            class="tw-text-[10px] tw-text-gray-400 tw-m-0 tw-mb-0.5 tw-ml-1"
+                            class="text-[10px] text-base-content/50 m-0 mb-0.5 ml-1"
                         >
                             {{ msg.sender?.name || 'Unknown' }}
                         </p>
                         <div
-                            class="tw-px-3 tw-py-2 tw-text-sm tw-leading-relaxed"
+                            class="px-3 py-2 text-sm leading-relaxed"
                             :class="isMyMessage(msg)
-                                ? 'tw-bg-court-600 tw-text-white tw-rounded-2xl tw-rounded-br-md'
-                                : 'tw-bg-white dark:tw-bg-court-900 tw-text-gray-900 dark:tw-text-gray-100 tw-border tw-border-gray-200 dark:tw-border-court-800 tw-rounded-2xl tw-rounded-bl-md'"
+                                ? 'bg-primary text-white rounded-2xl rounded-br-md'
+                                : 'bg-base-100 text-base-content border border-base-300 rounded-2xl rounded-bl-md'"
                         >
                             {{ msg.content }}
                         </div>
                         <p
-                            class="tw-text-[10px] tw-text-gray-400 tw-m-0 tw-mt-0.5"
-                            :class="isMyMessage(msg) ? 'tw-text-right tw-mr-1' : 'tw-ml-1'"
+                            class="text-[10px] text-base-content/50 m-0 mt-0.5"
+                            :class="isMyMessage(msg) ? 'text-right mr-1' : 'ml-1'"
                         >
                             {{ formatTime(msg.created_at) }}
                         </p>
@@ -64,21 +64,21 @@
             </div>
 
             <!-- Input Area -->
-            <div class="tw-shrink-0 tw-px-4 tw-py-3 tw-border-t tw-border-gray-200 dark:tw-border-court-800 tw-bg-white dark:tw-bg-court-900/80">
-                <div class="tw-flex tw-items-center tw-gap-2">
+            <div class="shrink-0 px-4 py-3 border-t border-base-300 bg-base-100">
+                <div class="flex items-center gap-2">
                     <input
                         v-model="newMessage"
                         @keyup.enter="sendMessage"
                         type="text"
                         placeholder="พิมพ์ข้อความ..."
-                        class="tw-flex-1 tw-px-4 tw-py-2.5 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-700 tw-bg-white dark:tw-bg-court-900 tw-text-gray-900 dark:tw-text-gray-100 tw-text-sm focus:tw-border-court-500 focus:tw-ring-2 focus:tw-ring-court-500/20 tw-outline-none tw-transition-all"
+                        class="flex-1 px-4 py-2.5 rounded-xl border border-base-300 bg-base-100 text-base-content text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-hidden transition-all"
                     />
                     <button
                         @click="sendMessage"
                         :disabled="!newMessage.trim()"
-                        class="tw-w-10 tw-h-10 tw-flex tw-items-center tw-justify-center tw-rounded-xl tw-bg-court-600 hover:tw-bg-court-700 tw-text-white tw-border-0 tw-cursor-pointer tw-transition-colors tw-shrink-0 active:tw-scale-[0.95] disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/80 text-white border-0 cursor-pointer transition-colors shrink-0 active:scale-[0.95] disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        <i class="pi pi-send tw-text-sm"></i>
+                        <i class="pi pi-send text-sm"></i>
                     </button>
                 </div>
             </div>

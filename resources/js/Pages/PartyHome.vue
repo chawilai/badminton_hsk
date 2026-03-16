@@ -62,58 +62,58 @@ onMounted(() => {
     <Head title="Home" />
 
     <AppLayout>
-        <div class="tw-space-y-4">
+        <div class="space-y-4">
             <!-- Profile Card -->
-            <div class="tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-overflow-hidden">
-                <div class="tw-h-20 tw-bg-gradient-to-r tw-from-court-500 tw-to-court-400"></div>
-                <div class="tw-px-4 tw-pb-4 tw--mt-10">
-                    <div class="tw-flex tw-items-end tw-gap-3 tw-mb-3">
-                        <UserAvatar :src="user?.avatar" :name="user?.name" size="xl" rounded="2xl" class="tw-border-4 tw-border-white dark:tw-border-court-900" />
-                        <div class="tw-pb-1">
-                            <h2 class="tw-text-lg tw-font-bold tw-text-gray-900 dark:tw-text-gray-100 tw-m-0">{{ user?.name }}</h2>
-                            <p class="tw-text-sm tw-text-gray-500 tw-m-0">{{ user?.email }}</p>
+            <div class="bg-base-100 rounded-xl border border-base-300 overflow-hidden">
+                <div class="h-20 bg-gradient-to-r from-primary to-primary/80"></div>
+                <div class="px-4 pb-4 -mt-10">
+                    <div class="flex items-end gap-3 mb-3">
+                        <UserAvatar :src="user?.avatar" :name="user?.name" size="xl" rounded="2xl" class="border-4 border-base-100" />
+                        <div class="pb-1">
+                            <h2 class="text-lg font-bold text-base-content m-0">{{ user?.name }}</h2>
+                            <p class="text-sm text-base-content/60 m-0">{{ user?.email }}</p>
                         </div>
                     </div>
-                    <p v-if="user?.player_motto" class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-400 tw-m-0 tw-italic">"{{ user.player_motto }}"</p>
+                    <p v-if="user?.player_motto" class="text-sm text-base-content/70 m-0 italic">"{{ user.player_motto }}"</p>
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div class="tw-grid tw-grid-cols-2 tw-gap-3">
+            <div class="grid grid-cols-2 gap-3">
                 <button @click="router.get('/party-lists')"
-                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
-                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                        <i class="pi pi-list tw-text-court-600 dark:tw-text-court-400"></i>
+                    class="badminton-card flex flex-col items-center gap-2 p-4 bg-base-100 rounded-xl border border-base-300 cursor-pointer transition-all hover:border-primary/30">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <i class="pi pi-list text-primary"></i>
                     </div>
-                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Party Lists</span>
+                    <span class="text-sm font-medium text-base-content/80">Party Lists</span>
                 </button>
                 <button @click="router.get('/my-parties')"
-                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
-                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                        <i class="pi pi-play tw-text-court-600 dark:tw-text-court-400"></i>
+                    class="badminton-card flex flex-col items-center gap-2 p-4 bg-base-100 rounded-xl border border-base-300 cursor-pointer transition-all hover:border-primary/30">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <i class="pi pi-play text-primary"></i>
                     </div>
-                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">My Parties</span>
+                    <span class="text-sm font-medium text-base-content/80">My Parties</span>
                 </button>
                 <button @click="router.get('/chat')"
-                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
-                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                        <i class="pi pi-comments tw-text-court-600 dark:tw-text-court-400"></i>
+                    class="badminton-card flex flex-col items-center gap-2 p-4 bg-base-100 rounded-xl border border-base-300 cursor-pointer transition-all hover:border-primary/30">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <i class="pi pi-comments text-primary"></i>
                     </div>
-                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Chat</span>
+                    <span class="text-sm font-medium text-base-content/80">Chat</span>
                 </button>
                 <button @click="router.get('/profile')"
-                    class="badminton-card tw-flex tw-flex-col tw-items-center tw-gap-2 tw-p-4 tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-cursor-pointer tw-transition-all hover:tw-border-court-300">
-                    <div class="tw-w-10 tw-h-10 tw-bg-court-100 dark:tw-bg-court-800 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                        <i class="pi pi-user tw-text-court-600 dark:tw-text-court-400"></i>
+                    class="badminton-card flex flex-col items-center gap-2 p-4 bg-base-100 rounded-xl border border-base-300 cursor-pointer transition-all hover:border-primary/30">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <i class="pi pi-user text-primary"></i>
                     </div>
-                    <span class="tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300">Profile</span>
+                    <span class="text-sm font-medium text-base-content/80">Profile</span>
                 </button>
             </div>
 
             <!-- Skill Radar Chart -->
-            <div class="tw-bg-white dark:tw-bg-court-900/80 tw-rounded-xl tw-border tw-border-gray-200 dark:tw-border-court-800 tw-p-4">
-                <h3 class="tw-text-base tw-font-bold tw-text-gray-900 dark:tw-text-gray-100 tw-m-0 tw-mb-3">กราฟคุณสมบัติ</h3>
-                <div class="tw-max-w-sm tw-mx-auto">
+            <div class="bg-base-100 rounded-xl border border-base-300 p-4">
+                <h3 class="text-base font-bold text-base-content m-0 mb-3">กราฟคุณสมบัติ</h3>
+                <div class="max-w-sm mx-auto">
                     <canvas id="skillRadarChart"></canvas>
                 </div>
             </div>

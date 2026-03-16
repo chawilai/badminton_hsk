@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Game;
+use App\Models\GameScore;
 use App\Models\GameSet;
 use App\Models\GamePlayer;
 use App\Models\Party;
@@ -773,6 +774,12 @@ class GameController extends Controller
         if (!in_array($game->status, ['setting', 'listing'])) {
             return back()->with('error', ['onlyOnSettingOrListing' => 'The game can only be deleted when its status is "setting" or "listing".']);
         }
+
+        // Delete related records first to avoid foreign key constraint violations
+        $game->gamePlayers()->delete();
+        $game->gameSets()->delete();
+        $game->shuttlecocks()->delete();
+        GameScore::where('game_id', $game->id)->delete();
 
         // Delete the game
         $game->delete();

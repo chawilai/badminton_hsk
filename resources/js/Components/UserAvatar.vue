@@ -15,23 +15,22 @@ const onError = () => { failed.value = true; };
 const initials = () => {
     const n = (props.name || '?').trim();
     if (!n) return '?';
-    // Handle emoji-heavy names — take first non-emoji char
     const clean = n.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]|[\u{1F900}-\u{1F9FF}]|[\u200B-\u200D\uFEFF\u2800]/gu, '').trim();
     if (clean.length === 0) return n[0] || '?';
     return clean[0].toUpperCase();
 };
 
 const bgColor = () => {
-    // Deterministic color from name
+    // DaisyUI theme-aware colors for avatar backgrounds
     const colors = [
-        'tw-bg-court-200 tw-text-court-700',
-        'tw-bg-blue-200 tw-text-blue-700',
-        'tw-bg-amber-200 tw-text-amber-700',
-        'tw-bg-pink-200 tw-text-pink-700',
-        'tw-bg-purple-200 tw-text-purple-700',
-        'tw-bg-teal-200 tw-text-teal-700',
-        'tw-bg-orange-200 tw-text-orange-700',
-        'tw-bg-indigo-200 tw-text-indigo-700',
+        'bg-primary/20 text-primary',
+        'bg-secondary/20 text-secondary',
+        'bg-accent/20 text-accent-content',
+        'bg-info/20 text-info',
+        'bg-success/20 text-success',
+        'bg-warning/20 text-warning-content',
+        'bg-neutral/20 text-neutral-content',
+        'bg-error/20 text-error',
     ];
     let hash = 0;
     for (let i = 0; i < (props.name || '').length; i++) {
@@ -41,18 +40,18 @@ const bgColor = () => {
 };
 
 const sizeClasses = {
-    sm: 'tw-w-7 tw-h-7 tw-text-[9px]',
-    md: 'tw-w-9 tw-h-9 tw-text-xs',
-    lg: 'tw-w-10 tw-h-10 tw-text-sm',
-    xl: 'tw-w-16 tw-h-16 tw-text-xl',
-    '2xl': 'tw-w-20 tw-h-20 tw-text-2xl',
-    '3xl': 'tw-w-24 tw-h-24 tw-text-3xl',
+    sm: 'w-7 h-7 text-[9px]',
+    md: 'w-9 h-9 text-xs',
+    lg: 'w-10 h-10 text-sm',
+    xl: 'w-16 h-16 text-xl',
+    '2xl': 'w-20 h-20 text-2xl',
+    '3xl': 'w-24 h-24 text-3xl',
 };
 
 const roundedClasses = {
-    full: 'tw-rounded-full',
-    xl: 'tw-rounded-xl',
-    '2xl': 'tw-rounded-2xl',
+    full: 'rounded-full',
+    xl: 'rounded-xl',
+    '2xl': 'rounded-2xl',
 };
 </script>
 
@@ -62,12 +61,12 @@ const roundedClasses = {
         :src="src"
         :alt="name"
         @error="onError"
-        class="tw-object-cover tw-bg-gray-100 dark:tw-bg-court-800"
+        class="object-cover bg-base-200"
         :class="[sizeClasses[size] || sizeClasses.md, roundedClasses[rounded] || roundedClasses.xl]"
     />
     <div
         v-else
-        class="tw-flex tw-items-center tw-justify-center tw-font-bold tw-shrink-0"
+        class="flex items-center justify-center font-bold shrink-0"
         :class="[sizeClasses[size] || sizeClasses.md, roundedClasses[rounded] || roundedClasses.xl, bgColor()]"
     >
         {{ initials() }}

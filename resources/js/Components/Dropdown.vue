@@ -12,23 +12,23 @@ const props = defineProps({
     },
     contentClasses: {
         type: String,
-        default: 'tw-py-1 tw-bg-white dark:tw-bg-gray-700',
+        default: 'py-1 bg-base-100',
     },
 });
 
 const widthClass = computed(() => {
     return {
-        48: 'tw-w-48',
+        48: 'w-48',
     }[props.width.toString()];
 });
 
 const alignmentClasses = computed(() => {
     if (props.align === 'left') {
-        return 'tw-ltr:tw-origin-top-left tw-rtl:tw-origin-top-right tw-start-0';
+        return 'ltr:origin-top-left rtl:origin-top-right start-0';
     } else if (props.align === 'right') {
-        return 'tw-ltr:tw-origin-top-right tw-rtl:tw-origin-top-left tw-end-0';
+        return 'ltr:origin-top-right rtl:origin-top-left end-0';
     } else {
-        return 'tw-origin-top';
+        return 'origin-top';
     }
 });
 
@@ -69,31 +69,31 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="tw-relative">
+    <div class="relative">
         <div @mouseenter="open = true">
             <slot name="trigger" />
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
-        <div v-show="open" class="tw-fixed tw-inset-0 tw-z-40" @click="open = false"></div>
+        <div v-show="open" class="fixed inset-0 z-40" @click="open = false"></div>
 
         <Transition
-            enter-active-class="tw-transition tw-ease-out tw-duration-200"
-            enter-from-class="tw-opacity-0 tw-scale-95"
-            enter-to-class="tw-opacity-100 tw-scale-100"
-            leave-active-class="tw-transition tw-ease-in tw-duration-75"
-            leave-from-class="tw-opacity-100 tw-scale-100"
-            leave-to-class="tw-opacity-0 tw-scale-95"
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition ease-in duration-75"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
         >
             <div
                 v-show="open"
                 ref="dropdownRef"
-                class="tw-absolute tw-z-50 tw-mt-2 tw-rounded-md tw-shadow-lg"
+                class="absolute z-50 mt-2 rounded-md shadow-lg"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none"
                 @click="open = false"
             >
-                <div class="tw-rounded-md tw-ring-1 tw-ring-black tw-ring-opacity-5" :class="contentClasses">
+                <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

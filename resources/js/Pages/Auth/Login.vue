@@ -88,52 +88,52 @@ onMounted(() => {
     <Head title="Log in" />
 
     <!-- Header -->
-    <div class="tw-text-center tw-mb-6">
-      <div class="tw-inline-flex tw-items-center tw-justify-center tw-w-14 tw-h-14 tw-bg-court-100 tw-rounded-2xl tw-mb-3">
-        <span class="tw-text-3xl">🏸</span>
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-court-100 rounded-2xl mb-3">
+        <span class="text-3xl">🏸</span>
       </div>
-      <h1 class="tw-text-2xl tw-font-bold tw-text-gray-900 tw-m-0">เข้าสู่ระบบ</h1>
-      <p class="tw-text-sm tw-text-gray-500 tw-mt-1 tw-m-0">Badminton Party</p>
+      <h1 class="text-2xl font-bold text-base-content m-0">เข้าสู่ระบบ</h1>
+      <p class="text-sm text-base-content/60 mt-1 m-0">Badminton Party</p>
     </div>
 
     <!-- Status message -->
-    <div v-if="status" class="tw-mb-4 tw-p-3 tw-rounded-xl tw-bg-court-50 tw-text-court-700 tw-text-sm tw-text-center">
+    <div v-if="status" class="mb-4 p-3 rounded-xl bg-court-50 text-court-700 text-sm text-center">
       {{ status }}
     </div>
 
     <!-- LINE Login Button (Primary) -->
     <a
       :href="lineLoginUrl"
-      class="tw-flex tw-items-center tw-justify-center tw-w-full tw-py-3 tw-px-4 tw-bg-[#06C755] hover:tw-bg-[#05b34c] tw-text-white tw-font-semibold tw-rounded-xl tw-no-underline tw-transition-all tw-duration-200 active:tw-scale-[0.98] tw-shadow-sm hover:tw-shadow-md tw-gap-3"
+      class="flex items-center justify-center w-full py-3 px-4 bg-[#06C755] hover:bg-[#05b34c] text-white font-semibold rounded-xl no-underline transition-all duration-200 active:scale-[0.98] shadow-xs hover:shadow-md gap-3"
     >
-      <svg class="tw-w-6 tw-h-6 tw-fill-current" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
         <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
       </svg>
       <span>เข้าสู่ระบบด้วย LINE</span>
     </a>
 
     <!-- Divider -->
-    <div class="tw-flex tw-items-center tw-gap-3 tw-my-5">
-      <div class="tw-flex-1 tw-h-px tw-bg-gray-200"></div>
-      <span class="tw-text-xs tw-text-gray-400 tw-uppercase tw-tracking-wider">หรือ</span>
-      <div class="tw-flex-1 tw-h-px tw-bg-gray-200"></div>
+    <div class="flex items-center gap-3 my-5">
+      <div class="flex-1 h-px bg-base-300"></div>
+      <span class="text-xs text-base-content/50 uppercase tracking-wider">หรือ</span>
+      <div class="flex-1 h-px bg-base-300"></div>
     </div>
 
     <!-- Email/Password toggle -->
     <button
       v-if="!showEmailForm"
       @click="showEmailForm = true"
-      class="tw-w-full tw-py-3 tw-px-4 tw-bg-gray-50 hover:tw-bg-gray-100 tw-text-gray-700 tw-font-medium tw-rounded-xl tw-border tw-border-gray-200 tw-transition-all tw-duration-200 tw-cursor-pointer tw-text-sm"
+      class="w-full py-3 px-4 bg-base-200 hover:bg-base-200 text-base-content/80 font-medium rounded-xl border border-base-300 transition-all duration-200 cursor-pointer text-sm"
     >
-      <i class="pi pi-envelope tw-mr-2 tw-text-xs"></i>
+      <i class="pi pi-envelope mr-2 text-xs"></i>
       เข้าสู่ระบบด้วย Email
     </button>
 
     <!-- Email/Password Form -->
     <transition name="page-fade">
-      <form v-if="showEmailForm" @submit.prevent="submit" class="tw-space-y-4">
+      <form v-if="showEmailForm" @submit.prevent="submit" class="space-y-4">
         <div>
-          <label for="email" class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">Email</label>
+          <label for="email" class="block text-sm font-medium text-base-content/80 mb-1">Email</label>
           <input
             id="email"
             type="email"
@@ -141,39 +141,39 @@ onMounted(() => {
             required
             autofocus
             autocomplete="username"
-            class="tw-w-full tw-px-4 tw-py-2.5 tw-rounded-xl tw-border tw-border-gray-300 tw-bg-white tw-text-gray-900 tw-text-sm focus:tw-border-court-500 focus:tw-ring-2 focus:tw-ring-court-500/20 tw-outline-none tw-transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-base-300 bg-base-100 text-base-content text-sm focus:border-court-500 focus:ring-2 focus:ring-court-500/20 outline-hidden transition-all"
             placeholder="your@email.com"
           />
-          <InputError class="tw-mt-1" :message="form.errors.email" />
+          <InputError class="mt-1" :message="form.errors.email" />
         </div>
 
         <div>
-          <label for="password" class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">Password</label>
+          <label for="password" class="block text-sm font-medium text-base-content/80 mb-1">Password</label>
           <input
             id="password"
             type="password"
             v-model="form.password"
             required
             autocomplete="current-password"
-            class="tw-w-full tw-px-4 tw-py-2.5 tw-rounded-xl tw-border tw-border-gray-300 tw-bg-white tw-text-gray-900 tw-text-sm focus:tw-border-court-500 focus:tw-ring-2 focus:tw-ring-court-500/20 tw-outline-none tw-transition-all"
+            class="w-full px-4 py-2.5 rounded-xl border border-base-300 bg-base-100 text-base-content text-sm focus:border-court-500 focus:ring-2 focus:ring-court-500/20 outline-hidden transition-all"
             placeholder="********"
           />
-          <InputError class="tw-mt-1" :message="form.errors.password" />
+          <InputError class="mt-1" :message="form.errors.password" />
         </div>
 
-        <div class="tw-flex tw-items-center tw-justify-between">
-          <label class="tw-flex tw-items-center tw-gap-2 tw-cursor-pointer">
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               v-model="form.remember"
-              class="tw-w-4 tw-h-4 tw-rounded tw-border-gray-300 tw-text-court-600 focus:tw-ring-court-500"
+              class="w-4 h-4 rounded border-base-300 text-court-600 focus:ring-court-500"
             />
-            <span class="tw-text-sm tw-text-gray-600">Remember me</span>
+            <span class="text-sm text-base-content/70">Remember me</span>
           </label>
           <Link
             v-if="canResetPassword"
             :href="route('password.request')"
-            class="tw-text-sm tw-text-court-600 hover:tw-text-court-700 tw-no-underline tw-transition-colors"
+            class="text-sm text-court-600 hover:text-court-700 no-underline transition-colors"
           >
             ลืม Password?
           </Link>
@@ -182,10 +182,10 @@ onMounted(() => {
         <button
           type="submit"
           :disabled="form.processing"
-          class="tw-w-full tw-py-2.5 tw-px-4 tw-bg-court-600 hover:tw-bg-court-700 tw-text-white tw-font-semibold tw-rounded-xl tw-border-0 tw-transition-all tw-duration-200 tw-cursor-pointer active:tw-scale-[0.98] tw-shadow-sm hover:tw-shadow-md disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-text-sm"
+          class="w-full py-2.5 px-4 bg-court-600 hover:bg-court-700 text-white font-semibold rounded-xl border-0 transition-all duration-200 cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
-          <span v-if="form.processing" class="tw-inline-flex tw-items-center tw-gap-2">
-            <i class="pi pi-spinner pi-spin tw-text-xs"></i> กำลังเข้าสู่ระบบ...
+          <span v-if="form.processing" class="inline-flex items-center gap-2">
+            <i class="pi pi-spinner pi-spin text-xs"></i> กำลังเข้าสู่ระบบ...
           </span>
           <span v-else>เข้าสู่ระบบ</span>
         </button>

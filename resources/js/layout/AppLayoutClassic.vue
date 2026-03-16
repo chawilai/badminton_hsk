@@ -4,10 +4,9 @@ import AppTopbar from './AppTopbar.vue';
 import AppConfig from './AppConfig.vue';
 import AppRightMenu from './AppRightMenu.vue';
 import AppBreadcrumb from './AppBreadcrumb.vue';
-import { usePrimeVue } from 'primevue/config';
 import { useLayout } from '@/layout/composables/layout';
+import DaisyToast from '@/Components/DaisyToast.vue';
 
-const $primevue = usePrimeVue();
 const { layoutConfig, layoutState, isSidebarActive } = useLayout();
 const outsideClickListener = ref(null);
 const topbarRef = ref(null);
@@ -44,7 +43,6 @@ const containerClass = computed(() => {
             'layout-static-inactive': layoutState.staticMenuDesktopInactive.value && layoutConfig.menuMode.value === 'static',
             'layout-overlay-active': layoutState.overlayMenuActive.value,
             'layout-mobile-active': layoutState.staticMenuMobileActive.value,
-            'p-ripple-disabled': $primevue.config.ripple === false,
             'layout-sidebar-active': layoutState.sidebarActive.value,
             'layout-sidebar-anchored': layoutState.anchored.value
         }
@@ -96,7 +94,7 @@ const isOutsideClicked = (event) => {
 
         <div class="layout-mask"></div>
     </div>
-    <Toast></Toast>
+    <DaisyToast />
 </template>
 
 <style lang="scss"></style>

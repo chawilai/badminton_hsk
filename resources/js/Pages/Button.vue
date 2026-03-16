@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
 import { ref } from "vue";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "@/composables/useToast";
 import { Head, Link, router } from "@inertiajs/vue3";
 
 const toast = useToast();
@@ -11,698 +11,146 @@ const visible = ref(false);
 const items = ref([
     {
         label: "Add",
-        icon: "pi pi-pencil",
         command: () => {
-            toast.add({
-                severity: "info",
-                summary: "Add",
-                detail: "Data Added",
-            });
+            toast.add({ severity: "info", summary: "Add", detail: "Data Added" });
         },
     },
     {
         label: "Update",
-        icon: "pi pi-refresh",
         command: () => {
-            toast.add({
-                severity: "success",
-                summary: "Update",
-                detail: "Data Updated",
-            });
+            toast.add({ severity: "success", summary: "Update", detail: "Data Updated" });
         },
     },
     {
         label: "Delete",
-        icon: "pi pi-trash",
         command: () => {
-            toast.add({
-                severity: "error",
-                summary: "Delete",
-                detail: "Data Deleted",
-            });
-        },
-    },
-    {
-        label: "Upload",
-        icon: "pi pi-upload",
-        command: () => {
-            router.visit("/fileupload");
-        },
-    },
-    {
-        label: "Vue Website",
-        icon: "pi pi-external-link",
-        command: () => {
-            window.location.href = "https://vuejs.org/";
+            toast.add({ severity: "error", summary: "Delete", detail: "Data Deleted" });
         },
     },
 ]);
 </script>
 
 <template>
-    <Head title="Welcome" />
+    <Head title="Buttons" />
 
     <AppLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Badminton Game Making
+                DaisyUI Button Showcase
             </h2>
         </template>
 
-        <div class="grid">
-            <div class="col-12">
-                <div class="card">
-                    <h5>Empty Page</h5>
-                    <p>
-                        Use this page to start from scratch and place your
-                        custom content.
-                    </p>
-
-                    <Button label="Primary" raised />
-                    <Button label="Secondary" severity="secondary" raised />
-                    <Button label="Success" severity="success" raised />
-                    <Button label="Info" severity="info" raised />
-                    <Button label="Warning" severity="warning" raised />
-                    <Button label="Help" severity="help" raised />
-                    <Button label="Danger" severity="danger" raised />
-                    <Button label="Contrast" severity="contrast" raised />
-
-                    <Button label="Primary" text raised />
-                    <Button
-                        label="Secondary"
-                        severity="secondary"
-                        text
-                        raised
-                    />
-                    <Button label="Success" severity="success" text raised />
-                    <Button label="Info" severity="info" text raised />
-                    <Button label="Warning" severity="warning" text raised />
-                    <Button label="Help" severity="help" text raised />
-                    <Button label="Danger" severity="danger" text raised />
-                    <Button label="Plain" plain text raised />
-
-                    <Button label="Primary" outlined />
-                    <Button label="Secondary" severity="secondary" outlined />
-                    <Button label="Success" severity="success" outlined />
-                    <Button label="Info" severity="info" outlined />
-                    <Button label="Warning" severity="warning" outlined />
-                    <Button label="Help" severity="help" outlined />
-                    <Button label="Danger" severity="danger" outlined />
-                    <Button label="Contrast" severity="contrast" outlined />
+        <div class="space-y-6">
+            <!-- Filled Buttons -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Filled Buttons</h5>
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                    <button class="btn btn-info">Info</button>
+                    <button class="btn btn-warning">Warning</button>
+                    <button class="btn btn-error">Danger</button>
+                    <button class="btn btn-neutral">Neutral</button>
+                    <button class="btn btn-accent">Accent</button>
                 </div>
             </div>
 
-            <div class="card">
-                <Button icon="pi pi-check" aria-label="Filter" />
-                <Button
-                    icon="pi pi-bookmark"
-                    severity="secondary"
-                    aria-label="Bookmark"
-                />
-                <Button
-                    icon="pi pi-search"
-                    severity="success"
-                    aria-label="Search"
-                />
-                <Button icon="pi pi-user" severity="info" aria-label="User" />
-                <Button
-                    icon="pi pi-bell"
-                    severity="warning"
-                    aria-label="Notification"
-                />
-                <Button
-                    icon="pi pi-heart"
-                    severity="help"
-                    aria-label="Favorite"
-                />
-                <Button
-                    icon="pi pi-times"
-                    severity="danger"
-                    aria-label="Cancel"
-                />
-
-                <Button icon="pi pi-check" rounded aria-label="Filter" />
-                <Button
-                    icon="pi pi-bookmark"
-                    severity="secondary"
-                    rounded
-                    aria-label="Bookmark"
-                />
-                <Button
-                    icon="pi pi-search"
-                    severity="success"
-                    rounded
-                    aria-label="Search"
-                />
-                <Button
-                    icon="pi pi-user"
-                    severity="info"
-                    rounded
-                    aria-label="User"
-                />
-                <Button
-                    icon="pi pi-bell"
-                    severity="warning"
-                    rounded
-                    aria-label="Notification"
-                />
-                <Button
-                    icon="pi pi-heart"
-                    severity="help"
-                    rounded
-                    aria-label="Favorite"
-                />
-                <Button
-                    icon="pi pi-times"
-                    severity="danger"
-                    rounded
-                    aria-label="Cancel"
-                />
-
-                <Button
-                    icon="pi pi-check"
-                    rounded
-                    outlined
-                    aria-label="Filter"
-                />
-                <Button
-                    icon="pi pi-bookmark"
-                    severity="secondary"
-                    rounded
-                    outlined
-                    aria-label="Bookmark"
-                />
-                <Button
-                    icon="pi pi-search"
-                    severity="success"
-                    rounded
-                    outlined
-                    aria-label="Search"
-                />
-                <Button
-                    icon="pi pi-user"
-                    severity="info"
-                    rounded
-                    outlined
-                    aria-label="User"
-                />
-                <Button
-                    icon="pi pi-bell"
-                    severity="warning"
-                    rounded
-                    outlined
-                    aria-label="Notification"
-                />
-                <Button
-                    icon="pi pi-heart"
-                    severity="help"
-                    rounded
-                    outlined
-                    aria-label="Favorite"
-                />
-                <Button
-                    icon="pi pi-times"
-                    severity="danger"
-                    rounded
-                    outlined
-                    aria-label="Cancel"
-                />
-
-                <Button
-                    icon="pi pi-check"
-                    text
-                    raised
-                    rounded
-                    aria-label="Filter"
-                />
-                <Button
-                    icon="pi pi-bookmark"
-                    severity="secondary"
-                    text
-                    raised
-                    rounded
-                    aria-label="Bookmark"
-                />
-                <Button
-                    icon="pi pi-search"
-                    severity="success"
-                    text
-                    raised
-                    rounded
-                    aria-label="Search"
-                />
-                <Button
-                    icon="pi pi-user"
-                    severity="info"
-                    text
-                    raised
-                    rounded
-                    aria-label="User"
-                />
-                <Button
-                    icon="pi pi-bell"
-                    severity="warning"
-                    text
-                    raised
-                    rounded
-                    aria-label="Notification"
-                />
-                <Button
-                    icon="pi pi-heart"
-                    severity="help"
-                    text
-                    raised
-                    rounded
-                    aria-label="Favorite"
-                />
-                <Button
-                    icon="pi pi-times"
-                    severity="danger"
-                    text
-                    raised
-                    rounded
-                    aria-label="Cancel"
-                />
-
-                <Button icon="pi pi-check" text rounded aria-label="Filter" />
-                <Button
-                    icon="pi pi-bookmark"
-                    severity="secondary"
-                    text
-                    rounded
-                    aria-label="Bookmark"
-                />
-                <Button
-                    icon="pi pi-search"
-                    severity="success"
-                    text
-                    rounded
-                    aria-label="Search"
-                />
-                <Button
-                    icon="pi pi-user"
-                    severity="info"
-                    text
-                    rounded
-                    aria-label="User"
-                />
-                <Button
-                    icon="pi pi-bell"
-                    severity="warning"
-                    text
-                    rounded
-                    aria-label="Notification"
-                />
-                <Button
-                    icon="pi pi-heart"
-                    severity="help"
-                    text
-                    rounded
-                    aria-label="Favorite"
-                />
-                <Button
-                    icon="pi pi-times"
-                    severity="danger"
-                    text
-                    rounded
-                    aria-label="Cancel"
-                />
-            </div>
-
-            <div class="card w-full">
-                <ButtonGroup>
-                    <Button label="เซฟ" icon="pi pi-check" />
-                    <Button label="ลบ" icon="pi pi-trash" />
-                    <Button label="ยกเลิก" icon="pi pi-times" />
-                </ButtonGroup>
-            </div>
-
-            <div class="card w-full">
-                <div :style="{ position: 'relative', height: '200px' }">
-                    <SpeedDial
-                        :model="items"
-                        direction="up"
-                        :style="{ left: 'calc(50% - 2rem)', bottom: 0 }"
-                    />
-                    <SpeedDial
-                        :model="items"
-                        direction="down"
-                        :style="{ left: 'calc(50% - 2rem)', top: 0 }"
-                    />
-                    <SpeedDial
-                        :model="items"
-                        direction="left"
-                        :style="{ top: 'calc(50% - 2rem)', right: 0 }"
-                    />
-                    <SpeedDial
-                        :model="items"
-                        direction="right"
-                        :style="{ top: 'calc(50% - 2rem)', left: 0 }"
-                    />
-                    <Toast />
+            <!-- Outline Buttons -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Outline Buttons</h5>
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-outline btn-primary">Primary</button>
+                    <button class="btn btn-outline btn-secondary">Secondary</button>
+                    <button class="btn btn-outline btn-success">Success</button>
+                    <button class="btn btn-outline btn-info">Info</button>
+                    <button class="btn btn-outline btn-warning">Warning</button>
+                    <button class="btn btn-outline btn-error">Danger</button>
                 </div>
             </div>
 
-            <div class="card w-full">
-                <Sidebar v-model:visible="visible">
-                    <template #container="{ closeCallback }">
-                        <div class="flex flex-column h-full">
-                            <div
-                                class="flex align-items-center justify-content-between px-4 pt-3 flex-shrink-0"
-                            >
-                                <span
-                                    class="inline-flex align-items-center gap-2"
-                                >
-                                    <svg
-                                        width="35"
-                                        height="40"
-                                        viewBox="0 0 35 40"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path
-                                            d="M25.87 18.05L23.16 17.45L25.27 20.46V29.78L32.49 23.76V13.53L29.18 14.73L25.87 18.04V18.05ZM25.27 35.49L29.18 31.58V27.67L25.27 30.98V35.49ZM20.16 17.14H20.03H20.17H20.16ZM30.1 5.19L34.89 4.81L33.08 12.33L24.1 15.67L30.08 5.2L30.1 5.19ZM5.72 14.74L2.41 13.54V23.77L9.63 29.79V20.47L11.74 17.46L9.03 18.06L5.72 14.75V14.74ZM9.63 30.98L5.72 27.67V31.58L9.63 35.49V30.98ZM4.8 5.2L10.78 15.67L1.81 12.33L0 4.81L4.79 5.19L4.8 5.2ZM24.37 21.05V34.59L22.56 37.29L20.46 39.4H14.44L12.34 37.29L10.53 34.59V21.05L12.42 18.23L17.45 26.8L22.48 18.23L24.37 21.05ZM22.85 0L22.57 0.69L17.45 13.08L12.33 0.69L12.05 0H22.85Z"
-                                            fill="var(--primary-color)"
-                                        />
-                                        <path
-                                            d="M30.69 4.21L24.37 4.81L22.57 0.69L22.86 0H26.48L30.69 4.21ZM23.75 5.67L22.66 3.08L18.05 14.24V17.14H19.7H20.03H20.16H20.2L24.1 15.7L30.11 5.19L23.75 5.67ZM4.21002 4.21L10.53 4.81L12.33 0.69L12.05 0H8.43002L4.22002 4.21H4.21002ZM21.9 17.4L20.6 18.2H14.3L13 17.4L12.4 18.2L12.42 18.23L17.45 26.8L22.48 18.23L22.5 18.2L21.9 17.4ZM4.79002 5.19L10.8 15.7L14.7 17.14H14.74H15.2H16.85V14.24L12.24 3.09L11.15 5.68L4.79002 5.2V5.19Z"
-                                            fill="var(--text-color)"
-                                        />
-                                    </svg>
-                                    <span
-                                        class="font-semibold text-2xl text-primary"
-                                        >Your Logo</span
-                                    >
-                                </span>
-                                <span>
-                                    <Button
-                                        type="button"
-                                        @click="closeCallback"
-                                        icon="pi pi-times"
-                                        rounded
-                                        outlined
-                                        class="h-2rem w-2rem"
-                                    ></Button>
-                                </span>
-                            </div>
-                            <div class="overflow-y-auto">
-                                <ul class="list-none p-3 m-0">
-                                    <li>
-                                        <div
-                                            v-ripple
-                                            v-styleclass="{
-                                                selector: '@next',
-                                                enterClass: 'hidden',
-                                                enterActiveClass: 'slidedown',
-                                                leaveToClass: 'hidden',
-                                                leaveActiveClass: 'slideup',
-                                            }"
-                                            class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple"
-                                        >
-                                            <span class="font-medium"
-                                                >FAVORITES</span
-                                            >
-                                            <i class="pi pi-chevron-down"></i>
-                                        </div>
-                                        <ul
-                                            class="list-none p-0 m-0 overflow-hidden"
-                                        >
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-home mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Dashboard</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-bookmark mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Bookmarks</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    v-styleclass="{
-                                                        selector: '@next',
-                                                        enterClass: 'hidden',
-                                                        enterActiveClass:
-                                                            'slidedown',
-                                                        leaveToClass: 'hidden',
-                                                        leaveActiveClass:
-                                                            'slideup',
-                                                    }"
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-chart-line mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Reports</span
-                                                    >
-                                                    <i
-                                                        class="pi pi-chevron-down ml-auto"
-                                                    ></i>
-                                                </a>
-                                                <ul
-                                                    class="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out"
-                                                >
-                                                    <li>
-                                                        <a
-                                                            v-ripple
-                                                            v-styleclass="{
-                                                                selector:
-                                                                    '@next',
-                                                                enterClass:
-                                                                    'hidden',
-                                                                enterActiveClass:
-                                                                    'slidedown',
-                                                                leaveToClass:
-                                                                    'hidden',
-                                                                leaveActiveClass:
-                                                                    'slideup',
-                                                            }"
-                                                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                        >
-                                                            <i
-                                                                class="pi pi-chart-line mr-2"
-                                                            ></i>
-                                                            <span
-                                                                class="font-medium"
-                                                                >Revenue</span
-                                                            >
-                                                            <i
-                                                                class="pi pi-chevron-down ml-auto"
-                                                            ></i>
-                                                        </a>
-                                                        <ul
-                                                            class="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out"
-                                                        >
-                                                            <li>
-                                                                <a
-                                                                    v-ripple
-                                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                                >
-                                                                    <i
-                                                                        class="pi pi-table mr-2"
-                                                                    ></i>
-                                                                    <span
-                                                                        class="font-medium"
-                                                                        >View</span
-                                                                    >
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a
-                                                                    v-ripple
-                                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                                >
-                                                                    <i
-                                                                        class="pi pi-search mr-2"
-                                                                    ></i>
-                                                                    <span
-                                                                        class="font-medium"
-                                                                        >Search</span
-                                                                    >
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </li>
-                                                    <li>
-                                                        <a
-                                                            v-ripple
-                                                            class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                        >
-                                                            <i
-                                                                class="pi pi-chart-line mr-2"
-                                                            ></i>
-                                                            <span
-                                                                class="font-medium"
-                                                                >Expenses</span
-                                                            >
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-users mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Team</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-comments mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Messages</span
-                                                    >
-                                                    <span
-                                                        class="inline-flex align-items-center justify-content-center ml-auto bg-primary border-circle"
-                                                        style="
-                                                            min-width: 1.5rem;
-                                                            height: 1.5rem;
-                                                        "
-                                                        >3</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-calendar mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Calendar</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-cog mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Settings</span
-                                                    >
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                                <ul class="list-none p-3 m-0">
-                                    <li>
-                                        <div
-                                            v-ripple
-                                            v-styleclass="{
-                                                selector: '@next',
-                                                enterClass: 'hidden',
-                                                enterActiveClass: 'slidedown',
-                                                leaveToClass: 'hidden',
-                                                leaveActiveClass: 'slideup',
-                                            }"
-                                            class="p-3 flex align-items-center justify-content-between text-600 cursor-pointer p-ripple"
-                                        >
-                                            <span class="font-medium"
-                                                >APPLICATION</span
-                                            >
-                                            <i class="pi pi-chevron-down"></i>
-                                        </div>
-                                        <ul
-                                            class="list-none p-0 m-0 overflow-hidden"
-                                        >
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-folder mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Projects</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-chart-bar mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Performance</span
-                                                    >
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a
-                                                    v-ripple
-                                                    class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                                >
-                                                    <i
-                                                        class="pi pi-cog mr-2"
-                                                    ></i>
-                                                    <span class="font-medium"
-                                                        >Settings</span
-                                                    >
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="mt-auto">
-                                <hr
-                                    class="mb-3 mx-3 border-top-1 border-none surface-border"
-                                />
-                                <a
-                                    v-ripple
-                                    class="m-3 flex align-items-center cursor-pointer p-3 gap-2 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple"
-                                >
-                                    <Avatar
-                                        image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png"
-                                        shape="circle"
-                                    />
-                                    <span class="font-bold">Amy Elsner</span>
-                                </a>
+            <!-- Ghost Buttons -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Ghost & Soft Buttons</h5>
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-ghost">Ghost</button>
+                    <button class="btn btn-link">Link</button>
+                    <button class="btn glass">Glass</button>
+                </div>
+            </div>
+
+            <!-- Sizes -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Button Sizes</h5>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <button class="btn btn-primary btn-lg">Large</button>
+                    <button class="btn btn-primary">Normal</button>
+                    <button class="btn btn-primary btn-sm">Small</button>
+                    <button class="btn btn-primary btn-xs">Tiny</button>
+                </div>
+            </div>
+
+            <!-- Button Group -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Button Group</h5>
+                <div class="join">
+                    <button class="btn btn-primary join-item">Save</button>
+                    <button class="btn btn-error join-item">Delete</button>
+                    <button class="btn join-item">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Action Buttons</h5>
+                <div class="flex flex-wrap gap-2">
+                    <button v-for="item in items" :key="item.label" class="btn btn-primary btn-sm" @click="item.command">
+                        {{ item.label }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Demo -->
+            <div class="card bg-base-100 shadow p-6">
+                <h5 class="text-lg font-bold mb-4">Drawer Demo</h5>
+                <button class="btn btn-primary" @click="visible = true">Open Drawer</button>
+
+                <div v-if="visible" class="fixed inset-0 z-50 flex" @click.self="visible = false">
+                    <div class="bg-black/50 absolute inset-0" @click="visible = false"></div>
+                    <div class="relative z-10 bg-base-100 w-80 h-full shadow-xl overflow-y-auto">
+                        <div class="flex items-center justify-between px-4 pt-4">
+                            <span class="font-semibold text-2xl text-emerald-600">Your Logo</span>
+                            <button class="btn btn-sm btn-circle btn-ghost" @click="visible = false">✕</button>
+                        </div>
+                        <ul class="menu p-4">
+                            <li><a>Dashboard</a></li>
+                            <li><a>Bookmarks</a></li>
+                            <li>
+                                <details>
+                                    <summary>Reports</summary>
+                                    <ul>
+                                        <li><a>Revenue</a></li>
+                                        <li><a>Expenses</a></li>
+                                    </ul>
+                                </details>
+                            </li>
+                            <li><a>Team</a></li>
+                            <li><a>Messages <span class="badge badge-primary badge-sm">3</span></a></li>
+                            <li><a>Calendar</a></li>
+                            <li><a>Settings</a></li>
+                        </ul>
+                        <div class="mt-auto border-t border-base-300 p-4">
+                            <div class="flex items-center gap-2">
+                                <div class="avatar placeholder">
+                                    <div class="bg-neutral text-neutral-content rounded-full w-10">
+                                        <span>AE</span>
+                                    </div>
+                                </div>
+                                <span class="font-bold">Amy Elsner</span>
                             </div>
                         </div>
-                    </template>
-                </Sidebar>
-                <Button icon="pi pi-bars" @click="visible = true" />
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>

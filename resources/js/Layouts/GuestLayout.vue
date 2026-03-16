@@ -4,23 +4,23 @@ import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
 </script>
 
 <template>
-    <div class="tw-min-h-screen tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-8 tw-bg-gradient-to-br tw-from-court-50 tw-via-white tw-to-court-100">
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-br from-court-50 via-white to-court-100">
         <!-- Background decoration -->
-        <div class="tw-fixed tw-inset-0 tw-overflow-hidden tw-pointer-events-none">
-            <div class="tw-absolute tw--top-40 tw--right-40 tw-w-80 tw-h-80 tw-bg-court-200/30 tw-rounded-full tw-blur-3xl"></div>
-            <div class="tw-absolute tw--bottom-40 tw--left-40 tw-w-80 tw-h-80 tw-bg-court-300/20 tw-rounded-full tw-blur-3xl"></div>
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-40 -right-40 w-80 h-80 bg-court-200/30 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-court-300/20 rounded-full blur-3xl"></div>
         </div>
 
         <!-- Logo -->
-        <div class="tw-relative tw-z-10 tw-mb-6 tw-animate-fade-in">
+        <div class="relative z-10 mb-6 animate-fade-in">
             <Link href="/">
-                <img class="tw-w-48 tw-h-auto tw-drop-shadow-lg" :src="badminton_party" alt="Badminton Party" />
+                <img class="w-48 h-auto drop-shadow-lg" :src="badminton_party" alt="Badminton Party" />
             </Link>
         </div>
 
         <!-- Card -->
-        <div class="tw-relative tw-z-10 tw-w-full tw-max-w-md tw-animate-slide-up">
-            <div class="tw-bg-white/70 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-lg tw-border tw-border-white/50 tw-p-8 tw-transition-shadow hover:tw-shadow-xl">
+        <div class="relative z-10 w-full max-w-md animate-slide-up">
+            <div class="bg-base-100/70 backdrop-blur-xl rounded-2xl shadow-lg border border-base-100/50 p-8 transition-shadow hover:shadow-xl">
                 <slot />
             </div>
         </div>

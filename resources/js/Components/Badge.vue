@@ -4,10 +4,10 @@
     <a
         href="#"
         target="_blank"
-        class="tw-fixed tw-flex tw-items-center tw-z-50 tw-bottom-0 tw-right-0 tw-px-2.5 tw-py-1.5 tw-mb-3 tw-mr-3 tw-bg-gradient-to-r tw-from-red-500 tw-to-gray-900 tw-rounded tw-text-[0.6rem] tw-text-white tw-font-medium"
+        class="fixed flex items-center z-50 bottom-0 right-0 px-2.5 py-1.5 mb-3 mr-3 bg-gradient-to-r from-red-500 to-neutral rounded text-[0.6rem] text-white font-medium"
     >
-        <span class="tw-flex tw-items-center tw-font-bold tw-text-white">
-            <!-- <span class="tw-pr-1.5 tw-rounded-full"></span> -->
+        <span class="flex items-center font-bold text-white">
+            <!-- <span class="pr-1.5 rounded-full"></span> -->
             <span>
                 <slot />
             </span>

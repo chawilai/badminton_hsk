@@ -1,829 +1,200 @@
 <script setup>
-import { FilterMatchMode } from "primevue/api";
-import { ref, onMounted, onBeforeMount } from "vue";
-import { ProductService } from "@/service/ProductService";
-import { useToast } from "primevue/usetoast";
+import { ref, computed } from "vue";
+import { useToast } from "@/composables/useToast";
 
 const toast = useToast();
 
 const products = ref([
-    {
-        name: "Product 1",
-        description: "Description for product 1",
-        inventoryStatus: "instock",
-        category: "Accessories",
-        price: 199,
-        quantity: 10,
-        id: "p1GTr",
-        code: "Xv1A3",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 2",
-        description: "Description for product 2",
-        inventoryStatus: "outofstock",
-        category: "Electronics",
-        price: 349,
-        quantity: 0,
-        id: "p2TYr",
-        code: "Nv2B5",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 3",
-        description: "Description for product 3",
-        inventoryStatus: "lowstock",
-        category: "Fashion",
-        price: 79,
-        quantity: 5,
-        id: "p3ZTq",
-        code: "Cv3C7",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 4",
-        description: "Description for product 4",
-        inventoryStatus: "instock",
-        category: "Accessories",
-        price: 129,
-        quantity: 15,
-        id: "p4WEy",
-        code: "Dv4D9",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 5",
-        description: "Description for product 5",
-        inventoryStatus: "instock",
-        category: "Books",
-        price: 25,
-        quantity: 50,
-        id: "p5RTx",
-        code: "Ev5F1",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 6",
-        description: "Description for product 6",
-        inventoryStatus: "instock",
-        category: "Home",
-        price: 350,
-        quantity: 8,
-        id: "p6BPr",
-        code: "Fv6G3",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 7",
-        description: "Description for product 7",
-        inventoryStatus: "lowstock",
-        category: "Toys",
-        price: 45,
-        quantity: 3,
-        id: "p7QWt",
-        code: "Gv7H5",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 8",
-        description: "Description for product 8",
-        inventoryStatus: "instock",
-        category: "Clothing",
-        price: 89,
-        quantity: 20,
-        id: "p8LTy",
-        code: "Hv8J7",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 9",
-        description: "Description for product 9",
-        inventoryStatus: "outofstock",
-        category: "Sports",
-        price: 200,
-        quantity: 0,
-        id: "p9KJz",
-        code: "Iv9K9",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 10",
-        description: "Description for product 10",
-        inventoryStatus: "instock",
-        category: "Tools",
-        price: 299,
-        quantity: 12,
-        id: "p10MTr",
-        code: "Jv10L1",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 11",
-        description: "Description for product 11",
-        inventoryStatus: "instock",
-        category: "Accessories",
-        price: 199,
-        quantity: 10,
-        id: "p11Grd",
-        code: "Lv11K5",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 12",
-        description: "Description for product 12",
-        inventoryStatus: "lowstock",
-        category: "Electronics",
-        price: 399,
-        quantity: 7,
-        id: "p12BGq",
-        code: "Mv12N3",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 13",
-        description: "Description for product 13",
-        inventoryStatus: "instock",
-        category: "Fashion",
-        price: 59,
-        quantity: 20,
-        id: "p13ZKy",
-        code: "Nv13P5",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 14",
-        description: "Description for product 14",
-        inventoryStatus: "outofstock",
-        category: "Books",
-        price: 15,
-        quantity: 0,
-        id: "p14LTz",
-        code: "Ov14Q7",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 15",
-        description: "Description for product 15",
-        inventoryStatus: "instock",
-        category: "Home",
-        price: 450,
-        quantity: 9,
-        id: "p15RTx",
-        code: "Pv15R1",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 16",
-        description: "Description for product 16",
-        inventoryStatus: "instock",
-        category: "Toys",
-        price: 60,
-        quantity: 10,
-        id: "p16KWr",
-        code: "Qv16S3",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 17",
-        description: "Description for product 17",
-        inventoryStatus: "lowstock",
-        category: "Clothing",
-        price: 99,
-        quantity: 6,
-        id: "p17MWt",
-        code: "Rv17T5",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 18",
-        description: "Description for product 18",
-        inventoryStatus: "instock",
-        category: "Sports",
-        price: 120,
-        quantity: 25,
-        id: "p18JZr",
-        code: "Sv18U7",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 19",
-        description: "Description for product 19",
-        inventoryStatus: "outofstock",
-        category: "Tools",
-        price: 499,
-        quantity: 0,
-        id: "p19KPr",
-        code: "Tv19V9",
-        image: "product-placeholder.svg",
-    },
-    {
-        name: "Product 20",
-        description: "Description for product 20",
-        inventoryStatus: "instock",
-        category: "Accessories",
-        price: 120,
-        quantity: 30,
-        id: "p20XGr",
-        code: "Uv20W1",
-        image: "product-placeholder.svg",
-    },
+    { name: "Product 1", description: "Description for product 1", inventoryStatus: "instock", category: "Accessories", price: 199, quantity: 10, id: "p1GTr", code: "Xv1A3" },
+    { name: "Product 2", description: "Description for product 2", inventoryStatus: "outofstock", category: "Electronics", price: 349, quantity: 0, id: "p2TYr", code: "Nv2B5" },
+    { name: "Product 3", description: "Description for product 3", inventoryStatus: "lowstock", category: "Fashion", price: 79, quantity: 5, id: "p3ZTq", code: "Cv3C7" },
+    { name: "Product 4", description: "Description for product 4", inventoryStatus: "instock", category: "Accessories", price: 129, quantity: 15, id: "p4WEy", code: "Dv4D9" },
 ]);
+
+const product = ref({});
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
-const deleteProductsDialog = ref(false);
-const product = ref({});
-const selectedProducts = ref(null);
-const dt = ref(null);
-const filters = ref({});
+const searchQuery = ref("");
 const submitted = ref(false);
-const statuses = ref([
-    { label: "INSTOCK", value: "instock" },
-    { label: "LOWSTOCK", value: "lowstock" },
-    { label: "OUTOFSTOCK", value: "outofstock" },
-]);
 
-const productService = new ProductService();
+const filteredProducts = computed(() => {
+    if (!searchQuery.value) return products.value;
+    const q = searchQuery.value.toLowerCase();
+    return products.value.filter(p =>
+        p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+    );
+});
 
-const getBadgeSeverity = (inventoryStatus) => {
-    switch (inventoryStatus.toLowerCase()) {
-        case "instock":
-            return "success";
-        case "lowstock":
-            return "warning";
-        case "outofstock":
-            return "danger";
-        default:
-            return "info";
+const statusClass = (status) => {
+    switch (status) {
+        case "instock": return "badge-success";
+        case "lowstock": return "badge-warning";
+        case "outofstock": return "badge-error";
+        default: return "badge-ghost";
     }
 };
 
-onBeforeMount(() => {
-    initFilters();
-});
-onMounted(() => {
-    productService.getProducts().then((data) => (products.value = data));
-});
-const formatCurrency = (value) => {
-    return value.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-    });
-};
-
 const openNew = () => {
-    product.value = {};
+    product.value = { inventoryStatus: "instock" };
     submitted.value = false;
     productDialog.value = true;
 };
 
-const hideDialog = () => {
-    productDialog.value = false;
-    submitted.value = false;
+const editProduct = (prod) => {
+    product.value = { ...prod };
+    productDialog.value = true;
+};
+
+const confirmDeleteProduct = (prod) => {
+    product.value = prod;
+    deleteProductDialog.value = true;
 };
 
 const saveProduct = () => {
     submitted.value = true;
-    console.log(product.value);
-    if (
-        product.value.name &&
-        product.value.name.trim() &&
-        product.value.price
-    ) {
-        if (product.value.id) {
-            product.value.inventoryStatus = product.value.inventoryStatus.value
-                ? product.value.inventoryStatus.value
-                : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
-            toast.add({
-                severity: "success",
-                summary: "Successful",
-                detail: "Product Updated",
-                life: 3000,
-            });
-        } else {
-            product.value.id = createId();
-            product.value.code = createId();
-            product.value.image = "product-placeholder.svg";
-            product.value.inventoryStatus = product.value.inventoryStatus
-                ? product.value.inventoryStatus.value
-                : "INSTOCK";
-            products.value.push(product.value);
-            toast.add({
-                severity: "success",
-                summary: "Successful",
-                detail: "Product Created",
-                life: 3000,
-            });
-        }
-        productDialog.value = false;
-        product.value = {};
+    if (!product.value.name?.trim()) return;
+
+    if (product.value.id) {
+        const index = products.value.findIndex(p => p.id === product.value.id);
+        if (index > -1) products.value[index] = { ...product.value };
+        toast.add({ severity: "success", summary: "Success", detail: "Product Updated", life: 3000 });
+    } else {
+        product.value.id = "p" + Math.random().toString(36).substr(2, 4);
+        product.value.code = Math.random().toString(36).substr(2, 5);
+        products.value.push({ ...product.value });
+        toast.add({ severity: "success", summary: "Success", detail: "Product Created", life: 3000 });
     }
-};
-
-const editProduct = (editProduct) => {
-    product.value = { ...editProduct };
-    productDialog.value = true;
-};
-
-const confirmDeleteProduct = (editProduct) => {
-    product.value = editProduct;
-    deleteProductDialog.value = true;
+    productDialog.value = false;
 };
 
 const deleteProduct = () => {
-    products.value = products.value.filter(
-        (val) => val.id !== product.value.id
-    );
+    products.value = products.value.filter(p => p.id !== product.value.id);
     deleteProductDialog.value = false;
-    product.value = {};
-    toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Product Deleted",
-        life: 3000,
-    });
+    toast.add({ severity: "success", summary: "Success", detail: "Product Deleted", life: 3000 });
 };
 
-const findIndexById = (id) => {
-    let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
-    return index;
-};
-
-const createId = () => {
-    let id = "";
-    const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 5; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
-};
-
-const exportCSV = () => {
-    dt.value.exportCSV();
-};
-
-const confirmDeleteSelected = () => {
-    deleteProductsDialog.value = true;
-};
-const deleteSelectedProducts = () => {
-    products.value = products.value.filter(
-        (val) => !selectedProducts.value.includes(val)
-    );
-    deleteProductsDialog.value = false;
-    selectedProducts.value = null;
-    toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Products Deleted",
-        life: 3000,
-    });
-};
-
-const getImagePath = (imageName) => {
-    return new URL(`/resources/assets/demo/images/product/${imageName}`, import.meta.url).href;
-};
-
-const initFilters = () => {
-    filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    };
+const formatCurrency = (value) => {
+    if (value == null) return "";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 };
 </script>
 
 <template>
-    <div class="grid">
-        <div class="col-12">
-            <div class="card">
-                <Toolbar class="mb-4">
-                    <template v-slot:start>
-                        <div class="my-2">
-                            <Button
-                                label="New"
-                                icon="pi pi-plus"
-                                class="mr-2"
-                                severity="success"
-                                @click="openNew"
-                            />
-                            <Button
-                                label="Delete"
-                                icon="pi pi-trash"
-                                severity="danger"
-                                @click="confirmDeleteSelected"
-                                :disabled="
-                                    !selectedProducts ||
-                                    !selectedProducts.length
-                                "
-                            />
-                        </div>
-                    </template>
-
-                    <template v-slot:end>
-                        <FileUpload
-                            mode="basic"
-                            accept="image/*"
-                            :maxFileSize="1000000"
-                            label="Import"
-                            chooseLabel="Import"
-                            class="mr-2 inline-block"
-                        />
-                        <Button
-                            label="Export"
-                            icon="pi pi-upload"
-                            severity="help"
-                            @click="exportCSV($event)"
-                        />
-                    </template>
-                </Toolbar>
-
-                <DataTable
-                    ref="dt"
-                    :value="products"
-                    v-model:selection="selectedProducts"
-                    dataKey="id"
-                    :paginator="true"
-                    :rows="10"
-                    :filters="filters"
-                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    :rowsPerPageOptions="[5, 10, 25]"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                >
-                    <template #header>
-                        <div
-                            class="flex flex-column md:flex-row md:justify-content-between md:align-items-center"
-                        >
-                            <h5 class="m-0">Manage Products</h5>
-                            <IconField
-                                iconPosition="left"
-                                class="block mt-2 md:mt-0"
-                            >
-                                <InputIcon class="pi pi-search" />
-                                <InputText
-                                    class="w-full sm:w-auto"
-                                    v-model="filters['global'].value"
-                                    placeholder="Search..."
-                                />
-                            </IconField>
-                        </div>
-                    </template>
-
-                    <Column
-                        selectionMode="multiple"
-                        headerStyle="width: 3rem"
-                    ></Column>
-                    <Column
-                        field="code"
-                        header="Code"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Code</span>
-                            {{ slotProps.data.code }}
-                        </template>
-                    </Column>
-                    <Column
-                        field="name"
-                        header="Name"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Name</span>
-                            {{ slotProps.data.name }}
-                        </template>
-                    </Column>
-                    <Column
-                        header="Image"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Image</span>
-                            <img
-                                :src="getImagePath(slotProps.data.image)"
-                                :alt="slotProps.data.image"
-                                class="shadow-2"
-                                width="100"
-                            />
-                        </template>
-                    </Column>
-                    <Column
-                        field="price"
-                        header="Price"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:8rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Price</span>
-                            {{ formatCurrency(slotProps.data.price) }}
-                        </template>
-                    </Column>
-                    <Column
-                        field="category"
-                        header="Category"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Category</span>
-                            {{ slotProps.data.category }}
-                        </template>
-                    </Column>
-                    <Column
-                        field="rating"
-                        header="Reviews"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Rating</span>
-                            <Rating
-                                :modelValue="slotProps.data.rating"
-                                :readonly="true"
-                                :cancel="false"
-                            />
-                        </template>
-                    </Column>
-                    <Column
-                        field="inventoryStatus"
-                        header="Status"
-                        :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;"
-                    >
-                        <template #body="slotProps">
-                            <span class="p-column-title">Status</span>
-                            <Tag
-                                :severity="
-                                    getBadgeSeverity(
-                                        slotProps.data.inventoryStatus
-                                    )
-                                "
-                                >{{ slotProps.data.inventoryStatus }}</Tag
-                            >
-                        </template>
-                    </Column>
-                    <Column headerStyle="min-width:10rem;">
-                        <template #body="slotProps">
-                            <Button
-                                icon="pi pi-pencil"
-                                class="mr-2"
-                                severity="success"
-                                rounded
-                                @click="editProduct(slotProps.data)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                class="mt-2"
-                                severity="warning"
-                                rounded
-                                @click="confirmDeleteProduct(slotProps.data)"
-                            />
-                        </template>
-                    </Column>
-                </DataTable>
-
-                <Dialog
-                    v-model:visible="productDialog"
-                    :style="{ width: '450px' }"
-                    header="Product Details"
-                    :modal="true"
-                    class="p-fluid"
-                >
-                    <img
-                        :src="getImagePath(product.image)"
-                        :alt="product.image"
-                        v-if="product.image"
-                        width="150"
-                        class="mt-0 mx-auto mb-5 block shadow-2"
-                    />
-                    <div class="field">
-                        <label for="name">Name</label>
-                        <InputText
-                            id="name"
-                            v-model.trim="product.name"
-                            required="true"
-                            autofocus
-                            :invalid="submitted && !product.name"
-                        />
-                        <small
-                            class="p-invalid"
-                            v-if="submitted && !product.name"
-                            >Name is required.</small
-                        >
-                    </div>
-                    <div class="field">
-                        <label for="description">Description</label>
-                        <Textarea
-                            id="description"
-                            v-model="product.description"
-                            required="true"
-                            rows="3"
-                            cols="20"
-                        />
-                    </div>
-
-                    <div class="field">
-                        <label for="inventoryStatus" class="mb-3"
-                            >Inventory Status</label
-                        >
-                        <Dropdown
-                            id="inventoryStatus"
-                            v-model="product.inventoryStatus"
-                            :options="statuses"
-                            optionLabel="label"
-                            placeholder="Select a Status"
-                        >
-                            <template #value="slotProps">
-                                <div
-                                    v-if="
-                                        slotProps.value && slotProps.value.value
-                                    "
-                                >
-                                    <span
-                                        :class="
-                                            'product-badge status-' +
-                                            slotProps.value.value
-                                        "
-                                        >{{ slotProps.value.label }}</span
-                                    >
-                                </div>
-                                <div
-                                    v-else-if="
-                                        slotProps.value &&
-                                        !slotProps.value.value
-                                    "
-                                >
-                                    <span
-                                        :class="
-                                            'product-badge status-' +
-                                            slotProps.value.toLowerCase()
-                                        "
-                                        >{{ slotProps.value }}</span
-                                    >
-                                </div>
-                                <span v-else>
-                                    {{ slotProps.placeholder }}
-                                </span>
-                            </template>
-                        </Dropdown>
-                    </div>
-
-                    <div class="field">
-                        <label class="mb-3">Category</label>
-                        <div class="formgrid grid">
-                            <div class="field-radiobutton col-6">
-                                <RadioButton
-                                    id="category1"
-                                    name="category"
-                                    value="Accessories"
-                                    v-model="product.category"
-                                />
-                                <label for="category1">Accessories</label>
-                            </div>
-                            <div class="field-radiobutton col-6">
-                                <RadioButton
-                                    id="category2"
-                                    name="category"
-                                    value="Clothing"
-                                    v-model="product.category"
-                                />
-                                <label for="category2">Clothing</label>
-                            </div>
-                            <div class="field-radiobutton col-6">
-                                <RadioButton
-                                    id="category3"
-                                    name="category"
-                                    value="Electronics"
-                                    v-model="product.category"
-                                />
-                                <label for="category3">Electronics</label>
-                            </div>
-                            <div class="field-radiobutton col-6">
-                                <RadioButton
-                                    id="category4"
-                                    name="category"
-                                    value="Fitness"
-                                    v-model="product.category"
-                                />
-                                <label for="category4">Fitness</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="formgrid grid">
-                        <div class="field col">
-                            <label for="price">Price</label>
-                            <InputNumber
-                                id="price"
-                                v-model="product.price"
-                                mode="currency"
-                                currency="USD"
-                                locale="en-US"
-                                :invalid="submitted && !product.price"
-                                :required="true"
-                            />
-                            <small
-                                class="p-invalid"
-                                v-if="submitted && !product.price"
-                                >Price is required.</small
-                            >
-                        </div>
-                        <div class="field col">
-                            <label for="quantity">Quantity</label>
-                            <InputNumber
-                                id="quantity"
-                                v-model="product.quantity"
-                                integeronly
-                            />
-                        </div>
-                    </div>
-                    <template #footer>
-                        <Button
-                            label="Cancel"
-                            icon="pi pi-times"
-                            text=""
-                            @click="hideDialog"
-                        />
-                        <Button
-                            label="Save"
-                            icon="pi pi-check"
-                            text=""
-                            @click="saveProduct"
-                        />
-                    </template>
-                </Dialog>
-
-                <Dialog
-                    v-model:visible="deleteProductDialog"
-                    :style="{ width: '450px' }"
-                    header="Confirm"
-                    :modal="true"
-                >
-                    <div class="flex align-items-center justify-content-center">
-                        <i
-                            class="pi pi-exclamation-triangle mr-3"
-                            style="font-size: 2rem"
-                        />
-                        <span v-if="product"
-                            >Are you sure you want to delete
-                            <b>{{ product.name }}</b
-                            >?</span
-                        >
-                    </div>
-                    <template #footer>
-                        <Button
-                            label="No"
-                            icon="pi pi-times"
-                            text
-                            @click="deleteProductDialog = false"
-                        />
-                        <Button
-                            label="Yes"
-                            icon="pi pi-check"
-                            text
-                            @click="deleteProduct"
-                        />
-                    </template>
-                </Dialog>
-
-                <Dialog
-                    v-model:visible="deleteProductsDialog"
-                    :style="{ width: '450px' }"
-                    header="Confirm"
-                    :modal="true"
-                >
-                    <div class="flex align-items-center justify-content-center">
-                        <i
-                            class="pi pi-exclamation-triangle mr-3"
-                            style="font-size: 2rem"
-                        />
-                        <span v-if="product"
-                            >Are you sure you want to delete the selected
-                            products?</span
-                        >
-                    </div>
-                    <template #footer>
-                        <Button
-                            label="No"
-                            icon="pi pi-times"
-                            text
-                            @click="deleteProductsDialog = false"
-                        />
-                        <Button
-                            label="Yes"
-                            icon="pi pi-check"
-                            text
-                            @click="deleteSelectedProducts"
-                        />
-                    </template>
-                </Dialog>
+    <div class="space-y-4">
+        <!-- Toolbar -->
+        <div class="flex items-center justify-between">
+            <div class="flex gap-2">
+                <button class="btn btn-primary btn-sm" @click="openNew">+ New</button>
+            </div>
+            <div>
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Search..."
+                    class="input input-bordered input-sm w-48"
+                />
             </div>
         </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in filteredProducts" :key="item.id">
+                        <td class="font-mono text-sm">{{ item.code }}</td>
+                        <td class="font-medium">{{ item.name }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ formatCurrency(item.price) }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>
+                            <span class="badge badge-sm" :class="statusClass(item.inventoryStatus)">
+                                {{ item.inventoryStatus }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex gap-1">
+                                <button class="btn btn-ghost btn-xs" @click="editProduct(item)">Edit</button>
+                                <button class="btn btn-ghost btn-xs text-error" @click="confirmDeleteProduct(item)">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Product Dialog -->
+        <dialog class="modal" :class="{ 'modal-open': productDialog }">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">{{ product.id ? 'Edit' : 'New' }} Product</h3>
+                <div class="py-4 space-y-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Name</span></label>
+                        <input v-model="product.name" type="text" class="input input-bordered" :class="{ 'input-error': submitted && !product.name }" />
+                        <label v-if="submitted && !product.name" class="label"><span class="label-text-alt text-error">Name is required.</span></label>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Description</span></label>
+                        <textarea v-model="product.description" class="textarea textarea-bordered" rows="3"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Category</span></label>
+                            <select v-model="product.category" class="select select-bordered">
+                                <option>Accessories</option>
+                                <option>Electronics</option>
+                                <option>Fashion</option>
+                            </select>
+                        </div>
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Price</span></label>
+                            <input v-model.number="product.price" type="number" class="input input-bordered" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Quantity</span></label>
+                            <input v-model.number="product.quantity" type="number" class="input input-bordered" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Status</span></label>
+                            <select v-model="product.inventoryStatus" class="select select-bordered">
+                                <option value="instock">In Stock</option>
+                                <option value="lowstock">Low Stock</option>
+                                <option value="outofstock">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-action">
+                    <button class="btn btn-ghost" @click="productDialog = false">Cancel</button>
+                    <button class="btn btn-primary" @click="saveProduct">Save</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button @click="productDialog = false">close</button></form>
+        </dialog>
+
+        <!-- Delete Confirmation -->
+        <dialog class="modal" :class="{ 'modal-open': deleteProductDialog }">
+            <div class="modal-box max-w-sm">
+                <h3 class="font-bold text-lg">Confirm</h3>
+                <p class="py-4">Are you sure you want to delete <b>{{ product.name }}</b>?</p>
+                <div class="modal-action">
+                    <button class="btn btn-ghost" @click="deleteProductDialog = false">Cancel</button>
+                    <button class="btn btn-error" @click="deleteProduct">Delete</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button @click="deleteProductDialog = false">close</button></form>
+        </dialog>
     </div>
 </template>

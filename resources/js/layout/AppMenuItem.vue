@@ -2,7 +2,6 @@
 import { ref, onBeforeMount, watch, nextTick } from "vue";
 // import { useRoute } from 'vue-router';
 import { useLayout } from "@/layout/composables/layout";
-import { DomHandler } from "primevue/utils";
 import { Link, usePage, router } from "@inertiajs/vue3";
 
 // const route = useRoute();
@@ -59,14 +58,6 @@ onBeforeMount(() => {
             : false;
     handleRouteChange(route.path);
 });
-
-// const handleRouteChange = (path) => {
-//     const activeItem = layoutState.activeMenuItem.value;
-//     isActiveMenu.value =
-//         activeItem === itemKey.value || activeItem
-//             ? activeItem.startsWith(itemKey.value + "-")
-//             : false;
-// };
 
 const handleRouteChange = (newPath) => {
     if (
@@ -134,29 +125,6 @@ watch(
         }
     }
 );
-// watch(
-//     () => route.path,
-//     (newPath) => {
-//         if (!(isSlim.value || isSlimPlus.value || isHorizontal.value) && props.item.to && props.item.to === newPath) {
-//             setActiveMenuItem(itemKey);
-//         } else if (isSlim.value || isSlimPlus.value || isHorizontal.value) {
-//             isActiveMenu.value = false;
-//         }
-//     }
-// );
-// watch(() => route.path, handleRouteChange);
-
-// function handleRouteChange(newPath) {
-//     if (
-//         !(isSlim.value || isSlimPlus.value || isHorizontal.value) &&
-//         props.item.to &&
-//         props.item.to === newPath
-//     ) {
-//         setActiveMenuItem(itemKey);
-//     } else if (isSlim.value || isSlimPlus.value || isHorizontal.value) {
-//         isActiveMenu.value = false;
-//     }
-// }
 
 const itemClick = async (event, item) => {
     if (item.disabled) {
@@ -241,7 +209,8 @@ const calculatePosition = (overlay, target) => {
         const { left, top } = target.getBoundingClientRect();
         const [vWidth, vHeight] = [window.innerWidth, window.innerHeight];
         const [oWidth, oHeight] = [overlay.offsetWidth, overlay.offsetHeight];
-        const scrollbarWidth = DomHandler.calculateScrollbarWidth();
+        // Native scrollbar width calculation replacing DomHandler.calculateScrollbarWidth()
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
         overlay.style.top = overlay.style.left = "";
 
@@ -286,9 +255,7 @@ const checkActiveRoute = (item) => {
             :target="item.target"
             tabindex="0"
             @mouseenter="onMouseEnter"
-            v-tooltip.hover="
-                isSlim && root && !isActiveMenu ? item.label : null
-            "
+            :title="isSlim && root && !isActiveMenu ? item.label : undefined"
         >
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
@@ -304,11 +271,7 @@ const checkActiveRoute = (item) => {
             tabindex="0"
             :href="item.to"
             @mouseenter="onMouseEnter"
-            v-tooltip.hover="
-                (isSlim || isSlimPlus) && root && !isActiveMenu
-                    ? item.label
-                    : null
-            "
+            :title="(isSlim || isSlimPlus) && root && !isActiveMenu ? item.label : undefined"
         >
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
