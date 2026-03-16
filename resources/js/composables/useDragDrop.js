@@ -6,7 +6,9 @@ export function useDragDrop() {
     const toast = useToast();
 
     const dropZones = reactive({
-        Game: [], // Start empty
+        Game: [], // Legacy — kept for compatibility
+        Team1: [],
+        Team2: [],
         Ready: [],
         Playing: [],
         Listing: [],
@@ -39,6 +41,8 @@ export function useDragDrop() {
     const originalZones = reactive({}); // Store original zones for items
 
     const MAX_PLAYING_ITEMS = 4;
+    const MAX_TEAM_ITEMS = 2;
+    const TEAM_ZONES = ['Team1', 'Team2'];
 
     const isActionProcessed = ref(false); // Flag to avoid duplicate actions
 
@@ -103,83 +107,67 @@ export function useDragDrop() {
         setTimeout(() => (isActionProcessed.value = false), 300);
     };
 
+    const isInTeam = (itemId) => {
+        return dropZones.Team1.some(p => p.id === itemId) || dropZones.Team2.some(p => p.id === itemId);
+    };
+
+    const totalTeamPlayers = () => dropZones.Team1.length + dropZones.Team2.length;
+
     const moveItem = (item, currentZone) => {
         const fromZone = dropZones[currentZone];
-        const playingZone = dropZones["Game"];
 
-        if (currentZone === "Game") {
-            // Return to original zone
+        if (TEAM_ZONES.includes(currentZone)) {
+            // Clicking ✕ on a team player → return to original zone
             const originalZone = originalZones[item.id];
             if (originalZone) {
-                // Check if the player is already in the Game zone
-                const isPlayerInOther = dropZones[originalZone].some(
-                    (player) => player.id === item.id
-                );
-                if (isPlayerInOther) {
-                    // toast.add({
-                    //     severity: "error",
-                    //     summary: "เพิ่มผู้เล่นล้มเหลว",
-                    //     detail: `${item.title} อยู่ใน ${originalZone} แล้ว`,
-                    //     life: 1500,
-                    // });
-
-                    return;
-                }
+                const isAlreadyThere = dropZones[originalZone].some(p => p.id === item.id);
+                if (isAlreadyThere) return;
 
                 fromZone.splice(fromZone.indexOf(item), 1);
                 dropZones[originalZone].push(item);
-                // console.log(`Moved item ${item.title} back to ${originalZone}`);
 
                 toast.add({
                     severity: "warn",
                     summary: "ลบผู้เล่น",
                     detail: `ลบ ${item.title} กลับไปยัง ${originalZone} แล้ว`,
-                    // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
                     life: 1500,
                 });
             }
+        } else if (currentZone === "Game") {
+            // Legacy Game zone — same as team removal
+            const originalZone = originalZones[item.id];
+            if (originalZone) {
+                fromZone.splice(fromZone.indexOf(item), 1);
+                dropZones[originalZone].push(item);
+            }
         } else {
-            // Check if the Game drop zone has reached its limit
-            if (playingZone.length >= MAX_PLAYING_ITEMS) {
+            // Clicking + on a non-team player → add to team with room (Team1 first, then Team2)
+            if (totalTeamPlayers() >= MAX_PLAYING_ITEMS) {
                 toast.add({
                     severity: "error",
                     summary: "เพิ่มผู้เล่นล้มเหลว",
                     detail: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
-                    // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
                     life: 1500,
                 });
-
                 return;
             }
 
-            // Check if the player is already in the Game zone
-            const isPlayerInGame = playingZone.some(
-                (player) => player.id === item.id
-            );
-            if (isPlayerInGame) {
-                // toast.add({
-                //     severity: "error",
-                //     summary: "เพิ่มผู้เล่นล้มเหลว",
-                //     detail: `${item.title} อยู่ใน Game แล้ว`,
-                //     life: 1500,
-                // });
+            if (isInTeam(item.id)) return;
 
-                return;
-            }
-
-            // Store the original zone if not already stored
+            // Store original zone
             if (!originalZones[item.id]) {
                 originalZones[item.id] = currentZone;
             }
 
+            // Pick the team with fewer players (prefer Team1 on tie)
+            const targetTeam = dropZones.Team1.length <= dropZones.Team2.length ? 'Team1' : 'Team2';
             fromZone.splice(fromZone.indexOf(item), 1);
-            playingZone.push(item);
+            dropZones[targetTeam].push(item);
 
             toast.add({
                 severity: "info",
                 summary: "เพิ่มผู้เล่น",
-                detail: `เพิ่ม ${item.title} เข้าตารางเกมแล้ว`,
-                // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
+                detail: `เพิ่ม ${item.title} เข้า ${targetTeam} แล้ว`,
                 life: 1500,
             });
         }
@@ -188,22 +176,30 @@ export function useDragDrop() {
     };
 
     const releaseAllItems = () => {
-        const playingZone = dropZones["Game"];
-        playingZone.forEach((item) => {
+        // Release from Team1 and Team2
+        for (const teamZone of TEAM_ZONES) {
+            dropZones[teamZone].forEach((item) => {
+                const originalZone = originalZones[item.id];
+                if (originalZone) {
+                    dropZones[originalZone].push(item);
+                }
+            });
+            dropZones[teamZone].splice(0, dropZones[teamZone].length);
+        }
+
+        // Also clear legacy Game zone
+        dropZones.Game.forEach((item) => {
             const originalZone = originalZones[item.id];
             if (originalZone) {
-                dropZones[originalZone].push(item); // Move the item back to its original zone
+                dropZones[originalZone].push(item);
             }
         });
-
-        // Clear the Game drop zone
-        playingZone.splice(0, playingZone.length);
+        dropZones.Game.splice(0, dropZones.Game.length);
 
         toast.add({
             severity: "contrast",
             summary: "ล้างตารางเกม",
             detail: `ลบผู้เล่นทั้งหมดออกจากตารางเกม แล้ว`,
-            // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
             life: 1500,
         });
     };
@@ -409,7 +405,23 @@ export function useDragDrop() {
                 } else {
                     // Move to the new zone if not hovered over an item
 
-                    // Capacity check for Game zone
+                    // Capacity check for Team zones (max 2 per team)
+                    if (
+                        TEAM_ZONES.includes(dropZoneActive.value) &&
+                        dropZones[dropZoneActive.value].length >= MAX_TEAM_ITEMS
+                    ) {
+                        toast.add({
+                            severity: "error",
+                            summary: "เพิ่มผู้เล่นล้มเหลว",
+                            detail: `${dropZoneActive.value} เต็มแล้ว (สูงสุด ${MAX_TEAM_ITEMS} คน)`,
+                            life: 1500,
+                        });
+
+                        resetDragState();
+                        return;
+                    }
+
+                    // Capacity check for legacy Game zone
                     if (
                         dropZoneActive.value === "Game" &&
                         dropZones["Game"].length >= MAX_PLAYING_ITEMS
@@ -418,12 +430,11 @@ export function useDragDrop() {
                             severity: "error",
                             summary: "เพิ่มผู้เล่นล้มเหลว",
                             detail: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
-                            // summary: "ผู้เล่นเต็ม ไม่สามารถเพิ่มได้อีก",
                             life: 1500,
                         });
 
                         resetDragState();
-                        return; // Prevent adding the item
+                        return;
                     }
 
                     // Playing Zone not for drag & drop

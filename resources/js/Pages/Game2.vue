@@ -99,16 +99,23 @@ const shortenTitle = (title, maxLength = 14) => {
   return title;
 };
 
-// Team split: first 2 = Team 1, next 2 = Team 2
-const team1Players = computed(() => dropZones.Game.slice(0, 2));
-const team2Players = computed(() => dropZones.Game.slice(2, 4));
-const team1Level = computed(() => team1Players.value.reduce((sum, p) => sum + (p.rank_level || 0), 0));
-const team2Level = computed(() => team2Players.value.reduce((sum, p) => sum + (p.rank_level || 0), 0));
+// Team zones from drag-drop
+const totalGamePlayers = computed(() => dropZones.Team1.length + dropZones.Team2.length);
+const team1Level = computed(() => dropZones.Team1.reduce((sum, p) => sum + (p.rank_level || 0), 0));
+const team2Level = computed(() => dropZones.Team2.reduce((sum, p) => sum + (p.rank_level || 0), 0));
 const levelDiff = computed(() => Math.abs(team1Level.value - team2Level.value));
 const isBalanced = computed(() => levelDiff.value <= 3);
 
+const allGamePlayers = () => [...dropZones.Team1, ...dropZones.Team2];
+
+const clearTeamZones = () => {
+  dropZones.Team1.splice(0, dropZones.Team1.length);
+  dropZones.Team2.splice(0, dropZones.Team2.length);
+};
+
 const startNewGame = () => {
-  const playerCount = dropZones.Game.length;
+  const players = allGamePlayers();
+  const playerCount = players.length;
   form.value.game_type =
     playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
 
@@ -122,20 +129,20 @@ const startNewGame = () => {
     return;
   }
 
-  form.value.players = (dropZones.Game ?? []).map((player) => player.id);
+  form.value.players = players.map((player) => player.id);
   form.value.process = "playing";
   router.post(`/games/create-game`, form.value, {
     preserveScroll: true,
     headers: { Accept: "application/json" },
     onSuccess: (res) => {
-      dropZones.Playing = [...dropZones.Playing, ...dropZones.Game];
-      dropZones.Game = [];
+      dropZones.Playing = [...dropZones.Playing, ...players];
+      clearTeamZones();
       form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
       emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
       toast.add({ severity: "success", summary: "Game Created", detail: "สร้างเกม และ เริ่มเกมเรียบร้อยแล้ว.", life: 3000 });
     },
     onError: (err) => {
-      dropZones.Game = [];
+      clearTeamZones();
       if (err.notMatchType) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "จำนวนผู้เล่นไม่ตรงกับรูปแบบของเกม", life: 3000 });
       if (err.existSettingGame) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีเกมที่กำลังตั้งค่าอยู่ก่อนแล้ว", life: 3000 });
       if (err.activePlayers) toast.add({ severity: "error", summary: "ล้มเหลว", detail: err.activePlayers });
@@ -144,7 +151,8 @@ const startNewGame = () => {
 };
 
 const listNewGame = () => {
-  const playerCount = dropZones.Game.length;
+  const players = allGamePlayers();
+  const playerCount = players.length;
   form.value.game_type =
     playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
 
@@ -153,14 +161,14 @@ const listNewGame = () => {
     return;
   }
 
-  form.value.players = (dropZones.Game ?? []).map((player) => player.id);
+  form.value.players = players.map((player) => player.id);
   form.value.process = "listing";
   router.post(`/games/create-game`, form.value, {
     preserveScroll: true,
     headers: { Accept: "application/json" },
     onSuccess: (res) => {
-      dropZones.Listing = [...dropZones.Listing, ...dropZones.Game];
-      dropZones.Game = [];
+      dropZones.Listing = [...dropZones.Listing, ...players];
+      clearTeamZones();
       form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
       emit("gameCreated", { action: "somethingHappened", timestamp: Date.now() });
       toast.add({ severity: "success", summary: "Game Created", detail: "สร้างเกมแล้ว และ ลีสลงรายการรอเริ่ม.", life: 3000 });
@@ -209,14 +217,16 @@ const zoneBadgeClass = (zone) => {
     <!-- ===== GAME ZONE (Top) ===== -->
     <div
       class="game-zone-card rounded-2xl p-4 border-2 border-dashed transition-all"
-      :style="{ borderColor: dropZoneActive === 'Game' ? '#67e8f9' : '#86efac', backgroundColor: dropZoneActive === 'Game' ? '#cffafe' : '#f0fdf4' }"
-      data-zone="Game"
+      :style="{
+        borderColor: (dropZoneActive === 'Team1' || dropZoneActive === 'Team2') ? '#67e8f9' : '#86efac',
+        backgroundColor: (dropZoneActive === 'Team1' || dropZoneActive === 'Team2') ? '#cffafe' : '#f0fdf4'
+      }"
     >
       <!-- Header -->
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <span class="badge badge-success badge-lg font-bold gap-1">🏸 Game</span>
-          <span class="text-xs text-base-content/50">{{ dropZones.Game.length }}/4</span>
+          <span class="text-xs text-base-content/50">{{ totalGamePlayers }}/4</span>
         </div>
         <div class="flex items-center gap-1.5">
           <!-- Shuttle select -->
@@ -242,7 +252,7 @@ const zoneBadgeClass = (zone) => {
       </div>
 
       <!-- Balance indicator -->
-      <div v-if="dropZones.Game.length >= 3" class="flex items-center justify-center gap-2 mb-2">
+      <div v-if="totalGamePlayers >= 3" class="flex items-center justify-center gap-2 mb-2">
         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
           :class="isBalanced ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'"
         >{{ isBalanced ? 'Balanced' : `Diff ${levelDiff}` }}</span>
@@ -251,25 +261,25 @@ const zoneBadgeClass = (zone) => {
       <!-- Team split layout -->
       <div class="flex items-stretch gap-2 min-h-[10rem]">
         <!-- Team 1 -->
-        <div class="flex-1 rounded-xl border-2 border-dashed border-accent/40 bg-accent/5 p-2.5 flex flex-col">
+        <div class="flex-1 rounded-xl border-2 border-dashed border-accent/40 bg-accent/5 p-2.5 flex flex-col" data-zone="Team1">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-bold text-accent uppercase tracking-wider">Team 1</span>
-            <span v-if="team1Players.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">Lv {{ team1Level }}</span>
+            <span v-if="dropZones.Team1.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">Lv {{ team1Level }}</span>
           </div>
           <div class="flex flex-col gap-2 flex-1">
-            <template v-for="item in team1Players" :key="item.id">
+            <template v-for="item in dropZones.Team1" :key="item.id">
               <div
                 class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
                 :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
                 :data-id="item.id"
-                @mousedown.prevent="handleDragStart($event, item, 'Game')"
-                @touchstart.prevent="handleDragStart($event, item, 'Game')"
+                @mousedown.prevent="handleDragStart($event, item, 'Team1')"
+                @touchstart.prevent="handleDragStart($event, item, 'Team1')"
               >
                 <button
                   class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-error-content text-[10px] flex items-center justify-center cursor-pointer hover:bg-error/80 z-10"
                   @mousedown.stop @mouseup.stop="handleMouseUp" @touchstart.stop="handleTouchStart"
-                  @click.stop="handleClick(item, 'Game')" @touchend.stop="handleTouchEnd(item, 'Game')"
-                  @dblclick.stop="handleDoubleClick(item, 'Game')"
+                  @click.stop="handleClick(item, 'Team1')" @touchend.stop="handleTouchEnd(item, 'Team1')"
+                  @dblclick.stop="handleDoubleClick(item, 'Team1')"
                 >✕</button>
                 <div class="flex items-center gap-2 p-2.5">
                   <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-accent/30 shrink-0" />
@@ -288,7 +298,7 @@ const zoneBadgeClass = (zone) => {
             </template>
             <!-- Empty slot(s) for Team 1 -->
             <div
-              v-for="n in Math.max(0, 2 - team1Players.length)"
+              v-for="n in Math.max(0, 2 - dropZones.Team1.length)"
               :key="'t1-empty-' + n"
               class="rounded-xl border-2 border-dashed border-accent/20 flex items-center justify-center min-h-[4.5rem] text-accent/20"
             >
@@ -303,25 +313,25 @@ const zoneBadgeClass = (zone) => {
         </div>
 
         <!-- Team 2 -->
-        <div class="flex-1 rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 p-2.5 flex flex-col">
+        <div class="flex-1 rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 p-2.5 flex flex-col" data-zone="Team2">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Team 2</span>
-            <span v-if="team2Players.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary/15 text-secondary">Lv {{ team2Level }}</span>
+            <span v-if="dropZones.Team2.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary/15 text-secondary">Lv {{ team2Level }}</span>
           </div>
           <div class="flex flex-col gap-2 flex-1">
-            <template v-for="item in team2Players" :key="item.id">
+            <template v-for="item in dropZones.Team2" :key="item.id">
               <div
                 class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
                 :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
                 :data-id="item.id"
-                @mousedown.prevent="handleDragStart($event, item, 'Game')"
-                @touchstart.prevent="handleDragStart($event, item, 'Game')"
+                @mousedown.prevent="handleDragStart($event, item, 'Team2')"
+                @touchstart.prevent="handleDragStart($event, item, 'Team2')"
               >
                 <button
                   class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-error-content text-[10px] flex items-center justify-center cursor-pointer hover:bg-error/80 z-10"
                   @mousedown.stop @mouseup.stop="handleMouseUp" @touchstart.stop="handleTouchStart"
-                  @click.stop="handleClick(item, 'Game')" @touchend.stop="handleTouchEnd(item, 'Game')"
-                  @dblclick.stop="handleDoubleClick(item, 'Game')"
+                  @click.stop="handleClick(item, 'Team2')" @touchend.stop="handleTouchEnd(item, 'Team2')"
+                  @dblclick.stop="handleDoubleClick(item, 'Team2')"
                 >✕</button>
                 <div class="flex items-center gap-2 p-2.5">
                   <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-secondary/30 shrink-0" />
@@ -340,7 +350,7 @@ const zoneBadgeClass = (zone) => {
             </template>
             <!-- Empty slot(s) for Team 2 -->
             <div
-              v-for="n in Math.max(0, 2 - team2Players.length)"
+              v-for="n in Math.max(0, 2 - dropZones.Team2.length)"
               :key="'t2-empty-' + n"
               class="rounded-xl border-2 border-dashed border-secondary/20 flex items-center justify-center min-h-[4.5rem] text-secondary/20"
             >
