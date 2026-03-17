@@ -2,8 +2,10 @@
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { usePage } from "@inertiajs/vue3";
 import { ref, computed } from "vue";
+import { useLocale } from "@/composables/useLocale";
 
 const page = usePage();
+const { t } = useLocale();
 
 const activeFilter = ref('all');
 
@@ -30,16 +32,15 @@ const isTeam1 = (team) => team === 'team1' || team === 1;
 const isTeam2 = (team) => team === 'team2' || team === 2;
 const isUnassigned = (team) => !team || team === 0 || team === '0';
 
-const gameStatus = (status) => {
-  if (status === "setting")
-    return `<span class='px-2 py-1 bg-warning text-warning-content rounded-md'>${status}</span>`;
-  if (status === "listing")
-    return `<span class='px-2 py-1 bg-orange-500 text-white rounded-md'>${status}</span>`;
-  if (status === "playing")
-    return `<span class='px-2 py-1 bg-success text-success-content rounded-md'>${status}</span>`;
-  if (status === "finished")
-    return `<span class='px-2 py-1 bg-info text-info-content rounded-md'>${status}</span>`;
+const statusStyles = {
+  setting: 'bg-warning text-warning-content',
+  listing: 'bg-orange-500 text-white',
+  playing: 'bg-success text-success-content',
+  finished: 'bg-info text-info-content',
 };
+
+const gameStatusLabel = (status) => t(`game.status.${status}`) || status;
+const gameStatusClass = (status) => statusStyles[status] || '';
 
 const shuttlecocksTotal = (game) => {
   return game.shuttlecocks.reduce((total, sc) => total + sc.quantity, 0);
@@ -116,19 +117,19 @@ const statusCounts = computed(() => {
   return counts;
 });
 
-const filters = [
-  { key: 'all', label: 'ทั้งหมด', idle: 'bg-base-200 text-base-content/70', active: 'bg-base-content text-base-100' },
-  { key: 'playing', label: 'กำลังเล่น', idle: 'bg-success/15 text-success', active: 'bg-success text-success-content' },
-  { key: 'listing', label: 'รอเล่น', idle: 'bg-orange-100 text-orange-600', active: 'bg-orange-500 text-white' },
-  { key: 'no_score', label: 'รอลงผล', idle: 'bg-warning/15 text-warning', active: 'bg-warning text-warning-content' },
-  { key: 'finished', label: 'จบแล้ว', idle: 'bg-info/15 text-info', active: 'bg-info text-info-content' },
-];
+const filters = computed(() => [
+  { key: 'all', label: t('filter.all'), idle: 'bg-base-200 text-base-content/70', active: 'bg-base-content text-base-100' },
+  { key: 'playing', label: t('filter.playing'), idle: 'bg-success/15 text-success', active: 'bg-success text-success-content' },
+  { key: 'listing', label: t('filter.listing'), idle: 'bg-orange-100 text-orange-600', active: 'bg-orange-500 text-white' },
+  { key: 'no_score', label: t('filter.noScore'), idle: 'bg-warning/15 text-warning', active: 'bg-warning text-warning-content' },
+  { key: 'finished', label: t('filter.finished'), idle: 'bg-info/15 text-info', active: 'bg-info text-info-content' },
+]);
 </script>
 
 <template>
   <div class="mb-4">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-lg font-bold text-base-content m-0">Games <span class="text-sm font-normal text-base-content/50">({{ games.length }})</span></h2>
+      <h2 class="text-lg font-bold text-base-content m-0">{{ t('game.title') }} <span class="text-sm font-normal text-base-content/50">({{ games.length }})</span></h2>
     </div>
 
     <!-- Filter buttons -->
@@ -147,11 +148,11 @@ const filters = [
 
     <div v-if="games.length === 0" class="text-center py-10 bg-base-100 rounded-2xl border border-base-300">
       <span class="text-4xl">🏸</span>
-      <p class="text-sm text-base-content/50 mt-3 m-0">ยังไม่มีเกม กด + New Game เพื่อเริ่มเลย!</p>
+      <p class="text-sm text-base-content/50 mt-3 m-0">{{ t('game.noGames') }}</p>
     </div>
 
     <div v-else-if="filteredGames.length === 0" class="text-center py-8 bg-base-100 rounded-2xl border border-base-300">
-      <p class="text-sm text-base-content/50 m-0">ไม่มีเกมในสถานะนี้</p>
+      <p class="text-sm text-base-content/50 m-0">{{ t('game.noGamesInStatus') }}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -189,10 +190,10 @@ const filters = [
           <!-- Header: Game number + Status + Shuttlecock -->
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-base-content/40">GAME</span>
+              <span class="text-xs font-bold text-base-content/40">{{ t('game.game') }}</span>
               <span class="text-lg font-bold text-base-content">#{{ games.length - games.indexOf(game) }}</span>
-              <span v-html="gameStatus(game.status)"></span>
-              <span v-if="noScore(game)" class="px-2 py-1 bg-error/15 text-error text-xs font-semibold rounded-md">รอลงผล</span>
+              <span class="px-2 py-1 rounded-md text-xs font-semibold" :class="gameStatusClass(game.status)">{{ gameStatusLabel(game.status) }}</span>
+              <span v-if="noScore(game)" class="px-2 py-1 bg-error/15 text-error text-xs font-semibold rounded-md">{{ t('filter.noScore') }}</span>
             </div>
             <div class="flex items-center gap-1 bg-base-200 rounded-lg px-2 py-1">
               <button @click="emit('returnShuttlecock', game.id)" class="w-5 h-5 rounded flex items-center justify-center bg-error/10 text-error border-0 cursor-pointer text-[10px] font-bold hover:bg-error/20 transition-colors">−</button>
@@ -255,7 +256,7 @@ const filters = [
 
           <!-- Unassigned players (no team yet) -->
           <div v-if="game.game_players?.filter(p => isUnassigned(p.team)).length > 0" class="mb-3">
-            <div class="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 text-center">รอจัดทีม</div>
+            <div class="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 text-center">{{ t('game.waitingTeam') }}</div>
             <div class="flex items-center justify-center gap-2.5 flex-wrap">
               <div v-for="player in game.game_players?.filter(p => isUnassigned(p.team))" :key="player.id" class="flex flex-col items-center gap-0.5">
                 <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" />
@@ -269,7 +270,7 @@ const filters = [
             v-if="!isGameIsFull(game) && ['setting', 'listing'].includes(game.status)"
             @click="emit('autoAddPlayers', game.id)"
             class="w-full py-2 rounded-xl border-2 border-dashed border-base-300 bg-transparent text-base-content/40 cursor-pointer hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all text-xs font-medium mb-3"
-          >+ เพิ่มผู้เล่น</button>
+          >{{ t('game.addPlayers') }}</button>
 
           <!-- Footer: Time + Actions -->
           <div class="flex items-center justify-between pt-3 border-t border-base-200">
@@ -280,7 +281,7 @@ const filters = [
               </template>
               <template v-else-if="game.status === 'playing'">
                 <span class="inline-block w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                <span class="text-success font-medium">กำลังเล่น</span>
+                <span class="text-success font-medium">{{ t('game.playing') }}</span>
               </template>
               <template v-else>
                 <span>{{ game.game_players?.length || 0 }}/{{ getMaxPlayers(game.game_type) || '?' }} คน</span>
@@ -288,12 +289,12 @@ const filters = [
             </div>
 
             <div class="flex items-center gap-1.5">
-              <button v-show="game.status === 'setting'" @click="emit('listGame', game.id, $event)" class="btn btn-secondary btn-xs">List</button>
-              <button v-show="game.status === 'listing'" @click="emit('startGame', game.id)" class="btn btn-primary btn-xs">Start</button>
-              <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs">Delete</button>
-              <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs">Finish</button>
-              <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs">ลงผล</button>
-              <span v-if="game.status === 'finished' && !game.game_sets?.[0]?.winning_team && !isPlayerInGame(game)" class="text-[10px] text-base-content/40">รอผู้เล่นลงผล</span>
+              <button v-show="game.status === 'setting'" @click="emit('listGame', game.id, $event)" class="btn btn-secondary btn-xs">{{ t('game.list') }}</button>
+              <button v-show="game.status === 'listing'" @click="emit('startGame', game.id)" class="btn btn-primary btn-xs">{{ t('game.start') }}</button>
+              <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs">{{ t('common.delete') }}</button>
+              <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs">{{ t('game.finish') }}</button>
+              <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs">{{ t('game.score') }}</button>
+              <span v-if="game.status === 'finished' && !game.game_sets?.[0]?.winning_team && !isPlayerInGame(game)" class="text-[10px] text-base-content/40">{{ t('game.waitingScore') }}</span>
             </div>
           </div>
         </div>

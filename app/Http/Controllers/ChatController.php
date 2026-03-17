@@ -5,83 +5,108 @@ namespace App\Http\Controllers;
 use App\Models\Chat;
 use App\Models\ChatParticipant;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Ably\AblyRest;
-use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
 {
-    // Create or find a chat
     public function showChat(Request $request)
     {
-        $chatId = $request->chatId ?? 1;
+        $userId = auth()->id();
 
-        $chat = Chat::findOrFail($chatId);
+        // Get all chats the user participates in
+        $chats = Chat::whereHas('participants', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        })
+            ->with(['participants.user', 'messages' => function ($q) {
+                $q->latest()->limit(1);
+            }, 'messages.sender'])
+            ->get()
+            ->map(function ($chat) use ($userId) {
+                $lastMessage = $chat->messages->first();
+                $otherParticipant = $chat->participants->firstWhere('user_id', '!=', $userId);
+                $myParticipant = $chat->participants->firstWhere('user_id', $userId);
 
-        $ably = new AblyRest(env('ABLY_KEY'));
+                // Count unread messages for this chat
+                $unreadQuery = Message::where('chat_id', $chat->id)
+                    ->where('sender_id', '!=', $userId);
+                if ($myParticipant?->last_read_at) {
+                    $unreadQuery->where('created_at', '>', $myParticipant->last_read_at);
+                }
+                $unreadCount = $unreadQuery->count();
 
-        $tokenRequest = $ably->auth->createTokenRequest([
-            'clientId' => auth()->user()->id ?? 'guest',
-        ]);
+                return [
+                    'id' => $chat->id,
+                    'name' => $chat->is_group ? $chat->name : ($otherParticipant?->user?->name ?? 'Unknown'),
+                    'avatar' => $chat->is_group ? null : $otherParticipant?->user?->avatar,
+                    'is_group' => $chat->is_group,
+                    'last_message' => $lastMessage?->content,
+                    'last_message_at' => $lastMessage?->created_at,
+                    'last_sender_name' => $lastMessage?->sender?->name,
+                    'participants_count' => $chat->participants->count(),
+                    'unread_count' => $unreadCount,
+                ];
+            })
+            ->sortByDesc('last_message_at')
+            ->values();
 
-        // Ably
-        $apiKey = env('ABLY_KEY');  // Ensure your API key is in your .env file
+        // Selected chat
+        $chatId = $request->chatId;
 
-        // Basic auth credentials should be base64 encoded as username:password format
-        $basicAuth = base64_encode($apiKey);
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Basic ' . $basicAuth
-            ])->get('https://rest.ably.io/channels');
-
-            // // Check for successful response
-            // if ($response->successful()) {
-            //     return $response->json();  // Return the JSON response
-            // } else {
-            //     // Handle errors
-            //     return response()->json(['error' => 'Failed to fetch channels'], $response->status());
-            // }
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-
-        // Ably
+        // Users available for new chat (exclude self)
+        $users = User::where('id', '!=', $userId)
+            ->select('id', 'name', 'avatar')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Chat', [
-            'chat_id' => $chat->id, // Pass the chat ID
+            'chats' => $chats,
+            'selected_chat_id' => $chatId ? (int) $chatId : null,
             'ably_key' => env('ABLY_KEY'),
-            'ably_token' => $tokenRequest,
-            'ably_channels' => $response->json(),
+            'users' => $users,
         ]);
     }
 
-    // Create or find a chat
     public function createChat(Request $request)
     {
         $validated = $request->validate([
-            'user_ids' => 'required|array|min:2', // Array of user IDs
+            'user_ids' => 'required|array|min:2',
             'is_group' => 'required|boolean',
             'name' => 'nullable|string',
         ]);
+
+        $userId = auth()->id();
+
+        // For 1-on-1 chat, check if one already exists
+        if (!$validated['is_group'] && count($validated['user_ids']) === 2) {
+            $otherUserId = collect($validated['user_ids'])->first(fn($id) => $id != $userId);
+            $existingChat = Chat::where('is_group', false)
+                ->whereHas('participants', fn($q) => $q->where('user_id', $userId))
+                ->whereHas('participants', fn($q) => $q->where('user_id', $otherUserId))
+                ->first();
+
+            if ($existingChat) {
+                return response()->json(['chat_id' => $existingChat->id]);
+            }
+        }
 
         $chat = Chat::create([
             'is_group' => $validated['is_group'],
             'name' => $validated['is_group'] ? $validated['name'] : null,
         ]);
 
-        foreach ($validated['user_ids'] as $userId) {
+        foreach ($validated['user_ids'] as $uid) {
             ChatParticipant::create([
                 'chat_id' => $chat->id,
-                'user_id' => $userId,
+                'user_id' => $uid,
             ]);
         }
 
-        return response()->json($chat);
+        return response()->json(['chat_id' => $chat->id]);
     }
 
-    // Get messages in a chat
     public function getMessages(Request $request)
     {
         $messages = Message::where('chat_id', $request->chat_id)
@@ -92,10 +117,8 @@ class ChatController extends Controller
         return response()->json($messages);
     }
 
-    // Send a message
     public function sendMessage(Request $request, $chat_id)
     {
-
         $validated = $request->validate([
             'sender_id' => 'required|integer',
             'content' => 'required|string',
@@ -107,12 +130,42 @@ class ChatController extends Controller
             'content' => $validated['content'],
         ]);
 
+        // Load sender for broadcasting
+        $message->load('sender');
+
         // Publish to Ably
         $ably = new AblyRest(env('ABLY_KEY'));
         $channel = $ably->channels->get("chat.{$chat_id}");
-
         $channel->publish('message', $message->toArray());
 
-        // return response()->json($message);
+        return response()->json($message);
+    }
+
+    public function markAsRead($chat_id)
+    {
+        ChatParticipant::where('chat_id', $chat_id)
+            ->where('user_id', auth()->id())
+            ->update(['last_read_at' => now()]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public static function getUnreadCount($userId): int
+    {
+        $participants = ChatParticipant::where('user_id', $userId)->get();
+        $total = 0;
+
+        foreach ($participants as $p) {
+            $query = Message::where('chat_id', $p->chat_id)
+                ->where('sender_id', '!=', $userId);
+
+            if ($p->last_read_at) {
+                $query->where('created_at', '>', $p->last_read_at);
+            }
+
+            $total += $query->count();
+        }
+
+        return $total;
     }
 }

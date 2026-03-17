@@ -10,11 +10,13 @@ import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { reactive, ref, computed, onMounted, watch } from "vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
+import { useLocale } from "@/composables/useLocale";
 
 import crown from "@/../assets/images/crown.png";
 
 const toast = useToast();
 const { confirm } = useConfirm();
+const { t } = useLocale();
 
 const page = usePage();
 
@@ -34,7 +36,7 @@ const activeTab = ref("game");
 const game_data = reactive({
   game_id: "",
   party_member_id: "",
-  ready_players: [],
+  ready_คน: [],
 });
 
 party.value = page.props.party;
@@ -46,7 +48,7 @@ game_data.party_id = party.value.id;
 const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null;
 
 const visibleGameId = ref(settingGame ? settingGame.id : null);
-const game_players = ref(settingGame ? settingGame.game_players : []);
+const game_คน = ref(settingGame ? settingGame.game_คน : []);
 
 const initial_shuttlecock_party = ref(0);
 
@@ -159,10 +161,10 @@ const fetchReadyPlayer = (gameId) => {
       preserveScroll: true,
       headers: { Accept: "application/json" },
       onSuccess: (response) => {
-        game_data.ready_players = response.props.response || [];
+        game_data.ready_คน = response.props.response || [];
       },
       onError: (error) => {
-        console.error("Error fetching ready players:", error);
+        console.error("Error fetching ready คน:", error);
       },
     }
   );
@@ -170,7 +172,7 @@ const fetchReadyPlayer = (gameId) => {
 
 const autoAddPlayers = (gameId) => {
   router.post(
-    `/games/${gameId}/auto-add-players`,
+    `/games/${gameId}/auto-add-คน`,
     {},
     {
       preserveScroll: true,
@@ -181,7 +183,7 @@ const autoAddPlayers = (gameId) => {
         visibleGameId.value = gameId;
         fetchReadyPlayer(gameId);
         thisGame.value = games.value.find((sc) => sc.id == gameId);
-        game_players.value = thisGame.value.game_players;
+        game_คน.value = thisGame.value.game_คน;
         if (res.props.flash.success?.length > 0) {
           toast.add({ severity: "success", summary: "จัดผู้เล่น", detail: `ระบบได้จัดผู้เล่นที่เหมาะสมลงเกมแล้ว โปรดปรับเปลี่ยน`, life: 3000 });
         }
@@ -210,7 +212,7 @@ const listGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_players.value = thisGame.value.game_players;
+            game_คน.value = thisGame.value.game_คน;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "สำเร็จ", detail: `ลีสเกมลงรายการรอเล่นแล้ว`, life: 3000 });
             }
@@ -236,10 +238,10 @@ const createGame = () => {
       games.value = res.props.games;
       let newGame = res.props.games.find((sc) => sc.status === "setting");
       visibleGameId.value = newGame.id;
-      game_players.value = newGame.game_players;
+      game_คน.value = newGame.game_คน;
       fetchReadyPlayer(visibleGameId.value);
       thisGame.value = games.value.find((sc) => sc.id == newGame.id);
-      game_players.value = thisGame.value.game_players;
+      game_คน.value = thisGame.value.game_คน;
       if (res.props.flash.success?.length > 0) {
         toast.add({ severity: "success", summary: "สำเร็จ", detail: `สร้างเกมแล้วโปรดตั้งค่าเกม`, life: 3000 });
       }
@@ -267,7 +269,7 @@ const startGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_players.value = thisGame.value.game_players;
+            game_คน.value = thisGame.value.game_คน;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "สำเร็จ", detail: `เกมเริ่มต้นแล้ว`, life: 3000 });
             }
@@ -301,7 +303,7 @@ const finishGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_players.value = thisGame.value.game_players;
+            game_คน.value = thisGame.value.game_คน;
             props.value = res.props;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "จบเกม", detail: `จบเกมเรียบร้อยแล้ว`, life: 3000 });
@@ -463,17 +465,17 @@ const partyReload = (payload) => {
 };
 
 const playerSortWaiting = computed(() => {
-  return Array.isArray(game_data.ready_players)
-    ? [...game_data.ready_players].sort((a, b) => b.waiting_time - a.waiting_time)
+  return Array.isArray(game_data.ready_คน)
+    ? [...game_data.ready_คน].sort((a, b) => b.waiting_time - a.waiting_time)
     : [];
 });
 
-const tabs = [
-  { key: "game", label: "Game", icon: "🏸" },
-  { key: "info", label: "Info", icon: "ℹ️" },
-  { key: "player", label: "Player", icon: "👥" },
-  { key: "stats", label: "Stats", icon: "📊" },
-];
+const tabs = computed(() => [
+  { key: "game", label: t('party.tabGame'), icon: "🏸" },
+  { key: "info", label: t('party.tabInfo'), icon: "ℹ️" },
+  { key: "player", label: t('party.tabPlayer'), icon: "👥" },
+  { key: "stats", label: t('party.tabStats'), icon: "📊" },
+]);
 </script>
 
 <template>
@@ -488,7 +490,7 @@ const tabs = [
             {{ party.court?.name || 'Party' }} <span class="text-base font-normal text-base-content/50">#{{ party.id }}</span>
           </h1>
           <p class="text-sm text-base-content/60 m-0 mt-0.5">
-            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_players }} players
+            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_คน }} {{ t('common.players') }}
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -497,8 +499,8 @@ const tabs = [
           </button>
           <button @click="visibleTop = true" class="h-9 px-4 flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors active:scale-[0.98]">
             <span class="text-xs">+</span>
-            <span class="hidden sm:inline">New Game</span>
-            <span class="sm:hidden">New</span>
+            <span class="hidden sm:inline">{{ t('party.newGame') }}</span>
+            <span class="sm:hidden">{{ t('party.newGameShort') }}</span>
           </button>
         </div>
       </div>
@@ -514,7 +516,7 @@ const tabs = [
       >
         <div class="flex items-center gap-2 p-3 border-b border-base-300">
           <UserAvatar :src="$page.props.auth.user.avatar" :name="$page.props.auth.user.name" size="sm" rounded="full" />
-          <span class="font-bold">Game Making</span>
+          <span class="font-bold">{{ t('party.gameMaking') }}</span>
           <button class="btn btn-sm btn-ghost ml-auto" @click="visibleTop = false">✕</button>
         </div>
         <div class="overflow-y-auto" style="max-height: calc(90vh - 3.5rem);">
@@ -555,7 +557,7 @@ const tabs = [
                 <img v-show="showCrown(index, 'team1')" :src="crown" class="w-8 h-8 absolute -top-3 -left-1 -rotate-[25deg]" alt="" />
                 <p class="text-[10px] text-base-content/50 font-bold uppercase tracking-wider m-0 mb-2">Team 1</p>
                 <div class="flex justify-center gap-1 mb-3">
-                  <div v-for="player in setScoreGame.game_players?.filter(p => p.team === 'team1' || p.team === 1)" :key="player.user.id" class="text-center">
+                  <div v-for="player in setScoreGame.game_คน?.filter(p => p.team === 'team1' || p.team === 1)" :key="player.user.id" class="text-center">
                     <UserAvatar :src="player.user.avatar" :name="player.display_name || player.user.name" size="lg" rounded="xl" class="border-2 border-white" />
                     <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3rem]">{{ player.display_name }}</p>
                   </div>
@@ -584,7 +586,7 @@ const tabs = [
                 <img v-show="showCrown(index, 'team2')" :src="crown" class="w-8 h-8 absolute -top-3 -right-1 rotate-[25deg]" alt="" />
                 <p class="text-[10px] text-base-content/50 font-bold uppercase tracking-wider m-0 mb-2">Team 2</p>
                 <div class="flex justify-center gap-1 mb-3">
-                  <div v-for="player in setScoreGame.game_players?.filter(p => p.team === 'team2' || p.team === 2)" :key="player.user.id" class="text-center">
+                  <div v-for="player in setScoreGame.game_คน?.filter(p => p.team === 'team2' || p.team === 2)" :key="player.user.id" class="text-center">
                     <UserAvatar :src="player.user.avatar" :name="player.display_name || player.user.name" size="lg" rounded="xl" class="border-2 border-white" />
                     <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3rem]">{{ player.display_name }}</p>
                   </div>
@@ -629,11 +631,11 @@ const tabs = [
         <div class="flex gap-2 px-4 pb-4">
           <button type="button" @click="visible = false; setScoreGame = {}"
             class="flex-1 h-10 rounded-xl text-sm font-medium bg-base-200 text-base-content/80 border-0 cursor-pointer hover:bg-base-300 transition-colors">
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button type="button" @click="enterScore(setScoreGame.id)"
             class="flex-1 h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98]">
-            ✓ Save
+            ✓ {{ t('common.save') }}
           </button>
         </div>
       </div>
@@ -663,7 +665,7 @@ const tabs = [
       <TabGame
         :games="games"
         :party="party"
-        :readyPlayers="game_data.ready_players"
+        :readyPlayers="game_data.ready_คน"
         @listGame="listGame"
         @startGame="startGame"
         @finishGame="finishGame"

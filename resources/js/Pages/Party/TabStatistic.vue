@@ -1,6 +1,9 @@
 <script setup>
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { computed } from "vue";
+import { useLocale } from "@/composables/useLocale";
+
+const { t } = useLocale();
 
 const props = defineProps({
   games: { type: Array, required: true },
@@ -165,19 +168,19 @@ const formatDuration = (minutes) => {
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-base-100 rounded-2xl border border-base-300 p-4 text-center">
         <div class="text-2xl font-black text-primary">{{ summary.totalGames }}</div>
-        <div class="text-xs text-base-content/50 mt-1">เกมทั้งหมด</div>
+        <div class="text-xs text-base-content/50 mt-1">{{ t('stats.totalGames') }}</div>
       </div>
       <div class="bg-base-100 rounded-2xl border border-base-300 p-4 text-center">
         <div class="text-2xl font-black text-success">{{ summary.finishedGames }}</div>
-        <div class="text-xs text-base-content/50 mt-1">จบแล้ว</div>
+        <div class="text-xs text-base-content/50 mt-1">{{ t('stats.finished') }}</div>
       </div>
       <div class="bg-base-100 rounded-2xl border border-base-300 p-4 text-center">
         <div class="text-2xl font-black text-warning">{{ summary.totalShuttlecocks }}</div>
-        <div class="text-xs text-base-content/50 mt-1">ลูกขนไก่</div>
+        <div class="text-xs text-base-content/50 mt-1">{{ t('stats.shuttlecocks') }}</div>
       </div>
       <div class="bg-base-100 rounded-2xl border border-base-300 p-4 text-center">
         <div class="text-2xl font-black text-info">{{ formatDuration(summary.avgDurationMinutes) }}</div>
-        <div class="text-xs text-base-content/50 mt-1">เวลาเฉลี่ย/เกม</div>
+        <div class="text-xs text-base-content/50 mt-1">{{ t('stats.avgTime') }}</div>
       </div>
     </div>
 
@@ -201,17 +204,17 @@ const formatDuration = (minutes) => {
     <!-- Player Stats Table -->
     <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="playerStats.length > 0">
       <div class="px-4 py-3 border-b border-base-200">
-        <h3 class="text-base font-bold text-base-content m-0">สถิติผู้เล่น</h3>
+        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.playerStats') }}</h3>
       </div>
       <div class="overflow-x-auto">
         <table class="table table-sm w-full">
           <thead>
             <tr class="text-xs text-base-content/50">
               <th class="pl-4">#</th>
-              <th>ผู้เล่น</th>
-              <th class="text-center">เกม</th>
-              <th class="text-center">ชนะ</th>
-              <th class="text-center">แพ้</th>
+              <th>{{ t('stats.player') }}</th>
+              <th class="text-center">{{ t('stats.games') }}</th>
+              <th class="text-center">{{ t('stats.wins') }}</th>
+              <th class="text-center">{{ t('stats.losses') }}</th>
               <th class="text-center">Win%</th>
             </tr>
           </thead>
@@ -244,7 +247,7 @@ const formatDuration = (minutes) => {
     <!-- Head-to-Head -->
     <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="headToHead.length > 0">
       <div class="px-4 py-3 border-b border-base-200">
-        <h3 class="text-base font-bold text-base-content m-0">เจอกันบ่อย (ฝั่งตรงข้าม)</h3>
+        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.headToHead') }}</h3>
       </div>
       <div class="divide-y divide-base-200">
         <div v-for="(pair, index) in headToHead" :key="index" class="flex items-center gap-3 px-4 py-2.5">
@@ -267,7 +270,7 @@ const formatDuration = (minutes) => {
     <!-- Empty state -->
     <div v-if="finishedGames.length === 0" class="text-center py-10 bg-base-100 rounded-2xl border border-base-300">
       <span class="text-4xl">📊</span>
-      <p class="text-sm text-base-content/50 mt-3 m-0">ยังไม่มีเกมที่จบ ข้อมูลสถิติจะปรากฏเมื่อมีเกมเสร็จสิ้น</p>
+      <p class="text-sm text-base-content/50 mt-3 m-0">{{ t('stats.noGames') }}</p>
     </div>
   </div>
 </template>

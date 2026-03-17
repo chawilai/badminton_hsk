@@ -192,6 +192,7 @@ Route::get('/chat', [ChatController::class, 'showChat']);
 Route::post('/chat/create', [ChatController::class, 'createChat']);
 Route::post('/chat/messages', [ChatController::class, 'getMessages']);
 Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
+Route::post('/chat/{chat_id}/read', [ChatController::class, 'markAsRead']);
 // Chat
 
 // game
@@ -238,6 +239,7 @@ Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController:
 Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
 Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
 Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
+Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');
 Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 
 Route::get('/dashboard', function () {

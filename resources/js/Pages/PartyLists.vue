@@ -1,13 +1,13 @@
 <template>
-  <Head title="Party Lists" />
+  <Head :title="t('partyList.title')" />
 
   <AppLayout>
     <div class="space-y-4">
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-base-content m-0">Party Lists</h1>
-          <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ filteredParties.length }} parties available</p>
+          <h1 class="text-xl font-bold text-base-content m-0">{{ t('partyList.title') }}</h1>
+          <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ t('partyList.count', { count: filteredParties.length }) }}</p>
         </div>
         <div class="flex items-center gap-2">
           <button
@@ -21,8 +21,8 @@
             class="h-9 px-4 flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors active:scale-[0.98]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-            <span class="hidden sm:inline">Create Party</span>
-            <span class="sm:hidden">New</span>
+            <span class="hidden sm:inline">{{ t('partyList.createParty') }}</span>
+            <span class="sm:hidden">{{ t('common.create') }}</span>
           </button>
         </div>
       </div>
@@ -66,7 +66,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Date</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.date') }}</p>
                   <p class="text-sm font-medium text-base-content m-0 truncate">{{ formatDisplayDate(party.play_date) }}</p>
                 </div>
               </div>
@@ -76,7 +76,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Time</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.time') }}</p>
                   <p class="text-sm font-medium text-base-content m-0">{{ formatTime(party.start_time) }}</p>
                 </div>
               </div>
@@ -86,7 +86,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Players</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.players') }}</p>
                   <p class="text-sm font-medium m-0" :class="party.members_count >= party.max_players ? 'text-error' : 'text-base-content'">
                     {{ party.members_count }}/{{ party.max_players }}
                   </p>
@@ -120,14 +120,14 @@
                 @click="joinParty(party.id)"
                 class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary/10 text-primary hover:bg-primary/20"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg> Join
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg> {{ t('common.join') }}
               </button>
               <button
                 v-else
                 @click="enterParty(party.id)"
                 class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary text-white hover:bg-primary/80"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg> Enter
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg> {{ t('common.enter') }}
               </button>
             </div>
           </div>
@@ -139,8 +139,8 @@
         <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <span class="text-3xl">🏸</span>
         </div>
-        <h3 class="text-lg font-semibold text-base-content m-0">No parties yet</h3>
-        <p class="text-sm text-base-content/60 mt-1 m-0">Create the first party to get started!</p>
+        <h3 class="text-lg font-semibold text-base-content m-0">{{ t('partyList.noParties') }}</h3>
+        <p class="text-sm text-base-content/60 mt-1 m-0">{{ t('partyList.createFirst') }}</p>
         <button
           @click="showDialog = true"
           class="mt-4 h-10 px-6 rounded-xl bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors"
@@ -170,7 +170,7 @@
         :class="{ 'modal-open': showDialog }"
       >
         <div class="modal-box w-full max-w-lg">
-          <h3 class="font-bold text-lg mb-4">Create Party</h3>
+          <h3 class="font-bold text-lg mb-4">{{ t('createParty.title') }}</h3>
           <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="showDialog = false">X</button>
           <form @submit.prevent="createParty">
             <div class="w-full">
@@ -178,22 +178,22 @@
               <div class="grid grid-cols-3 gap-4">
                 <div class="form-control">
                   <label class="label" for="play_date">
-                    <span class="label-text">Play Date</span>
+                    <span class="label-text">{{ t('createParty.playDate') }}</span>
                   </label>
                   <input type="date" id="play_date" v-model="form.play_date" class="input input-bordered w-full" />
                 </div>
                 <div class="form-control">
                   <label class="label" for="max_players">
-                    <span class="label-text">Max Players</span>
+                    <span class="label-text">{{ t('createParty.maxPlayers') }}</span>
                   </label>
                   <input type="number" id="max_players" v-model="form.max_players" min="1" class="input input-bordered w-full" />
                 </div>
                 <div class="form-control">
                   <label class="label" for="status">
-                    <span class="label-text">Status</span>
+                    <span class="label-text">{{ t('createParty.status') }}</span>
                   </label>
                   <select id="status" v-model="form.status" class="select select-bordered w-full">
-                    <option value="" disabled>Select Status</option>
+                    <option value="" disabled>{{ t('createParty.selectStatus') }}</option>
                     <option v-for="s in statuses" :key="s" :value="s">{{ s }}</option>
                   </select>
                 </div>
@@ -202,10 +202,10 @@
               <div class="grid grid-cols-2 gap-4 mt-4">
                 <div class="form-control">
                   <label class="label" for="court_id">
-                    <span class="label-text">Court</span>
+                    <span class="label-text">{{ t('createParty.court') }}</span>
                   </label>
                   <select id="court_id" v-model="form.court_id" class="select select-bordered w-full">
-                    <option value="" disabled>Select Court</option>
+                    <option value="" disabled>{{ t('createParty.selectCourt') }}</option>
                     <option v-for="court in courts" :key="court.id" :value="court.id">{{ court.name }}</option>
                   </select>
                 </div>
@@ -214,11 +214,11 @@
               <div class="form-control mt-4">
                 <label class="label cursor-pointer justify-start gap-2">
                   <input type="checkbox" v-model="form.is_private" class="checkbox checkbox-primary" />
-                  <span class="label-text">Private Party</span>
+                  <span class="label-text">{{ t('createParty.private') }}</span>
                 </label>
               </div>
 
-              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-3 mt-6">Court Bookings</h4>
+              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-3 mt-6">{{ t('createParty.courtBookings') }}</h4>
               <div
                 v-for="(booking, index) in form.court_bookings"
                 :key="index"
@@ -227,7 +227,7 @@
                 <h4 class="mb-2 font-semibold">Booking #{{ index + 1 }}</h4>
                 <div class="flex gap-4">
                   <div class="flex-1">
-                    <label class="label"><span class="label-text">คอร์ทที่</span></label>
+                    <label class="label"><span class="label-text">{{ t('createParty.courtNumber') }}</span></label>
                     <select
                       v-model="booking.court_field_number"
                       class="select select-bordered w-full"
@@ -236,26 +236,26 @@
                     </select>
                   </div>
                   <div class="flex-1">
-                    <label class="label"><span class="label-text">เวลาเริ่ม</span></label>
+                    <label class="label"><span class="label-text">{{ t('createParty.startTime') }}</span></label>
                     <select v-model="booking.start_time" class="select select-bordered w-full">
-                      <option v-for="t in timeOptions" :key="t.name" :value="t.name">{{ t.name }}</option>
+                      <option v-for="opt in timeOptions" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
                     </select>
                   </div>
                   <div class="flex-1">
-                    <label class="label"><span class="label-text">เวลาจบ</span></label>
+                    <label class="label"><span class="label-text">{{ t('createParty.endTime') }}</span></label>
                     <select v-model="booking.end_time" class="select select-bordered w-full">
-                      <option v-for="t in filteredEndTimeOptions(index)" :key="t.name" :value="t.name">{{ t.name }}</option>
+                      <option v-for="opt in filteredEndTimeOptions(index)" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
                     </select>
                   </div>
                 </div>
                 <button type="button" class="btn btn-error btn-sm mt-3" @click="removeCourtBooking(index)">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
-                  ลบคอร์ท
+                  {{ t('createParty.removeCourt') }}
                 </button>
               </div>
               <button type="button" class="btn btn-secondary btn-sm mt-3" @click="addCourtBooking">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                เพิ่มคอร์ท
+                {{ t('createParty.addCourt') }}
               </button>
             </div>
 
@@ -285,7 +285,9 @@ import UserAvatar from "@/Components/UserAvatar.vue";
 import { ref, computed } from "vue";
 import { Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "@/composables/useToast";
+import { useLocale } from "@/composables/useLocale";
 
+const { t } = useLocale();
 const toast = useToast();
 const showDialog = ref(false);
 const page = usePage();

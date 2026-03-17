@@ -96,14 +96,38 @@ class PartyController extends Controller
             ->withCount('members')
             ->findOrFail($id);
 
-        // Fetch ready players for the party
+        // Fetch ready, playing, and break players for the party
         $gameController = new GameController();
         $readyPlayers = $gameController->fetchReadyPlayersByPartyID($id);
+        $playingPlayers = $gameController->fetchPlayingPlayersByPartyID($id);
+
+        // Break players: party members with game_status = 'break'
+        $breakPlayers = PartyMember::with(['user.badmintonRank', 'user'])
+            ->where('party_id', $id)
+            ->where('game_status', 'break')
+            ->get()
+            ->map(function ($player) {
+                return [
+                    'user_id' => $player->user->id,
+                    'party_member_id' => $player->id,
+                    'name' => $player->user->name,
+                    'display_name' => $player->display_name ?? $player->user->name,
+                    'avatar' => $player->user->avatar,
+                    'badminton_level' => $player->user->badmintonRank->id ?? 0,
+                    'badminton_rank' => $player->user->badmintonRank->education_rank ?? '',
+                    'game_status' => 'break',
+                    'finished_games_count' => 0,
+                    'waiting_time' => 0,
+                    'current_game' => null,
+                ];
+            });
 
         return Inertia::render('Party', [
             'party' => $party,
             'games' => $games,
             'readyPlayers' => $readyPlayers,
+            'playingPlayers' => $playingPlayers,
+            'breakPlayers' => $breakPlayers,
         ]);
     }
 

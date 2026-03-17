@@ -27,4 +27,18 @@ class PartyMemberController extends Controller
             'party_member' => $partyMember,
         ]);
     }
+
+    public function updateGameStatus(Request $request, $id)
+    {
+        $request->validate([
+            'game_status' => 'required|in:ready,break',
+        ]);
+
+        $partyMember = PartyMember::findOrFail($id);
+        $partyMember->update([
+            'game_status' => $request->input('game_status'),
+        ]);
+
+        return back()->with('success', 'สถานะอัพเดทแล้ว');
+    }
 }

@@ -1,6 +1,8 @@
 <script setup>
 import { confirmState, useConfirm } from "@/composables/useConfirm";
+import { useLocale } from '@/composables/useLocale';
 
+const { t } = useLocale();
 const { close } = useConfirm();
 
 const handleAccept = () => {
@@ -20,8 +22,8 @@ const handleReject = () => {
             <h3 class="font-bold text-lg">{{ confirmState.header }}</h3>
             <p class="py-4">{{ confirmState.message }}</p>
             <div class="modal-action">
-                <button class="btn btn-ghost btn-sm" @click="handleReject">Cancel</button>
-                <button class="btn btn-primary btn-sm" @click="handleAccept">Confirm</button>
+                <button class="btn btn-ghost btn-sm" @click="handleReject">{{ t('common.cancel') }}</button>
+                <button class="btn btn-primary btn-sm" @click="handleAccept">{{ t('common.confirm') }}</button>
             </div>
         </div>
         <form method="dialog" class="modal-backdrop">

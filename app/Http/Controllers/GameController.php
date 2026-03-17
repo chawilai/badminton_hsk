@@ -391,6 +391,59 @@ class GameController extends Controller
         });
     }
 
+    public function fetchPlayingPlayersByPartyID($partyId)
+    {
+        $party = Party::find($partyId);
+        if (!$party) return [];
+
+        $currentDateTime = now();
+
+        // Get users currently in a 'playing' game in this party
+        $playingUserIds = GamePlayer::whereHas('game', function ($q) use ($party) {
+            $q->where('party_id', $party->id)->where('status', 'playing');
+        })->pluck('user_id')->unique();
+
+        if ($playingUserIds->isEmpty()) return [];
+
+        $players = PartyMember::with(['user.badmintonRank', 'user'])
+            ->where('party_id', $party->id)
+            ->whereIn('user_id', $playingUserIds)
+            ->get();
+
+        return $players->map(function ($player) use ($party, $currentDateTime) {
+            $finishedGamesCount = GamePlayer::where('user_id', $player->user_id)
+                ->whereHas('game', fn($q) => $q->where('party_id', $party->id)->where('status', 'finished'))
+                ->count();
+
+            $currentGame = GamePlayer::where('user_id', $player->user_id)
+                ->join('games', 'game_players.game_id', '=', 'games.id')
+                ->where('games.party_id', $party->id)
+                ->where('games.status', 'playing')
+                ->select(
+                    'games.id',
+                    'games.status',
+                    DB::raw('(SELECT COUNT(*) + 1 FROM games AS g WHERE g.party_id = games.party_id AND g.id < games.id) AS game_number')
+                )
+                ->first();
+
+            return [
+                'user_id' => $player->user->id,
+                'party_member_id' => $player->id,
+                'name' => $player->user->name,
+                'display_name' => $player->display_name ?? $player->user->name,
+                'gender' => $player->user->gender,
+                'avatar' => $player->user->avatar,
+                'badminton_level' => $player->user->badmintonRank->id ?? 0,
+                'badminton_rank' => $player->user->badmintonRank->education_rank ?? '',
+                'game_status' => $player->game_status,
+                'finished_games_count' => $finishedGamesCount,
+                'waiting_time' => 0,
+                'current_game' => $currentGame,
+                'current_game_number' => $currentGame?->game_number,
+            ];
+        });
+    }
+
     public function removePlayer(Request $request)
     {
         $request->validate([

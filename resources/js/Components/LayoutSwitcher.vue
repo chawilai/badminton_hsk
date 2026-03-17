@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useBadmintonLayout } from '@/layout/composables/badmintonLayout';
+import { useLocale } from '@/composables/useLocale';
+
+const { t } = useLocale();
 
 const { currentTheme, availableThemes, switchTheme } = useBadmintonLayout();
 const menuVisible = ref(false);
@@ -29,7 +32,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onOutsideClick));
         <button
             @click="toggleMenu"
             class="w-9 h-9 flex items-center justify-center rounded-lg text-base-content/50 hover:bg-base-200 transition-colors border-0 bg-transparent cursor-pointer"
-            title="Change theme"
+            :title="t('theme.change')"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
@@ -42,7 +45,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onOutsideClick));
                 class="absolute right-0 top-full mt-2 w-56 bg-base-100 rounded-2xl shadow-xl border border-base-300 py-2 z-50 animate-slide-up max-h-[70vh] overflow-y-auto"
             >
                 <div class="px-3 py-2 border-b border-base-200">
-                    <p class="text-xs font-bold text-base-content/40 uppercase tracking-wider m-0">Choose Theme</p>
+                    <p class="text-xs font-bold text-base-content/40 uppercase tracking-wider m-0">{{ t('theme.choose') }}</p>
                 </div>
                 <div class="py-1">
                     <button

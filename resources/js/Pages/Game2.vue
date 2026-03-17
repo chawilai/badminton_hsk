@@ -6,9 +6,11 @@ import UserAvatar from "@/Components/UserAvatar.vue";
 
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
+import { useLocale } from "@/composables/useLocale";
 
 const toast = useToast();
 const { confirm } = useConfirm();
+const { t } = useLocale();
 
 let props = defineProps({
   data: {
@@ -87,9 +89,47 @@ const sortedPlayerByGamePlayed = computed(() => {
   });
 });
 
+const formattedBreakPlayers = computed(() =>
+  (localData.value.breakPlayers || []).map((item) => ({
+    id: item.user_id,
+    title: shortenTitle(item.display_name),
+    avatar: item.avatar,
+    rank_title: item.badminton_rank,
+    rank_level: item.badminton_level,
+    waiting_time: 0,
+    played: item.finished_games_count || 0,
+    current_game: null,
+    current_game_number: null,
+  }))
+);
+
+const formattedPlayingPlayers = computed(() =>
+  (localData.value.playingPlayers || []).map((item) => ({
+    id: item.user_id,
+    title: shortenTitle(item.display_name),
+    avatar: item.avatar,
+    rank_title: item.badminton_rank,
+    rank_level: item.badminton_level,
+    waiting_time: item.waiting_time,
+    played: (item.finished_games_count || 0) + 1,
+    current_game: item.current_game,
+    current_game_number: item.current_game_number,
+  }))
+);
+
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
   dropZones.Ready = [...sortedPlayerByGamePlayed.value];
+  // Populate Playing zone with currently playing players (avoid duplicates), sorted by game number asc
+  const existingIds = new Set(dropZones.Playing.map(p => p.id));
+  const newPlaying = formattedPlayingPlayers.value.filter(p => !existingIds.has(p.id));
+  dropZones.Playing.push(...newPlaying);
+  dropZones.Playing.sort((a, b) => (a.current_game_number || 999) - (b.current_game_number || 999));
+  // Populate Break zone
+  const breakIds = new Set(dropZones.Break.map(p => p.id));
+  formattedBreakPlayers.value.forEach(p => {
+    if (!breakIds.has(p.id)) dropZones.Break.push(p);
+  });
 };
 
 const shortenTitle = (title, maxLength = 14) => {
@@ -277,14 +317,14 @@ onMounted(() => {
   toggleSortOrder();
 });
 
-const zoneConfig = {
-  Game:    { label: 'Game',    color: 'emerald', borderColor: '#86efac', bgColor: '#f0fdf4' },
-  Ready:   { label: 'Ready',   color: 'blue',    borderColor: '#93c5fd', bgColor: '#eff6ff' },
-  Playing: { label: 'Playing', color: 'teal',    borderColor: '#5eead4', bgColor: '#f0fdfa' },
-  Listing: { label: 'Listing', color: 'pink',    borderColor: '#f9a8d4', bgColor: '#fdf2f8' },
-  Break:   { label: 'Break',   color: 'amber',   borderColor: '#fde047', bgColor: '#fefce8' },
-  Finish:  { label: 'Finish',  color: 'purple',  borderColor: '#c4b5fd', bgColor: '#faf5ff' },
-};
+const zoneConfig = computed(() => ({
+  Game:    { label: 'Game',            color: 'emerald', borderColor: '#86efac', bgColor: '#f0fdf4' },
+  Ready:   { label: t('zone.ready'),   color: 'blue',    borderColor: '#93c5fd', bgColor: '#eff6ff' },
+  Playing: { label: t('zone.playing'), color: 'teal',    borderColor: '#5eead4', bgColor: '#f0fdfa' },
+  Listing: { label: t('zone.listing'), color: 'pink',    borderColor: '#f9a8d4', bgColor: '#fdf2f8' },
+  Break:   { label: t('zone.break'),   color: 'amber',   borderColor: '#fde047', bgColor: '#fefce8' },
+  Finish:  { label: t('zone.finish'),  color: 'purple',  borderColor: '#c4b5fd', bgColor: '#faf5ff' },
+}));
 
 const zoneBadgeClass = (zone) => {
   const map = {
@@ -370,17 +410,17 @@ const zoneBadgeClass = (zone) => {
                 >✕</button>
                 <div class="flex items-center gap-2 p-2.5">
                   <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-accent/30 shrink-0" />
-                  <div class="flex flex-col min-w-0">
+                  <div class="flex flex-col min-w-0 flex-1">
                     <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                     <div class="flex items-center gap-1 mt-0.5">
                       <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
-                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }}G</span>
+                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }} เกม</span>
+                      <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
+                        :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
+                      >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
                 </div>
-                <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
-                  :class="item.current_game ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning'"
-                >{{ item.current_game ? `กำลังเล่น` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)} น.` }}</div>
               </div>
             </template>
             <!-- Empty slot(s) for Team 1 -->
@@ -422,17 +462,17 @@ const zoneBadgeClass = (zone) => {
                 >✕</button>
                 <div class="flex items-center gap-2 p-2.5">
                   <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-secondary/30 shrink-0" />
-                  <div class="flex flex-col min-w-0">
+                  <div class="flex flex-col min-w-0 flex-1">
                     <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                     <div class="flex items-center gap-1 mt-0.5">
                       <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
-                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }}G</span>
+                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }} เกม</span>
+                      <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
+                        :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
+                      >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
                 </div>
-                <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
-                  :class="item.current_game ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning'"
-                >{{ item.current_game ? `กำลังเล่น` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)} น.` }}</div>
               </div>
             </template>
             <!-- Empty slot(s) for Team 2 -->
@@ -451,7 +491,7 @@ const zoneBadgeClass = (zone) => {
     <!-- ===== OTHER ZONES ===== -->
     <template v-for="zone in ['Ready', 'Playing', 'Listing', 'Break', 'Finish']" :key="zone">
       <div
-        v-if="dropZones[zone].length > 0 || zone === 'Ready'"
+        v-if="dropZones[zone].length > 0 || zone === 'Ready' || zone === 'Playing' || zone === 'Break'"
         class="rounded-2xl p-3 border-2 border-dashed transition-all"
         :style="{
           borderColor: dropZoneActive === zone ? '#67e8f9' : zoneConfig[zone].borderColor,
@@ -482,19 +522,17 @@ const zoneBadgeClass = (zone) => {
             >+</button>
             <div class="flex items-center gap-2 p-2.5">
               <UserAvatar :src="item.avatar" :name="item.display_name || item.name" size="md" rounded="full" class="border-2 border-base-200 shrink-0" />
-              <div class="flex flex-col min-w-0">
+              <div class="flex flex-col min-w-0 flex-1">
                 <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                 <div class="flex items-center gap-1 mt-0.5">
-                  <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-medium">L{{ item.rank_level }}</span>
-                  <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-medium">{{ item.played }}G</span>
+                  <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-medium">Lv{{ item.rank_level }}</span>
+                  <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-medium">{{ item.played }} เกม</span>
+                  <span class="text-[9px] px-1 py-px rounded font-medium ml-auto"
+                    :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
+                  >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                 </div>
               </div>
             </div>
-            <div class="px-2 py-1 text-[9px] font-semibold text-center border-t border-base-200"
-              :class="item.current_game
-                ? 'bg-accent/10 text-accent'
-                : (zone === 'Playing' ? 'bg-accent/10 text-accent' : 'bg-warning/10 text-warning')"
-            >{{ item.current_game ? `เกม ${item.played}` : (zone === 'Playing' ? 'กำลังเล่น' : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}m`) }}</div>
           </div>
         </div>
       </div>

@@ -1,12 +1,12 @@
 <template>
-  <Head title="My Parties" />
+  <Head :title="t('nav.myParties')" />
 
   <AppLayout>
     <div class="space-y-4">
       <!-- Header -->
       <div>
-        <h1 class="text-xl font-bold text-base-content m-0">My Parties</h1>
-        <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ parties.length }} parties joined</p>
+        <h1 class="text-xl font-bold text-base-content m-0">{{ t('nav.myParties') }}</h1>
+        <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ t('partyList.joined', { count: parties.length }) }}</p>
       </div>
 
       <!-- Party Cards -->
@@ -43,7 +43,7 @@
                   <i class="pi pi-calendar text-primary text-xs"></i>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Date</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.date') }}</p>
                   <p class="text-sm font-medium text-base-content m-0 truncate">{{ formatDate(party.play_date) }}</p>
                 </div>
               </div>
@@ -53,7 +53,7 @@
                   <i class="pi pi-clock text-primary text-xs"></i>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Hours</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.hours') }}</p>
                   <p class="text-sm font-medium text-base-content m-0">{{ party.play_hours }}h</p>
                 </div>
               </div>
@@ -63,7 +63,7 @@
                   <i class="pi pi-users text-primary text-xs"></i>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">Players</p>
+                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.players') }}</p>
                   <p class="text-sm font-medium m-0" :class="party.members_count >= party.max_players ? 'text-error' : 'text-base-content'">
                     {{ party.members_count }}/{{ party.max_players }}
                   </p>
@@ -71,7 +71,7 @@
               </div>
             </div>
 
-            <!-- Bottom: Avatars + Enter button -->
+            <!-- Bottom: Avatars + เข้า button -->
             <div class="flex items-center justify-between pt-3 border-t border-base-200">
               <div class="flex items-center">
                 <div class="flex -space-x-2">
@@ -92,7 +92,7 @@
                 @click.stop="enterParty(party.id)"
                 class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary text-white hover:bg-primary/80"
               >
-                <i class="pi pi-arrow-right mr-1 text-[10px]"></i> Enter
+                <i class="pi pi-arrow-right mr-1 text-[10px]"></i> {{ t('common.enter') }}
               </button>
             </div>
           </div>
@@ -104,8 +104,8 @@
         <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <span class="text-3xl">🏸</span>
         </div>
-        <h3 class="text-lg font-semibold text-base-content m-0">No parties yet</h3>
-        <p class="text-sm text-base-content/60 mt-1 m-0">Join a party from the Party Lists page!</p>
+        <h3 class="text-lg font-semibold text-base-content m-0">{{ t('partyList.noParties') }}</h3>
+        <p class="text-sm text-base-content/60 mt-1 m-0">{{ t('partyList.joinFirst') }}</p>
       </div>
     </div>
   </AppLayout>
@@ -116,6 +116,9 @@ import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { ref } from "vue";
 import { Head, usePage, router } from "@inertiajs/vue3";
+import { useLocale } from "@/composables/useLocale";
+
+const { t } = useLocale();
 
 const page = usePage();
 const parties = ref(page.props.parties ?? []);
