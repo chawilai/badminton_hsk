@@ -71,6 +71,9 @@ class HandleInertiaRequests extends Middleware
             'unreadChatCount' => fn () => $request->user()
                 ? ChatController::getUnreadCount($request->user()->id)
                 : 0,
+            'pendingFriendCount' => fn () => $request->user()
+                ? \App\Models\Friendship::where('receiver_id', $request->user()->id)->where('status', 'pending')->count()
+                : 0,
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

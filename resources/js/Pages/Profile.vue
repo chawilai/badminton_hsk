@@ -1,28 +1,36 @@
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
-import { Head, usePage, Link } from "@inertiajs/vue3";
+import { Head, usePage, Link, router } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { useLocale } from "@/composables/useLocale";
 
+const { t } = useLocale();
 const page = usePage();
-const user = page.props.profileUser ?? page.props.auth.user;
-const rank = user?.badminton_rank ?? user?.badmintonRank ?? null;
+const user = computed(() => page.props.profileUser || page.props.auth.user);
+const stats = computed(() => page.props.stats || {});
+const recentParties = computed(() => page.props.recentParties || []);
+const recentGames = computed(() => page.props.recentGames || []);
+const activeTab = ref('overview');
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return null;
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+const formatPlayTime = (seconds) => {
+  if (!seconds) return '0 น.';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h} ชม. ${m} น.`;
+  return `${m} น.`;
 };
+
+const estimateCalories = (seconds) => Math.round((seconds / 60) * 7);
 
 const genderLabel = (g) => {
-    if (!g) return null;
-    const map = { male: 'ชาย', female: 'หญิง', other: 'อื่นๆ' };
-    return map[g] || g;
+  const map = { male: 'ชาย', female: 'หญิง', other: 'อื่นๆ' };
+  return map[g] || '-';
 };
 
-const memberSince = () => {
-    const d = user?.created_at;
-    if (!d) return '-';
-    return new Date(d).toLocaleDateString('th-TH', { year: 'numeric', month: 'short' });
+const formatDate = (d) => {
+  if (!d) return '-';
+  return new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 </script>
 
@@ -30,126 +38,177 @@ const memberSince = () => {
   <Head title="Profile" />
 
   <AppLayout>
-    <div class="space-y-4">
-      <!-- Profile Header Card -->
-      <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
-        <!-- Cover gradient -->
-        <div class="h-28 bg-gradient-to-br from-primary via-secondary to-accent relative">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,oklch(100%_0_0_/_0.15),transparent)]"></div>
-        </div>
-
-        <!-- Profile info -->
-        <div class="px-5 pb-5 -mt-10 relative">
-          <!-- Avatar row -->
-          <UserAvatar :src="user?.avatar" :name="user?.name" size="2xl" rounded="2xl" class="border-4 border-base-100 shadow-lg mb-3" />
-
-          <!-- Name & details -->
-          <h1 class="text-xl font-bold text-base-content m-0 truncate">{{ user?.name }}</h1>
-          <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ user?.email }}</p>
-          <div v-if="rank" class="flex items-center gap-2 mt-2">
-            <span class="px-2.5 py-0.5 bg-primary/10 text-primary rounded-md text-xs font-semibold">{{ rank.general_rank }}</span>
-            <span class="text-xs text-base-content/50">{{ rank.education_rank }}</span>
-          </div>
-          <p v-if="user?.player_motto" class="text-sm text-base-content/70 italic mt-3 m-0">"{{ user.player_motto }}"</p>
+    <div class="space-y-4 pb-4">
+      <!-- Profile Header -->
+      <div class="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 text-center">
+        <UserAvatar :src="user.avatar" :name="user.name" size="2xl" rounded="full" class="mx-auto border-4 border-base-100 shadow-lg mb-3" />
+        <h1 class="text-lg font-bold text-base-content m-0">{{ user.name }}</h1>
+        <p class="text-xs text-base-content/50 m-0 mt-0.5">{{ user.email }}</p>
+        <div class="flex items-center justify-center gap-2 mt-2">
+          <span v-if="user.badminton_rank" class="badge badge-sm badge-primary">{{ user.badminton_rank?.education_rank || `Lv${user.badminton_rank_id}` }}</span>
+          <span v-if="user.gender" class="badge badge-sm badge-ghost">{{ genderLabel(user.gender) }}</span>
         </div>
       </div>
 
       <!-- Stats Grid -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-base-100 rounded-xl border border-base-300 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-info/10 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </div>
-            <div class="min-w-0">
-              <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wider">เพศ</p>
-              <p class="text-sm font-semibold text-base-content m-0">{{ genderLabel(user?.gender) || 'ยังไม่ระบุ' }}</p>
-            </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-xl font-black text-primary">{{ stats.totalGames || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">เกมทั้งหมด</div>
+        </div>
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-xl font-black text-success">{{ stats.gamesWon || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">ชนะ</div>
+        </div>
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-xl font-black text-warning">{{ stats.winRate || 0 }}%</div>
+          <div class="text-[10px] text-base-content/50">Win Rate</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-xl font-black text-info">{{ stats.partiesJoined || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">ปาร์ตี้</div>
+        </div>
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-xl font-black text-secondary">{{ stats.courtsVisited || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">สนาม</div>
+        </div>
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-lg font-black text-accent">{{ formatPlayTime(stats.totalPlaySeconds) }}</div>
+          <div class="text-[10px] text-base-content/50">เวลาเล่นรวม</div>
+        </div>
+      </div>
+
+      <!-- Calories -->
+      <div v-if="stats.totalPlaySeconds > 0" class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10 rounded-xl border border-orange-200/50 p-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🔥</span>
+          <div>
+            <div class="text-xs font-bold text-orange-600">แคลอรี่ที่เผาผลาญ</div>
+            <div class="text-[10px] text-base-content/50">ประมาณ ~7 kcal/นาที</div>
           </div>
         </div>
+        <div class="text-xl font-black text-orange-600">{{ estimateCalories(stats.totalPlaySeconds).toLocaleString() }} kcal</div>
+      </div>
 
-        <div class="bg-base-100 rounded-xl border border-base-300 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
-            <div class="min-w-0">
-              <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wider">วันเกิด</p>
-              <p class="text-sm font-semibold text-base-content m-0">{{ formatDate(user?.date_of_birth) || 'ยังไม่ระบุ' }}</p>
-            </div>
-          </div>
+      <!-- Most Played With -->
+      <div v-if="stats.mostPlayedWith" class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3">
+        <UserAvatar :src="stats.mostPlayedWith.avatar" :name="stats.mostPlayedWith.name" size="lg" rounded="full" class="border-2 border-primary/30" />
+        <div class="flex-1">
+          <div class="text-[10px] font-bold text-primary uppercase tracking-wider">คู่หูขาประจำ</div>
+          <div class="text-sm font-bold text-base-content">{{ stats.mostPlayedWith.name }}</div>
+          <div class="text-[10px] text-base-content/50">เล่นด้วยกัน {{ stats.mostPlayedWith.count }} เกม</div>
         </div>
+        <span class="text-2xl">🤝</span>
+      </div>
 
-        <div class="bg-base-100 rounded-xl border border-base-300 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-              <span class="text-lg">🏸</span>
-            </div>
-            <div class="min-w-0">
-              <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wider">แรงค์</p>
-              <p class="text-sm font-semibold text-base-content m-0">{{ rank?.education_rank || 'ยังไม่ระบุ' }}</p>
-            </div>
-          </div>
+      <!-- Friends Link -->
+      <Link href="/friends" class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3 no-underline hover:bg-base-200 transition-colors">
+        <span class="text-2xl">👥</span>
+        <div class="flex-1">
+          <div class="text-sm font-bold text-base-content">{{ t('friends.title') }}</div>
+          <div class="text-[10px] text-base-content/50">จัดการรายชื่อเพื่อน</div>
         </div>
+        <span v-if="page.props.pendingFriendCount > 0" class="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold">{{ page.props.pendingFriendCount }}</span>
+        <svg class="w-4 h-4 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </Link>
 
-        <div class="bg-base-100 rounded-xl border border-base-300 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <!-- Tabs -->
+      <div class="flex gap-1 p-1 bg-base-200 rounded-xl">
+        <button v-for="tab in [{ key: 'overview', label: 'ประวัติเกม' }, { key: 'parties', label: 'ปาร์ตี้' }]" :key="tab.key"
+          class="flex-1 py-2 px-3 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all"
+          :class="activeTab === tab.key ? 'bg-primary text-primary-content' : 'bg-transparent text-base-content/50 hover:text-base-content'"
+          @click="activeTab = tab.key"
+        >{{ tab.label }}</button>
+      </div>
+
+      <!-- Tab: Recent Games -->
+      <div v-show="activeTab === 'overview'">
+        <div v-if="recentGames.length === 0" class="text-center py-8 bg-base-100 rounded-xl border border-base-300">
+          <span class="text-3xl">🏸</span>
+          <p class="text-xs text-base-content/50 mt-2 m-0">ยังไม่มีประวัติเกม</p>
+        </div>
+        <div class="space-y-2">
+          <div v-for="game in recentGames" :key="game.id"
+            class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3"
+          >
+            <!-- Win/Loss indicator -->
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold"
+              :class="game.won ? 'bg-success/15 text-success' : (game.won === false ? 'bg-error/15 text-error' : 'bg-base-200 text-base-content/40')"
+            >{{ game.won ? 'W' : (game.won === false ? 'L' : '-') }}</div>
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-base-content">{{ game.score || '?-?' }}</span>
+                <span class="text-[10px] text-base-content/40">{{ game.court_name }}</span>
+              </div>
+              <div class="flex items-center gap-1 mt-0.5">
+                <!-- Teammates -->
+                <span class="text-[9px] text-base-content/50">กับ</span>
+                <div class="flex -space-x-1">
+                  <UserAvatar v-for="(tm, i) in game.teammates" :key="i" :src="tm.avatar" :name="tm.name" size="xs" rounded="full" class="border border-base-100" />
+                </div>
+                <span class="text-[9px] text-base-content/50 mx-0.5">vs</span>
+                <div class="flex -space-x-1">
+                  <UserAvatar v-for="(op, i) in game.opponents" :key="i" :src="op.avatar" :name="op.name" size="xs" rounded="full" class="border border-base-100" />
+                </div>
+              </div>
             </div>
-            <div class="min-w-0">
-              <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wider">ระดับ</p>
-              <p class="text-sm font-semibold text-base-content m-0">{{ rank?.general_rank || 'ยังไม่ระบุ' }}</p>
+
+            <!-- Duration -->
+            <div class="text-right shrink-0">
+              <div class="text-[10px] text-base-content/40">{{ formatDate(game.play_date) }}</div>
+              <div v-if="game.duration_seconds" class="text-[10px] text-base-content/50">{{ formatPlayTime(game.duration_seconds) }}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Account Details -->
-      <div class="bg-base-100 rounded-xl border border-base-300 overflow-hidden">
-        <div class="px-4 py-3 border-b border-base-200">
-          <h2 class="text-sm font-bold text-base-content m-0 uppercase tracking-wider">ข้อมูลบัญชี</h2>
+      <!-- Tab: Recent Parties -->
+      <div v-show="activeTab === 'parties'">
+        <div v-if="recentParties.length === 0" class="text-center py-8 bg-base-100 rounded-xl border border-base-300">
+          <span class="text-3xl">🎉</span>
+          <p class="text-xs text-base-content/50 mt-2 m-0">ยังไม่มีประวัติปาร์ตี้</p>
         </div>
-        <div class="divide-y divide-base-200">
-          <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center gap-3">
-              <svg class="w-4 h-4 text-base-content/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-              <div>
-                <p class="text-sm text-base-content m-0">Provider</p>
-                <p class="text-xs text-base-content/50 m-0">{{ user?.provider || 'Email' }}</p>
-              </div>
+        <div class="space-y-2">
+          <Link v-for="party in recentParties" :key="party.id" :href="`/party/${party.id}`"
+            class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3 no-underline hover:bg-base-200 transition-colors"
+          >
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <span class="text-sm">🏟️</span>
             </div>
-          </div>
-          <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center gap-3">
-              <svg class="w-4 h-4 text-base-content/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              <div>
-                <p class="text-sm text-base-content m-0">Email</p>
-                <p class="text-xs text-base-content/50 m-0">{{ user?.email }}</p>
-              </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-base-content truncate">{{ party.court_name }}</div>
+              <div class="text-[10px] text-base-content/50">{{ formatDate(party.play_date) }} · {{ party.start_time?.substring(0,5) }}</div>
             </div>
-          </div>
-          <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center gap-3">
-              <svg class="w-4 h-4 text-base-content/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <div>
-                <p class="text-sm text-base-content m-0">สมาชิกตั้งแต่</p>
-                <p class="text-xs text-base-content/50 m-0">{{ memberSince() }}</p>
-              </div>
+            <div class="text-right shrink-0">
+              <div class="text-[10px] text-base-content/50">{{ party.games_count }} เกม</div>
+              <div class="text-[10px] text-base-content/40">{{ party.members_count }} คน</div>
             </div>
-          </div>
+            <span class="badge badge-xs" :class="{
+              'badge-success': party.status === 'Open',
+              'badge-warning': party.status === 'Full',
+              'badge-neutral': party.status === 'Over',
+            }">{{ party.status }}</span>
+          </Link>
         </div>
       </div>
 
       <!-- Logout -->
-      <Link
-        as="button"
-        :href="route('logout')"
-        method="post"
-        class="w-full py-3 px-4 bg-error/10 text-error font-medium rounded-xl border border-error/20 text-sm text-center no-underline cursor-pointer transition-colors hover:bg-error/20"
-      >
-        ออกจากระบบ
-      </Link>
+      <div class="pt-2">
+        <Link
+          as="button"
+          :href="route('logout')"
+          method="post"
+          class="w-full h-10 rounded-xl text-sm font-medium bg-error/10 text-error border-0 cursor-pointer hover:bg-error/20 transition-colors flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          {{ t('nav.logout') }}
+        </Link>
+      </div>
     </div>
   </AppLayout>
 </template>

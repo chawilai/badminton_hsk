@@ -55,8 +55,9 @@ class ChatController extends Controller
         // Selected chat
         $chatId = $request->chatId;
 
-        // Users available for new chat (exclude self)
-        $users = User::where('id', '!=', $userId)
+        // Users available for new chat (friends only)
+        $friendIds = $request->user()->friendIds();
+        $users = User::whereIn('id', $friendIds)
             ->select('id', 'name', 'avatar')
             ->orderBy('name')
             ->get();

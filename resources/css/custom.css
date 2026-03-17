@@ -1,4 +1,14 @@
 
+/* Clean focus styles — no thick ring */
+.input:focus,
+.select:focus,
+.textarea:focus,
+.checkbox:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: oklch(var(--p)) !important;
+}
+
 @keyframes clippath {
     0%,
     100% {

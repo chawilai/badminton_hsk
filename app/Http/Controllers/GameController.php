@@ -15,9 +15,34 @@ use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Ably\AblyRest;
 
 class GameController extends Controller
 {
+    /**
+     * Broadcast a party update event via Ably.
+     */
+    private function getGameNumber($game)
+    {
+        return Game::where('party_id', $game->party_id)->where('id', '<=', $game->id)->count();
+    }
+
+    private function broadcastPartyUpdate($partyId, $event = 'game.updated', $message = null)
+    {
+        try {
+            $user = auth()->user();
+            $ably = new AblyRest(env('ABLY_KEY'));
+            $channel = $ably->channels->get("party.{$partyId}");
+            $channel->publish($event, [
+                'party_id' => $partyId,
+                'timestamp' => now()->toISOString(),
+                'user_id' => $user?->id,
+                'user_name' => $user?->name,
+                'message' => $message,
+            ]);
+        } catch (\Exception $e) {}
+    }
+
 
     public function index(Request $request)
     {
@@ -158,6 +183,7 @@ class GameController extends Controller
             'team' => $request->team
         ]);
 
+        $this->broadcastPartyUpdate($game->party_id, 'player.added');
         return back()->with('success', 'Player added successfully to the game.');
     }
 
@@ -476,6 +502,7 @@ class GameController extends Controller
             $game->update(['status' => 'setting']);
         }
 
+        $this->broadcastPartyUpdate($game->party_id, 'player.removed');
         return back()->with('success', 'Player has been removed and set to ready.');
     }
 
@@ -511,6 +538,7 @@ class GameController extends Controller
         $game->game_list_date = Carbon::now();
         $game->save();
 
+        $this->broadcastPartyUpdate($game->party_id, 'game.listed', 'ลีสเกม #' . $this->getGameNumber($game));
         return back()->with('success', 'The game has been listed for play.');
     }
 
@@ -523,7 +551,8 @@ class GameController extends Controller
             'players' => 'required|array|min:2',
             'team1_start_side' => 'sometimes|in:north,south',
             'initial_shuttlecock_game' => 'sometimes|numeric|min:0',
-            'process' => 'required|in:listing,playing', // Accept process to set status
+            'process' => 'required|in:listing,playing',
+            'court_number' => 'nullable|integer|min:1',
         ]);
 
         $party = Party::findOrFail($validatedData['party_id']);
@@ -578,9 +607,10 @@ class GameController extends Controller
         $game = Game::create([
             'party_id' => $validatedData['party_id'],
             'game_type' => $validatedData['game_type'],
-            'status' => $validatedData['process'], // Set the status based on process
+            'court_number' => $validatedData['court_number'] ?? null,
+            'status' => $validatedData['process'],
             'game_list_date' => now(),
-            'game_start_date' => $gameStartDate, // Add start date if process is playing
+            'game_start_date' => $gameStartDate,
             'game_create_date' => now(),
         ]);
 
@@ -615,6 +645,7 @@ class GameController extends Controller
             ]);
         }
 
+        $this->broadcastPartyUpdate($game->party_id, 'game.created', 'สร้างเกม #' . $this->getGameNumber($game));
         return back()->with('success', 'The game has been successfully created with the status set to ' . $validatedData['process'] . '.');
     }
 
@@ -633,6 +664,11 @@ class GameController extends Controller
         // Check if the game is already in progress or has started
         if ($game->status !== 'listing') {
             return back()->with('error', ['notInListing' => 'Game is not in a state listing to start']);
+        }
+
+        // Require court number to start
+        if (!$game->court_number) {
+            return back()->with('error', ['courtRequired' => 'กรุณาระบุเลขคอร์ทก่อนเริ่มเกม']);
         }
 
         // Check if any player is currently playing in another game within the same party
@@ -668,6 +704,7 @@ class GameController extends Controller
             'team2_start_side' => $team2StartSide,
         ]);
 
+        $this->broadcastPartyUpdate($game->party_id, 'game.started', 'เริ่มเกม #' . $this->getGameNumber($game));
         return back()->with('success', 'Game is starting.');
     }
 
@@ -704,6 +741,7 @@ class GameController extends Controller
             ]);
         }
 
+        $this->broadcastPartyUpdate($game->party_id, 'game.finished', 'จบเกม #' . $this->getGameNumber($game));
         return back()->with('success', 'Game finished successfully');
     }
 
@@ -757,6 +795,7 @@ class GameController extends Controller
             }
         }
 
+        $this->broadcastPartyUpdate($game->party_id, 'player.autoAdded');
         return back()->with('success', 'Players added automatically to the game.');
     }
 
@@ -799,6 +838,7 @@ class GameController extends Controller
             'quantity' => $quantity
         ]);
 
+        $this->broadcastPartyUpdate($game->party_id, 'shuttle.added', 'เพิ่มลูกแบดในเกม #' . $this->getGameNumber($game));
         return back();
     }
 
@@ -821,12 +861,31 @@ class GameController extends Controller
         ]);
     }
 
+    public function updateCourtNumber(Request $request, Game $game)
+    {
+        $request->validate([
+            'court_number' => 'required|integer|min:1',
+        ]);
+
+        // Don't allow editing court number of finished games that already have one
+        if ($game->status === 'finished' && $game->court_number) {
+            return back()->with('error', ['courtLocked' => 'ไม่สามารถแก้ไขเลขคอร์ทของเกมที่จบแล้วได้']);
+        }
+
+        $game->update(['court_number' => $request->court_number]);
+        $this->broadcastPartyUpdate($game->party_id, 'court.updated', 'กำหนดคอร์ท ' . $request->court_number . ' ให้เกม #' . $this->getGameNumber($game));
+
+        return back()->with('success', 'อัพเดทเลขคอร์ทแล้ว');
+    }
+
     public function deleteGame(Game $game)
     {
         // Check if the game status is 'setting' or 'listing'
         if (!in_array($game->status, ['setting', 'listing'])) {
             return back()->with('error', ['onlyOnSettingOrListing' => 'The game can only be deleted when its status is "setting" or "listing".']);
         }
+
+        $partyId = $game->party_id;
 
         // Delete related records first to avoid foreign key constraint violations
         $game->gamePlayers()->delete();
@@ -837,6 +896,7 @@ class GameController extends Controller
         // Delete the game
         $game->delete();
 
+        $this->broadcastPartyUpdate($partyId, 'game.deleted', 'ลบเกม');
         return back()->with('success', 'The game has been successfully deleted.');
     }
 
@@ -912,6 +972,11 @@ class GameController extends Controller
         $existingSets
             ->filter(fn($existingSet) => !$sentSetNumbers->contains($existingSet->set_number))
             ->each(fn($set) => $set->delete());
+
+        $gameModel = Game::find($game);
+        if ($gameModel) {
+            $this->broadcastPartyUpdate($gameModel->party_id, 'score.updated', 'ลงผลเกม #' . $this->getGameNumber($gameModel));
+        }
 
         return back()->with('response', [
             'message' => 'Game sets updated successfully',

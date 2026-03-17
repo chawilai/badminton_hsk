@@ -41,7 +41,7 @@ export function useDragDrop() {
     const originalZones = reactive({}); // Store original zones for items
 
     const MAX_PLAYING_ITEMS = 4;
-    const MAX_TEAM_ITEMS = 2;
+    const MAX_TEAM_ITEMS = 2; // Default max, can be overridden by UI
     const TEAM_ZONES = ['Team1', 'Team2'];
 
     const isActionProcessed = ref(false); // Flag to avoid duplicate actions

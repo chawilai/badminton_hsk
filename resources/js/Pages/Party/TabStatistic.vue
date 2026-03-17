@@ -1,9 +1,12 @@
 <script setup>
 import UserAvatar from "@/Components/UserAvatar.vue";
-import { computed } from "vue";
+import { ref, computed } from "vue";
+
+const statsTab = ref('games'); // 'games' or 'duration'
 import { useLocale } from "@/composables/useLocale";
 
 const { t } = useLocale();
+const pairSearch = ref("");
 
 const props = defineProps({
   games: { type: Array, required: true },
@@ -55,11 +58,18 @@ const playerStats = computed(() => {
           games: 0,
           wins: 0,
           losses: 0,
+          totalSeconds: 0,
           teammates: {},
           opponents: {},
         };
       }
       stats[uid].games++;
+
+      // Track play duration
+      if (game.game_start_date && game.game_end_date) {
+        const dur = Math.floor((new Date(game.game_end_date) - new Date(game.game_start_date)) / 1000);
+        if (dur > 0) stats[uid].totalSeconds += dur;
+      }
 
       if (gameWinnerTeam && hasTeam(player.team)) {
         if ((isTeam1(player.team) && gameWinnerTeam === 'team1') || (isTeam2(player.team) && gameWinnerTeam === 'team2')) {
@@ -87,6 +97,30 @@ const playerStats = computed(() => {
 });
 
 // MVP: highest win rate with min 2 games
+// Players sorted by duration
+const playerStatsByDuration = computed(() => {
+  return [...playerStats.value].sort((a, b) => b.totalSeconds - a.totalSeconds);
+});
+
+const formatPlayTime = (seconds) => {
+  if (!seconds) return '0 น.';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h} ชม. ${m} น.`;
+  return `${m} น.`;
+};
+
+const formatAvgTime = (seconds, games) => {
+  if (!games || !seconds) return '-';
+  return formatPlayTime(Math.floor(seconds / games));
+};
+
+// Calories estimate: badminton burns ~6-8 cal/min, use 7
+const estimateCalories = (seconds) => {
+  if (!seconds) return 0;
+  return Math.round((seconds / 60) * 7);
+};
+
 const mvp = computed(() => {
   const eligible = playerStats.value.filter(p => p.games >= 2);
   if (!eligible.length) return null;
@@ -147,8 +181,47 @@ const headToHead = computed(() => {
     });
   });
 
-  return Object.values(pairs).sort((a, b) => b.count - a.count).slice(0, 5);
+  return Object.values(pairs).sort((a, b) => b.count - a.count);
 });
+
+// Teammates: top pairs who played on the same team
+const teammates = computed(() => {
+  const pairs = {};
+  finishedGames.value.forEach(game => {
+    if (!game.game_players) return;
+    const team1Players = game.game_players.filter(p => isTeam1(p.team));
+    const team2Players = game.game_players.filter(p => isTeam2(p.team));
+
+    [team1Players, team2Players].forEach(teamPlayers => {
+      for (let i = 0; i < teamPlayers.length; i++) {
+        for (let j = i + 1; j < teamPlayers.length; j++) {
+          const p1 = teamPlayers[i];
+          const p2 = teamPlayers[j];
+          const key = [p1.user_id, p2.user_id].sort().join('-');
+          if (!pairs[key]) {
+            pairs[key] = {
+              player1: { user_id: p1.user_id, name: p1.display_name || p1.user?.name, avatar: p1.user?.avatar },
+              player2: { user_id: p2.user_id, name: p2.display_name || p2.user?.name, avatar: p2.user?.avatar },
+              count: 0,
+            };
+          }
+          pairs[key].count++;
+        }
+      }
+    });
+  });
+
+  return Object.values(pairs).sort((a, b) => b.count - a.count);
+});
+
+const matchesSearch = (pair) => {
+  if (!pairSearch.value.trim()) return true;
+  const q = pairSearch.value.toLowerCase();
+  return (pair.player1.name || '').toLowerCase().includes(q) || (pair.player2.name || '').toLowerCase().includes(q);
+};
+
+const filteredHeadToHead = computed(() => headToHead.value.filter(matchesSearch));
+const filteredTeammates = computed(() => teammates.value.filter(matchesSearch));
 
 const winRate = (player) => {
   if (player.games === 0) return 0;
@@ -203,10 +276,25 @@ const formatDuration = (minutes) => {
 
     <!-- Player Stats Table -->
     <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="playerStats.length > 0">
+      <!-- Tab header -->
       <div class="px-4 py-3 border-b border-base-200">
-        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.playerStats') }}</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.playerStats') }}</h3>
+          <div class="flex gap-1 p-0.5 bg-base-200 rounded-lg">
+            <button @click="statsTab = 'games'"
+              class="px-2.5 py-1 rounded-md text-[10px] font-semibold border-0 cursor-pointer transition-all"
+              :class="statsTab === 'games' ? 'bg-primary text-white' : 'bg-transparent text-base-content/50 hover:text-base-content'"
+            >{{ t('stats.tabGames') }}</button>
+            <button @click="statsTab = 'duration'"
+              class="px-2.5 py-1 rounded-md text-[10px] font-semibold border-0 cursor-pointer transition-all"
+              :class="statsTab === 'duration' ? 'bg-primary text-white' : 'bg-transparent text-base-content/50 hover:text-base-content'"
+            >{{ t('stats.tabDuration') }}</button>
+          </div>
+        </div>
       </div>
-      <div class="overflow-x-auto">
+
+      <!-- Games Tab -->
+      <div v-show="statsTab === 'games'" class="overflow-x-auto">
         <table class="table table-sm w-full">
           <thead>
             <tr class="text-xs text-base-content/50">
@@ -242,15 +330,59 @@ const formatDuration = (minutes) => {
           </tbody>
         </table>
       </div>
+
+      <!-- Duration Tab -->
+      <div v-show="statsTab === 'duration'" class="overflow-x-auto">
+        <table class="table table-sm w-full">
+          <thead>
+            <tr class="text-xs text-base-content/50">
+              <th class="pl-4">#</th>
+              <th>{{ t('stats.player') }}</th>
+              <th class="text-center">{{ t('stats.playTime') }}</th>
+              <th class="text-center">{{ t('stats.avgPerGame') }}</th>
+              <th class="text-center">{{ t('stats.games') }}</th>
+              <th class="text-center">🔥 {{ t('stats.calories') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(player, index) in playerStatsByDuration" :key="player.user_id" class="hover">
+              <td class="pl-4 text-xs text-base-content/50">{{ index + 1 }}</td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <UserAvatar :src="player.avatar" :name="player.name" size="sm" rounded="full" />
+                  <span class="text-sm font-medium text-base-content truncate max-w-[8rem]">{{ player.name }}</span>
+                </div>
+              </td>
+              <td class="text-center text-sm font-semibold text-primary">{{ formatPlayTime(player.totalSeconds) }}</td>
+              <td class="text-center text-xs text-base-content/60">{{ formatAvgTime(player.totalSeconds, player.games) }}</td>
+              <td class="text-center text-sm font-semibold">{{ player.games }}</td>
+              <td class="text-center">
+                <span class="text-xs font-bold text-orange-500">{{ estimateCalories(player.totalSeconds) }}</span>
+                <span class="text-[9px] text-base-content/40 ml-0.5">kcal</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Search for pair stats -->
+    <div v-if="headToHead.length > 0 || teammates.length > 0" class="mb-1">
+      <input
+        v-model="pairSearch"
+        type="text"
+        :placeholder="t('common.search') + '...'"
+        class="w-full px-3 py-2 rounded-xl border border-base-300 bg-base-100 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-hidden transition-all"
+      />
     </div>
 
     <!-- Head-to-Head -->
-    <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="headToHead.length > 0">
+    <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="filteredHeadToHead.length > 0">
       <div class="px-4 py-3 border-b border-base-200">
-        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.headToHead') }}</h3>
+        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.headToHead') }} <span class="text-sm font-normal text-base-content/50">({{ filteredHeadToHead.length }})</span></h3>
       </div>
       <div class="divide-y divide-base-200">
-        <div v-for="(pair, index) in headToHead" :key="index" class="flex items-center gap-3 px-4 py-2.5">
+        <div v-for="(pair, index) in filteredHeadToHead" :key="index" class="flex items-center gap-3 px-4 py-2.5">
           <div class="flex items-center gap-1.5 flex-1 min-w-0">
             <UserAvatar :src="pair.player1.avatar" :name="pair.player1.name" size="sm" rounded="full" />
             <span class="text-sm text-base-content truncate">{{ (pair.player1.name || '').split(' ')[0] }}</span>
@@ -258,6 +390,29 @@ const formatDuration = (minutes) => {
           <div class="shrink-0 flex items-center gap-1">
             <span class="text-[10px] font-black text-base-content/30">VS</span>
             <span class="badge badge-sm badge-primary font-bold">{{ pair.count }}x</span>
+          </div>
+          <div class="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+            <span class="text-sm text-base-content truncate">{{ (pair.player2.name || '').split(' ')[0] }}</span>
+            <UserAvatar :src="pair.player2.avatar" :name="pair.player2.name" size="sm" rounded="full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teammates -->
+    <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden" v-if="filteredTeammates.length > 0">
+      <div class="px-4 py-3 border-b border-base-200">
+        <h3 class="text-base font-bold text-base-content m-0">{{ t('stats.teammates') }} <span class="text-sm font-normal text-base-content/50">({{ filteredTeammates.length }})</span></h3>
+      </div>
+      <div class="divide-y divide-base-200">
+        <div v-for="(pair, index) in filteredTeammates" :key="index" class="flex items-center gap-3 px-4 py-2.5">
+          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+            <UserAvatar :src="pair.player1.avatar" :name="pair.player1.name" size="sm" rounded="full" />
+            <span class="text-sm text-base-content truncate">{{ (pair.player1.name || '').split(' ')[0] }}</span>
+          </div>
+          <div class="shrink-0 flex items-center gap-1">
+            <span class="text-[10px] font-black text-base-content/30">🤝</span>
+            <span class="badge badge-sm badge-success font-bold">{{ pair.count }}x</span>
           </div>
           <div class="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
             <span class="text-sm text-base-content truncate">{{ (pair.player2.name || '').split(' ')[0] }}</span>

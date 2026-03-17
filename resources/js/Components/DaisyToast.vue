@@ -26,7 +26,7 @@ const iconClass = (severity) => {
 </script>
 
 <template>
-    <div class="toast toast-top toast-end z-[9999]">
+    <div class="toast toast-bottom toast-end z-[9999] mb-16 lg:mb-0">
         <transition-group name="toast-slide">
             <div
                 v-for="t in toasts"

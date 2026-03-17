@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FriendController;
 // $user = User::findOrFail(1);
 // Auth::login($user);
 
@@ -193,7 +194,15 @@ Route::post('/chat/create', [ChatController::class, 'createChat']);
 Route::post('/chat/messages', [ChatController::class, 'getMessages']);
 Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
 Route::post('/chat/{chat_id}/read', [ChatController::class, 'markAsRead']);
+Route::post('/games/{game}/update-court-number', [GameController::class, 'updateCourtNumber']);
 // Chat
+
+// Friends
+Route::get('/friends', [FriendController::class, 'index']);
+Route::post('/friends/send', [FriendController::class, 'sendRequest']);
+Route::post('/friends/{friendship}/accept', [FriendController::class, 'acceptRequest']);
+Route::delete('/friends/{friendship}', [FriendController::class, 'cancelRequest']);
+// Friends
 
 // game
 // Using web routes (if your application uses CSRF protection and sessions)
@@ -237,6 +246,7 @@ Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.
 Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
 Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
 Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
+Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
 Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
 Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
 Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');

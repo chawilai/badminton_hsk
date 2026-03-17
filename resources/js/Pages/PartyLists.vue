@@ -6,7 +6,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-base-content m-0">{{ t('partyList.title') }}</h1>
+          <h1 class="text-lg font-bold text-base-content m-0">{{ t('partyList.title') }}</h1>
           <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ t('partyList.count', { count: filteredParties.length }) }}</p>
         </div>
         <div class="flex items-center gap-2">
@@ -17,12 +17,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
           </button>
           <button
-            @click="showDialog = true"
+            @click="openCreateDialog()"
             class="h-9 px-4 flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors active:scale-[0.98]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-            <span class="hidden sm:inline">{{ t('partyList.createParty') }}</span>
-            <span class="sm:hidden">{{ t('common.create') }}</span>
+            <span>{{ t('partyList.createParty') }}</span>
           </button>
         </div>
       </div>
@@ -37,98 +36,77 @@
           <!-- Card top accent -->
           <div class="h-1" :class="statusAccentColor(party.status)"></div>
 
-          <div class="p-4">
-            <!-- Top row: Court name + Status -->
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="min-w-0 flex-1">
-                <h3 class="text-base font-semibold text-base-content m-0 truncate">
-                  {{ party.court?.name || 'Unknown Court' }}
-                </h3>
-                <p class="text-xs text-base-content/50 m-0 mt-0.5">
-                  #{{ party.id }}
-                  <span v-if="party.is_private" class="ml-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg> Private
-                  </span>
-                </p>
-              </div>
-              <span
-                class="shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold"
-                :class="statusBadgeClass(party.status)"
-              >
-                {{ party.status }}
-              </span>
+          <div class="flex">
+            <!-- Thumbnail -->
+            <div class="w-20 shrink-0 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <span class="text-3xl">🏸</span>
             </div>
 
-            <!-- Info grid -->
-            <div class="grid grid-cols-3 gap-3 mb-3">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <!-- Content -->
+            <div class="flex-1 min-w-0 px-3 py-2">
+              <!-- Row 1: Party Name + Status -->
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <div class="flex-1 min-w-0 overflow-hidden">
+                  <h3 class="text-[12px] font-semibold text-base-content m-0 leading-tight whitespace-nowrap party-name-scroll">{{ party.name || party.court?.name || 'Party' }}</h3>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.date') }}</p>
-                  <p class="text-sm font-medium text-base-content m-0 truncate">{{ formatDisplayDate(party.play_date) }}</p>
-                </div>
+                <span class="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                  :class="party.members_count >= party.max_players ? 'bg-error/15 text-error' : 'bg-success/15 text-success'"
+                >{{ party.members_count }}/{{ party.max_players }}</span>
               </div>
 
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.time') }}</p>
-                  <p class="text-sm font-medium text-base-content m-0">{{ formatTime(party.start_time) }}</p>
-                </div>
+              <!-- Row 2: Court + Info inline -->
+              <div class="flex items-center gap-3 text-[11px] text-base-content/60 mb-1.5">
+                <span class="flex items-center gap-0.5">🏟️ {{ party.court?.name || '-' }}</span>
+              </div>
+              <div class="flex items-center gap-3 text-[11px] text-base-content/60 mb-1.5">
+                <span class="flex items-center gap-0.5">📅 {{ formatDisplayDate(party.play_date) }}</span>
+                <span class="flex items-center gap-0.5">⏰ {{ formatTime(party.start_time) }}</span>
+                <span class="px-1 py-px rounded text-[10px] font-bold" :class="party.default_game_type === 'double' ? 'bg-violet-100 text-violet-700' : 'bg-sky-100 text-sky-700'">{{ party.default_game_type === 'double' ? '1v1' : '2v2' }}</span>
+                <span v-if="party.is_private" class="text-base-content/40">🔒</span>
               </div>
 
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              <!-- Row 3: Avatars + Action -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="flex -space-x-1.5">
+                    <UserAvatar
+                      v-for="member in party.members?.slice(0, 5)"
+                      :key="member.id"
+                      :src="member.user?.avatar"
+                      :name="member.user?.name"
+                      size="xs"
+                      rounded="full"
+                      class="border border-base-100"
+                    />
+                  </div>
+                  <span v-if="party.members?.length > 5" class="ml-1 text-[9px] text-base-content/40">+{{ party.members.length - 5 }}</span>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.players') }}</p>
-                  <p class="text-sm font-medium m-0" :class="party.members_count >= party.max_players ? 'text-error' : 'text-base-content'">
-                    {{ party.members_count }}/{{ party.max_players }}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <!-- Members avatars + Action button -->
-            <div class="flex items-center justify-between pt-3 border-t border-base-200">
-              <!-- Member avatars -->
-              <div class="flex items-center">
-                <div class="flex -space-x-2">
-                  <UserAvatar
-                    v-for="(member, idx) in party.members?.slice(0, 5)"
-                    :key="member.id"
-                    :src="member.user?.avatar"
-                    :name="member.user?.name"
-                    size="sm"
-                    rounded="full"
-                    class="border-2 border-base-100"
-                  />
-                </div>
-                <span v-if="party.members?.length > 5" class="ml-1.5 text-xs text-base-content/50">
-                  +{{ party.members.length - 5 }}
-                </span>
+                <button
+                  v-if="!isUserInParty(party.members)"
+                  @click="joinParty(party.id)"
+                  class="h-8 px-4 rounded-lg text-xs font-bold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                  {{ t('common.join') }}
+                </button>
+                <template v-else>
+                  <button
+                    v-if="isOwner(party)"
+                    @click.stop="openEditDialog(party)"
+                    class="h-6 px-2 rounded-md text-[10px] font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-base-200 text-base-content/60 hover:bg-base-300 flex items-center gap-0.5"
+                  >
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  </button>
+                  <button
+                    @click="enterParty(party.id)"
+                    class="h-8 px-4 rounded-lg text-xs font-bold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary text-white hover:bg-primary/80 flex items-center gap-1"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    {{ t('common.enter') }}
+                  </button>
+                </template>
               </div>
-
-              <!-- Action -->
-              <button
-                v-if="!isUserInParty(party.members)"
-                @click="joinParty(party.id)"
-                class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary/10 text-primary hover:bg-primary/20"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg> {{ t('common.join') }}
-              </button>
-              <button
-                v-else
-                @click="enterParty(party.id)"
-                class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary text-white hover:bg-primary/80"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg> {{ t('common.enter') }}
-              </button>
             </div>
           </div>
         </div>
@@ -142,7 +120,7 @@
         <h3 class="text-lg font-semibold text-base-content m-0">{{ t('partyList.noParties') }}</h3>
         <p class="text-sm text-base-content/60 mt-1 m-0">{{ t('partyList.createFirst') }}</p>
         <button
-          @click="showDialog = true"
+          @click="openCreateDialog()"
           class="mt-4 h-10 px-6 rounded-xl bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg> Create Party
@@ -165,108 +143,216 @@
       </div>
 
       <!-- Create Party Dialog -->
-      <dialog
-        class="modal"
-        :class="{ 'modal-open': showDialog }"
-      >
-        <div class="modal-box w-full max-w-lg">
-          <h3 class="font-bold text-lg mb-4">{{ t('createParty.title') }}</h3>
-          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="showDialog = false">X</button>
-          <form @submit.prevent="createParty">
-            <div class="w-full">
-              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-3">Party Details</h4>
-              <div class="grid grid-cols-3 gap-4">
-                <div class="form-control">
-                  <label class="label" for="play_date">
-                    <span class="label-text">{{ t('createParty.playDate') }}</span>
-                  </label>
-                  <input type="date" id="play_date" v-model="form.play_date" class="input input-bordered w-full" />
+      <dialog class="modal" :class="{ 'modal-open': showDialog }">
+        <div class="modal-box w-full max-w-lg p-0">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 pt-5 pb-3">
+            <h3 class="text-base font-bold text-base-content m-0">🏸 {{ isEditing ? t('createParty.editTitle') : t('createParty.title') }}</h3>
+            <button @click="showDialog = false" class="w-8 h-8 rounded-lg bg-base-200 hover:bg-base-300 border-0 cursor-pointer flex items-center justify-center transition-colors">
+              <span class="text-base-content/60 text-sm">✕</span>
+            </button>
+          </div>
+
+          <form @submit.prevent="createParty" class="px-5 pb-5 space-y-4 overflow-y-auto max-h-[75vh]">
+            <!-- Section 1: Basic Info -->
+            <div class="space-y-3">
+              <!-- Party Name + Game Type -->
+              <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.partyName') }}</label>
+                  <input type="text" v-model="form.name" :placeholder="t('createParty.partyNamePlaceholder')" class="input input-bordered input-sm w-full" />
                 </div>
-                <div class="form-control">
-                  <label class="label" for="max_players">
-                    <span class="label-text">{{ t('createParty.maxPlayers') }}</span>
-                  </label>
-                  <input type="number" id="max_players" v-model="form.max_players" min="1" class="input input-bordered w-full" />
-                </div>
-                <div class="form-control">
-                  <label class="label" for="status">
-                    <span class="label-text">{{ t('createParty.status') }}</span>
-                  </label>
-                  <select id="status" v-model="form.status" class="select select-bordered w-full">
-                    <option value="" disabled>{{ t('createParty.selectStatus') }}</option>
-                    <option v-for="s in statuses" :key="s" :value="s">{{ s }}</option>
-                  </select>
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.gameType') }}</label>
+                  <div class="flex gap-1 p-0.5 bg-base-200 rounded-lg">
+                    <button type="button" @click="form.default_game_type = 'double'"
+                      class="flex-1 py-1 rounded-md text-[10px] font-bold border-0 cursor-pointer transition-all text-center"
+                      :class="form.default_game_type === 'double' ? 'bg-primary text-white' : 'bg-transparent text-base-content/50'"
+                    >1v1</button>
+                    <button type="button" @click="form.default_game_type = 'quadruple'"
+                      class="flex-1 py-1 rounded-md text-[10px] font-bold border-0 cursor-pointer transition-all text-center"
+                      :class="form.default_game_type === 'quadruple' ? 'bg-primary text-white' : 'bg-transparent text-base-content/50'"
+                    >2v2</button>
+                  </div>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="form-control">
-                  <label class="label" for="court_id">
-                    <span class="label-text">{{ t('createParty.court') }}</span>
-                  </label>
-                  <select id="court_id" v-model="form.court_id" class="select select-bordered w-full">
-                    <option value="" disabled>{{ t('createParty.selectCourt') }}</option>
+              <!-- Play Date + Day -->
+              <div>
+                <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.playDate') }}</label>
+                <div class="flex items-center gap-2">
+                  <input type="date" v-model="form.play_date" class="input input-bordered input-sm flex-1" :class="{ 'input-error': formErrors.play_date }" />
+                  <span v-if="selectedDayOfWeek" class="px-2 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">{{ selectedDayOfWeek }}</span>
+                </div>
+                <p v-if="formErrors.play_date" class="text-[10px] text-error m-0 mt-0.5">{{ formErrors.play_date }}</p>
+              </div>
+
+              <!-- Max Players + Court -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.maxPlayers') }}</label>
+                  <input type="number" v-model="form.max_players" min="2" class="input input-bordered input-sm w-full" />
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.court') }}</label>
+                  <select v-model="form.court_id" class="select select-bordered select-sm w-full" :class="{ 'select-error': formErrors.court_id }">
+                    <option :value="null" disabled>{{ t('createParty.selectCourt') }}</option>
                     <option v-for="court in courts" :key="court.id" :value="court.id">{{ court.name }}</option>
                   </select>
+                  <p v-if="formErrors.court_id" class="text-[10px] text-error m-0 mt-0.5">{{ formErrors.court_id }}</p>
                 </div>
               </div>
 
-              <div class="form-control mt-4">
-                <label class="label cursor-pointer justify-start gap-2">
-                  <input type="checkbox" v-model="form.is_private" class="checkbox checkbox-primary" />
-                  <span class="label-text">{{ t('createParty.private') }}</span>
-                </label>
-              </div>
-
-              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-3 mt-6">{{ t('createParty.courtBookings') }}</h4>
-              <div
-                v-for="(booking, index) in form.court_bookings"
-                :key="index"
-                class="court-booking p-3 mb-2 rounded-lg shadow-md border border-base-300"
-              >
-                <h4 class="mb-2 font-semibold">Booking #{{ index + 1 }}</h4>
-                <div class="flex gap-4">
-                  <div class="flex-1">
-                    <label class="label"><span class="label-text">{{ t('createParty.courtNumber') }}</span></label>
-                    <select
-                      v-model="booking.court_field_number"
-                      class="select select-bordered w-full"
-                    >
-                      <option v-for="i in 12" :key="i" :value="i">{{ i }}</option>
-                    </select>
-                  </div>
-                  <div class="flex-1">
-                    <label class="label"><span class="label-text">{{ t('createParty.startTime') }}</span></label>
-                    <select v-model="booking.start_time" class="select select-bordered w-full">
-                      <option v-for="opt in timeOptions" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
-                    </select>
-                  </div>
-                  <div class="flex-1">
-                    <label class="label"><span class="label-text">{{ t('createParty.endTime') }}</span></label>
-                    <select v-model="booking.end_time" class="select select-bordered w-full">
-                      <option v-for="opt in filteredEndTimeOptions(index)" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
-                    </select>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-error btn-sm mt-3" @click="removeCourtBooking(index)">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
-                  {{ t('createParty.removeCourt') }}
-                </button>
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm mt-3" @click="addCourtBooking">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                {{ t('createParty.addCourt') }}
-              </button>
+              <!-- Private toggle -->
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" v-model="form.is_private" class="checkbox checkbox-primary checkbox-sm" />
+                <span class="text-xs font-medium text-base-content/70">{{ t('createParty.private') }}</span>
+              </label>
             </div>
 
-            <div class="mt-4 flex justify-end gap-2">
-              <button type="submit" class="btn btn-success">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                Create
+            <!-- Section 2: Cost -->
+            <div class="border-t border-base-200 pt-3 space-y-3">
+              <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.costType') }}</label>
+              <div class="flex gap-1.5">
+                <button type="button" v-for="ct in [{ key: 'per_person', label: t('createParty.costPerPerson') }, { key: 'split_equal', label: t('createParty.costSplitEqual') }, { key: 'free', label: t('createParty.costFree') }]" :key="ct.key"
+                  @click="form.cost_type = ct.key"
+                  class="flex-1 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all"
+                  :class="form.cost_type === ct.key ? 'bg-primary text-white' : 'bg-base-200 text-base-content/60 hover:bg-base-300'"
+                >{{ ct.label }}</button>
+              </div>
+              <!-- Per person: entry fee -->
+              <div v-if="form.cost_type === 'per_person'" class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.costPerPerson_amount') }}</label>
+                  <input type="number" v-model="form.cost_amount" min="0" step="1" class="input input-bordered input-sm w-full" placeholder="0" />
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.shuttlecockCost') }}</label>
+                  <input type="number" v-model="form.shuttlecock_cost" min="0" step="1" class="input input-bordered input-sm w-full" placeholder="0" />
+                </div>
+              </div>
+              <!-- Split equal: court/hr + shuttle/pc -->
+              <div v-if="form.cost_type === 'split_equal'" class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.costAmount') }}</label>
+                  <input type="number" v-model="form.cost_amount" min="0" step="1" class="input input-bordered input-sm w-full" placeholder="150" />
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.shuttlecockCost') }}</label>
+                  <input type="number" v-model="form.shuttlecock_cost" min="0" step="1" class="input input-bordered input-sm w-full" placeholder="80" />
+                </div>
+              </div>
+              <!-- Split equal: example calculation -->
+              <div v-if="form.cost_type === 'split_equal' && form.cost_amount && bookingSummary" class="bg-primary/5 rounded-lg p-2.5 text-[10px] text-base-content/70 space-y-0.5">
+                <div class="font-bold text-base-content/80 text-xs mb-1">💰 ตัวอย่างค่าใช้จ่าย</div>
+                <div>ค่าคอร์ท: {{ form.cost_amount }} ฿/ชม. × {{ bookingSummary.totalHours }} ชม. = <span class="font-bold text-base-content">{{ form.cost_amount * bookingSummary.totalHours }} ฿</span></div>
+                <div v-if="form.shuttlecock_cost">ค่าลูกแบด: {{ form.shuttlecock_cost }} ฿/ลูก × (จำนวนลูกที่ใช้จริง)</div>
+                <div class="text-[9px] text-base-content/40 mt-1">* ยอดรวมจะคำนวณหลังจบ party โดยรวมค่าคอร์ท + ลูกแบดที่ใช้จริง แล้วหารเท่าตามจำนวนผู้เล่น</div>
+              </div>
+            </div>
+
+            <!-- Section 3: Notes -->
+            <div class="border-t border-base-200 pt-3">
+              <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.notes') }}</label>
+              <textarea v-model="form.notes" rows="2" class="textarea textarea-bordered textarea-sm w-full text-xs" :placeholder="t('createParty.notesPlaceholder')"></textarea>
+            </div>
+
+            <!-- Section 4: Court Booking -->
+            <div class="border-t border-base-200 pt-3 space-y-3">
+              <!-- Booking toggle -->
+              <div class="flex gap-1.5">
+                <button type="button" @click="form.has_booking = true"
+                  class="flex-1 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all"
+                  :class="form.has_booking ? 'bg-primary text-white' : 'bg-base-200 text-base-content/60 hover:bg-base-300'"
+                >{{ t('createParty.hasBooking') }}</button>
+                <button type="button" @click="form.has_booking = false"
+                  class="flex-1 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all"
+                  :class="!form.has_booking ? 'bg-primary text-white' : 'bg-base-200 text-base-content/60 hover:bg-base-300'"
+                >{{ t('createParty.noBooking') }}</button>
+              </div>
+
+              <!-- If no booking: simple time inputs -->
+              <div v-if="!form.has_booking" class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.startTime') }}</label>
+                  <select v-model="form.start_time" class="select select-bordered select-sm w-full" :class="{ 'select-error': formErrors.start_time }">
+                    <option v-for="opt in timeOptions" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
+                  </select>
+                  <p v-if="formErrors.start_time" class="text-[10px] text-error m-0 mt-0.5">{{ formErrors.start_time }}</p>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.endTime') }}</label>
+                  <select v-model="form.end_time" class="select select-bordered select-sm w-full" :class="{ 'select-error': formErrors.end_time }">
+                    <option v-for="opt in timeOptions" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- If booked: court bookings -->
+              <template v-if="form.has_booking">
+                <div v-for="(booking, index) in form.court_bookings" :key="index"
+                  class="bg-base-200/50 rounded-xl p-3 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-base-content/40 uppercase">{{ t('createParty.courtBookings') }} #{{ index + 1 }}</span>
+                    <button v-if="form.court_bookings.length > 1" type="button" @click="removeCourtBooking(index)"
+                      class="text-[10px] text-error font-semibold border-0 bg-transparent cursor-pointer hover:underline">{{ t('createParty.removeCourt') }}</button>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <div>
+                      <label class="text-[10px] text-base-content/50 block mb-0.5">{{ t('createParty.courtNumber') }}</label>
+                      <select v-model="booking.court_field_number" class="select select-bordered select-xs w-full" :class="{ 'select-error': formErrors[`booking_${index}_court`] }">
+                        <option v-for="i in 12" :key="i" :value="i">{{ i }}</option>
+                      </select>
+                      <p v-if="formErrors[`booking_${index}_court`]" class="text-[9px] text-error m-0 mt-0.5">{{ formErrors[`booking_${index}_court`] }}</p>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-base-content/50 block mb-0.5">{{ t('createParty.startTime') }}</label>
+                      <select v-model="booking.start_time" class="select select-bordered select-xs w-full" :class="{ 'select-error': formErrors[`booking_${index}_start`] }">
+                        <option v-for="opt in timeOptions" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
+                      </select>
+                      <p v-if="formErrors[`booking_${index}_start`]" class="text-[9px] text-error m-0 mt-0.5">{{ formErrors[`booking_${index}_start`] }}</p>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-base-content/50 block mb-0.5">{{ t('createParty.endTime') }}</label>
+                      <select v-model="booking.end_time" class="select select-bordered select-xs w-full" :class="{ 'select-error': formErrors[`booking_${index}_end`] }">
+                        <option v-for="opt in filteredEndTimeOptions(index)" :key="opt.name" :value="opt.name">{{ opt.name }}</option>
+                      </select>
+                      <p v-if="formErrors[`booking_${index}_end`]" class="text-[9px] text-error m-0 mt-0.5">{{ formErrors[`booking_${index}_end`] }}</p>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" @click="addCourtBooking"
+                  class="w-full py-1.5 rounded-lg border border-dashed border-base-300 bg-transparent text-xs font-medium text-base-content/40 cursor-pointer hover:border-primary/50 hover:text-primary transition-colors">
+                  + {{ t('createParty.addCourt') }}
+                </button>
+
+                <!-- Booking Summary -->
+                <div v-if="bookingSummary" class="bg-primary/5 rounded-xl p-3 mt-2 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-primary uppercase tracking-wider">📋 สรุปการจอง</span>
+                    <span class="text-xs font-bold text-base-content">{{ bookingSummary.overallStart }} - {{ bookingSummary.overallEnd }}</span>
+                  </div>
+                  <div v-for="(slot, i) in bookingSummary.slots" :key="i"
+                    class="flex items-center justify-between bg-base-100/50 rounded-lg px-2.5 py-1.5">
+                    <span class="text-[11px] font-medium text-base-content/70">{{ slot.time }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[11px] font-bold text-primary">{{ slot.courtCount }} คอร์ท</span>
+                      <span class="text-[10px] text-base-content/40">({{ slot.courts.join(', ') }})</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-2 pt-2">
+              <button type="button" @click="showDialog = false"
+                class="flex-1 h-10 rounded-xl text-sm font-medium bg-base-200 text-base-content/80 border-0 cursor-pointer hover:bg-base-300 transition-colors">
+                {{ t('common.cancel') }}
               </button>
-              <button type="button" class="btn btn-secondary" @click="showDialog = false">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                Cancel
+              <button type="submit"
+                class="flex-1 h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98]">
+                {{ isEditing ? t('common.save') : t('createParty.title') }}
               </button>
             </div>
           </form>
@@ -287,9 +373,51 @@ import { Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "@/composables/useToast";
 import { useLocale } from "@/composables/useLocale";
 
-const { t } = useLocale();
+const { t, locale } = useLocale();
 const toast = useToast();
 const showDialog = ref(false);
+const formErrors = ref({});
+const editingPartyId = ref(null);
+const isEditing = computed(() => !!editingPartyId.value);
+
+const openCreateDialog = () => {
+  editingPartyId.value = null;
+  form.value = {
+    name: '', default_game_type: 'quadruple', play_date: null, court_id: null, max_players: 18, status: "Open",
+    is_private: false, cost_type: "per_person", cost_amount: null, shuttlecock_cost: null,
+    notes: "", has_booking: true, start_time: "", end_time: "",
+    court_bookings: [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
+  };
+  formErrors.value = {};
+  showDialog.value = true;
+};
+
+const openEditDialog = (party) => {
+  editingPartyId.value = party.id;
+  form.value = {
+    name: party.name || '',
+    default_game_type: party.default_game_type || 'quadruple',
+    play_date: party.play_date,
+    court_id: party.court_id,
+    max_players: party.max_players,
+    status: party.status,
+    is_private: party.is_private || false,
+    cost_type: party.cost_type || 'per_person',
+    cost_amount: party.cost_amount,
+    shuttlecock_cost: party.shuttlecock_cost,
+    notes: party.notes || '',
+    has_booking: true,
+    start_time: party.start_time || '',
+    end_time: party.end_time || '',
+    court_bookings: party.court_bookings?.length
+      ? party.court_bookings.map(b => ({ court_id: b.court_id, court_field_number: b.court_field_number, start_time: b.start_time, end_time: b.end_time }))
+      : [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
+  };
+  formErrors.value = {};
+  showDialog.value = true;
+};
+
+const isOwner = (party) => party.creator_id === authUser?.id;
 const page = usePage();
 
 const parties = ref(page.props.parties ?? []);
@@ -299,12 +427,30 @@ const currentPage = ref(1);
 const perPage = 10;
 
 const form = ref({
+  name: '',
   play_date: null,
   court_id: null,
   max_players: 18,
   status: "Open",
   is_private: false,
+  cost_type: "per_person",
+  cost_amount: null,
+  shuttlecock_cost: null,
+  notes: "",
+  has_booking: true,
+  start_time: "",
+  end_time: "",
   court_bookings: [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
+});
+
+const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+const enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const selectedDayOfWeek = computed(() => {
+  if (!form.value.play_date) return '';
+  const d = new Date(form.value.play_date + 'T00:00:00');
+  const day = d.getDay();
+  return locale.value === 'th' ? thaiDays[day] : enDays[day];
 });
 
 const authUser = page.props.auth.user;
@@ -393,6 +539,61 @@ const enterParty = (partyId) => {
   router.get(`/party/${partyId}`);
 };
 
+// Court booking summary — group by time slots
+const bookingSummary = computed(() => {
+  const bookings = form.value.court_bookings.filter(b => b.start_time && b.end_time && b.court_field_number);
+  if (!bookings.length) return null;
+
+  // Collect all unique hours
+  const allTimes = new Set();
+  bookings.forEach(b => {
+    const startH = parseInt(b.start_time.split(':')[0]);
+    const endH = parseInt(b.end_time.split(':')[0]);
+    for (let h = startH; h < endH; h++) allTimes.add(h);
+  });
+
+  const sortedHours = [...allTimes].sort((a, b) => a - b);
+  if (!sortedHours.length) return null;
+
+  // Group consecutive hours with same courts
+  const slots = [];
+  let currentSlot = null;
+
+  sortedHours.forEach(h => {
+    const courtsAtHour = bookings
+      .filter(b => {
+        const s = parseInt(b.start_time.split(':')[0]);
+        const e = parseInt(b.end_time.split(':')[0]);
+        return h >= s && h < e;
+      })
+      .map(b => b.court_field_number)
+      .sort((a, b) => a - b);
+
+    const key = courtsAtHour.join(',');
+    if (currentSlot && currentSlot.key === key) {
+      currentSlot.endH = h + 1;
+    } else {
+      currentSlot = { startH: h, endH: h + 1, courts: courtsAtHour, key };
+      slots.push(currentSlot);
+    }
+  });
+
+  const overallStart = `${String(sortedHours[0]).padStart(2, '0')}:00`;
+  const overallEnd = `${String(sortedHours[sortedHours.length - 1] + 1).padStart(2, '0')}:00`;
+  const totalHours = sortedHours.length;
+
+  return {
+    overallStart,
+    overallEnd,
+    totalHours,
+    slots: slots.map(s => ({
+      time: `${String(s.startH).padStart(2, '0')}:00 - ${String(s.endH).padStart(2, '0')}:00`,
+      courtCount: s.courts.length,
+      courts: s.courts,
+    })),
+  };
+});
+
 const addCourtBooking = () => {
   form.value.court_bookings.push({ court_id: form.court_id, court_field_number: null, start_time: "", end_time: "" });
 };
@@ -401,16 +602,62 @@ const removeCourtBooking = (index) => {
   form.value.court_bookings.splice(index, 1);
 };
 
+const validationLabels = {
+  play_date: 'วันเล่น',
+  court_id: 'สนาม',
+  max_players: 'จำนวนผู้เล่น',
+  start_time: 'เวลาเริ่ม',
+  end_time: 'เวลาจบ',
+};
+
 const createParty = () => {
-  router.post("/party-create", form.value, {
+  // Frontend validation
+  const errors = {};
+  if (!form.value.play_date) errors.play_date = 'กรุณาเลือกวันเล่น';
+  if (!form.value.court_id) errors.court_id = 'กรุณาเลือกสนาม';
+  if (form.value.has_booking) {
+    form.value.court_bookings.forEach((b, i) => {
+      if (!b.court_field_number) errors[`booking_${i}_court`] = 'เลือกคอร์ท';
+      if (!b.start_time) errors[`booking_${i}_start`] = 'เลือกเวลาเริ่ม';
+      if (!b.end_time) errors[`booking_${i}_end`] = 'เลือกเวลาจบ';
+    });
+  } else {
+    if (!form.value.start_time) errors.start_time = 'กรุณาเลือกเวลาเริ่ม';
+    if (!form.value.end_time) errors.end_time = 'กรุณาเลือกเวลาจบ';
+  }
+
+  formErrors.value = errors;
+
+  if (Object.keys(errors).length) {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อมูลไม่ครบ',
+      detail: `กรุณากรอกข้อมูลที่ระบุ`,
+      life: 3000,
+    });
+    return;
+  }
+
+  const url = isEditing.value ? `/party/${editingPartyId.value}/update` : "/party-create";
+
+  router.post(url, form.value, {
     preserveScroll: true,
     onSuccess: (page) => {
       parties.value = page.props.parties;
       courts.value = page.props.courts;
       showDialog.value = false;
+      editingPartyId.value = null;
+      formErrors.value = {};
+      toast.add({ severity: 'success', summary: 'สำเร็จ', detail: isEditing.value ? 'แก้ไขปาร์ตี้เรียบร้อยแล้ว' : 'สร้างปาร์ตี้เรียบร้อยแล้ว', life: 3000 });
     },
-    onError: (error) => {
-      console.error("Error creating party:", error);
+    onError: (errors) => {
+      const messages = Object.values(errors).flat();
+      toast.add({
+        severity: 'error',
+        summary: 'ข้อมูลไม่ถูกต้อง',
+        detail: messages.join(', '),
+        life: 5000,
+      });
     },
   });
 };
@@ -421,5 +668,30 @@ const createParty = () => {
   border: 1px solid #ccc;
   padding: 10px;
   border-radius: 5px;
+}
+
+/* Scrolling text for long party names */
+.party-name-scroll {
+  display: inline-block;
+  animation: none;
+}
+
+div:has(> .party-name-scroll) {
+  position: relative;
+}
+
+/* Only animate when text overflows */
+@keyframes marquee {
+  0%, 20% { transform: translateX(0); }
+  80%, 100% { transform: translateX(calc(-100% + 10rem)); }
+}
+
+.party-name-scroll:where(:not(:empty)) {
+  animation: marquee 6s linear infinite alternate;
+  animation-play-state: paused;
+}
+
+div:hover > .party-name-scroll {
+  animation-play-state: running;
 }
 </style>

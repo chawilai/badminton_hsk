@@ -79,4 +79,54 @@ class User extends Authenticatable
     {
         return $this->hasMany(PartyMember::class);
     }
+
+    /**
+     * Friend requests sent by this user.
+     */
+    public function sentFriendships()
+    {
+        return $this->hasMany(Friendship::class, 'sender_id');
+    }
+
+    /**
+     * Friend requests received by this user.
+     */
+    public function receivedFriendships()
+    {
+        return $this->hasMany(Friendship::class, 'receiver_id');
+    }
+
+    /**
+     * Check if this user has an accepted friendship with the given user ID.
+     */
+    public function isFriendWith($userId): bool
+    {
+        return Friendship::where('status', 'accepted')
+            ->where(function ($q) use ($userId) {
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('sender_id', $this->id)
+                       ->where('receiver_id', $userId);
+                })->orWhere(function ($q2) use ($userId) {
+                    $q2->where('sender_id', $userId)
+                       ->where('receiver_id', $this->id);
+                });
+            })
+            ->exists();
+    }
+
+    /**
+     * Get a collection of user IDs who are friends with this user.
+     */
+    public function friendIds()
+    {
+        $sent = Friendship::where('status', 'accepted')
+            ->where('sender_id', $this->id)
+            ->pluck('receiver_id');
+
+        $received = Friendship::where('status', 'accepted')
+            ->where('receiver_id', $this->id)
+            ->pluck('sender_id');
+
+        return $sent->merge($received)->unique()->values();
+    }
 }

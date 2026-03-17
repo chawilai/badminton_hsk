@@ -228,7 +228,7 @@ test('can start a listing game', function () {
         [$this->players[0]->id],
         'listing'
     );
-    $game->update(['game_list_date' => now()]);
+    $game->update(['game_list_date' => now(), 'court_number' => 1]);
 
     $this->actingAs($this->host)->post("/games/{$game->id}/start", [])
         ->assertRedirect();
@@ -245,7 +245,7 @@ test('starting a game creates first game set', function () {
         [$this->players[0]->id],
         'listing'
     );
-    $game->update(['game_list_date' => now()]);
+    $game->update(['game_list_date' => now(), 'court_number' => 1]);
 
     $this->actingAs($this->host)->post("/games/{$game->id}/start", [
         'team1_start_side' => 'north',
@@ -487,6 +487,9 @@ test('game follows correct state progression', function () {
     // 3. List game (setting → listing)
     $this->actingAs($this->host)->post("/games/{$game->id}/list");
     $this->assertEquals('listing', $game->fresh()->status);
+
+    // 3.5 Set court number (required to start)
+    $game->fresh()->update(['court_number' => 1]);
 
     // 4. Start game (listing → playing)
     $this->actingAs($this->host)->post("/games/{$game->id}/start");

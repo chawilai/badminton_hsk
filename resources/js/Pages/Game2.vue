@@ -1,12 +1,13 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import { ref, watch, computed, onMounted, defineProps, defineEmits } from "vue";
+import { ref, watch, computed, onMounted, nextTick, defineProps, defineEmits } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import UserAvatar from "@/Components/UserAvatar.vue";
 
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useLocale } from "@/composables/useLocale";
+import shuttlecockIcon from "@/../assets/images/shuttlecock.png";
 
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -67,25 +68,46 @@ const formattedData = computed(() =>
   }))
 );
 
+const gameMode = ref(localData.value.party?.default_game_type || "quadruple"); // "double" (1v1) or "quadruple" (2v2)
+const maxPerTeam = computed(() => gameMode.value === "double" ? 1 : 2);
+const maxTotal = computed(() => gameMode.value === "double" ? 2 : 4);
+
 const form = ref({
   party_id: localData.value.party.id,
   game_type: "quadruple",
   players: [],
   team1_start_side: "north",
   initial_shuttlecock_game: 0,
+  court_number: null,
   process: "playing",
 });
 
 const sortOrder = ref("ASC");
+const showCourtDialog = ref(false);
+const courtInputRef = ref(null);
+const tempCourtNumber = ref(null);
+
+const openCourtDialog = () => {
+  tempCourtNumber.value = form.value.court_number || '';
+  showCourtDialog.value = true;
+  nextTick(() => courtInputRef.value?.focus());
+};
+
+const saveCourtFromDialog = () => {
+  if (tempCourtNumber.value && tempCourtNumber.value >= 1) {
+    form.value.court_number = parseInt(tempCourtNumber.value);
+  }
+  showCourtDialog.value = false;
+};
 
 const sortedPlayerByGamePlayed = computed(() => {
   const players = [...formattedData.value];
   return players.sort((a, b) => {
-    if (sortOrder.value === "ASC") {
-      return a.played - b.played;
-    } else {
-      return b.played - a.played;
-    }
+    // Primary: fewer games first
+    const gameDiff = a.played - b.played;
+    if (gameDiff !== 0) return gameDiff;
+    // Secondary: longer waiting first
+    return (b.waiting_time || 0) - (a.waiting_time || 0);
   });
 });
 
@@ -132,6 +154,40 @@ const toggleSortOrder = () => {
   });
 };
 
+// Pastel colors for game count badges (0-10+)
+const gameCountColors = [
+  'bg-emerald-100 text-emerald-700',  // 0
+  'bg-sky-100 text-sky-700',          // 1
+  'bg-violet-100 text-violet-700',    // 2
+  'bg-amber-100 text-amber-700',      // 3
+  'bg-rose-100 text-rose-700',        // 4
+  'bg-teal-100 text-teal-700',        // 5
+  'bg-indigo-100 text-indigo-700',    // 6
+  'bg-orange-100 text-orange-700',    // 7
+  'bg-pink-100 text-pink-700',        // 8
+  'bg-cyan-100 text-cyan-700',        // 9
+  'bg-fuchsia-100 text-fuchsia-700',  // 10+
+];
+
+const gameCountClass = (count) => gameCountColors[Math.min(count, 10)];
+
+// Pastel colors for game number badges (#1-#10+)
+const gameNumColors = [
+  '',                                  // 0 (unused)
+  'bg-sky-100 text-sky-700',          // #1
+  'bg-violet-100 text-violet-700',    // #2
+  'bg-amber-100 text-amber-700',      // #3
+  'bg-rose-100 text-rose-700',        // #4
+  'bg-teal-100 text-teal-700',        // #5
+  'bg-indigo-100 text-indigo-700',    // #6
+  'bg-orange-100 text-orange-700',    // #7
+  'bg-pink-100 text-pink-700',        // #8
+  'bg-cyan-100 text-cyan-700',        // #9
+  'bg-fuchsia-100 text-fuchsia-700',  // #10+
+];
+
+const gameNumClass = (num) => gameNumColors[Math.min(num || 1, 10)];
+
 const shortenTitle = (title, maxLength = 14) => {
   if (title.length > maxLength) {
     return `${title.slice(0, maxLength)}...`;
@@ -154,8 +210,8 @@ const autoSetPlayers = () => {
   releaseAllItems();
 
   const ready = [...dropZones.Ready].filter(p => !p.current_game);
-  if (ready.length < 4) {
-    toast.add({ severity: "error", summary: "ล้มเหลว", detail: `ผู้เล่นพร้อมไม่พอ (${ready.length}/4)`, life: 3000 });
+  if (ready.length < maxTotal.value) {
+    toast.add({ severity: "error", summary: "ล้มเหลว", detail: `ผู้เล่นพร้อมไม่พอ (${ready.length}/${maxTotal.value})`, life: 3000 });
     return;
   }
 
@@ -172,51 +228,66 @@ const autoSetPlayers = () => {
          + (1 - (p.played || 0) / maxPlayed) * 0.5,
   }));
 
-  // 3) Sort by score descending, pick top 4
+  // 3) Sort by score descending, pick top N
+  const total = maxTotal.value;
+  const perTeam = maxPerTeam.value;
   scored.sort((a, b) => b.score - a.score);
-  const picked = scored.slice(0, 4);
+  const picked = scored.slice(0, total);
 
   // 4) Find the best team split (minimize level diff)
-  //    With 4 players there are only 3 ways to split into 2v2
-  const combos = [
-    [[0, 1], [2, 3]],
-    [[0, 2], [1, 3]],
-    [[0, 3], [1, 2]],
-  ];
+  if (total === 2) {
+    // 1v1: just split first 2
+    const moveToTeam = (teamZone, player) => {
+      const idx = dropZones.Ready.findIndex(p => p.id === player.id);
+      if (idx > -1) {
+        const [removed] = dropZones.Ready.splice(idx, 1);
+        originalZones[removed.id] = 'Ready';
+        dropZones[teamZone].push(removed);
+      }
+    };
+    moveToTeam('Team1', picked[0]);
+    moveToTeam('Team2', picked[1]);
+  } else {
+    // 2v2: try 3 combinations
+    const combos = [
+      [[0, 1], [2, 3]],
+      [[0, 2], [1, 3]],
+      [[0, 3], [1, 2]],
+    ];
 
-  let bestSplit = combos[0];
-  let bestDiff = Infinity;
+    let bestSplit = combos[0];
+    let bestDiff = Infinity;
 
-  for (const [t1Idx, t2Idx] of combos) {
-    const t1Lvl = t1Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
-    const t2Lvl = t2Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
-    const diff = Math.abs(t1Lvl - t2Lvl);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestSplit = [t1Idx, t2Idx];
+    for (const [t1Idx, t2Idx] of combos) {
+      const t1Lvl = t1Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
+      const t2Lvl = t2Idx.reduce((s, i) => s + (picked[i].rank_level || 0), 0);
+      const diff = Math.abs(t1Lvl - t2Lvl);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestSplit = [t1Idx, t2Idx];
+      }
     }
-  }
 
-  // 5) Move players from Ready to Team1/Team2
-  const [t1Indices, t2Indices] = bestSplit;
+    const [t1Indices, t2Indices] = bestSplit;
 
-  for (const i of t1Indices) {
-    const player = picked[i];
-    const idx = dropZones.Ready.findIndex(p => p.id === player.id);
-    if (idx > -1) {
-      const [removed] = dropZones.Ready.splice(idx, 1);
-      originalZones[removed.id] = 'Ready';
-      dropZones.Team1.push(removed);
+    for (const i of t1Indices) {
+      const player = picked[i];
+      const idx = dropZones.Ready.findIndex(p => p.id === player.id);
+      if (idx > -1) {
+        const [removed] = dropZones.Ready.splice(idx, 1);
+        originalZones[removed.id] = 'Ready';
+        dropZones.Team1.push(removed);
+      }
     }
-  }
 
-  for (const i of t2Indices) {
-    const player = picked[i];
-    const idx = dropZones.Ready.findIndex(p => p.id === player.id);
-    if (idx > -1) {
-      const [removed] = dropZones.Ready.splice(idx, 1);
-      originalZones[removed.id] = 'Ready';
-      dropZones.Team2.push(removed);
+    for (const i of t2Indices) {
+      const player = picked[i];
+      const idx = dropZones.Ready.findIndex(p => p.id === player.id);
+      if (idx > -1) {
+        const [removed] = dropZones.Ready.splice(idx, 1);
+        originalZones[removed.id] = 'Ready';
+        dropZones.Team2.push(removed);
+      }
     }
   }
 
@@ -239,14 +310,13 @@ const clearTeamZones = () => {
 const startNewGame = () => {
   const players = allGamePlayers();
   const playerCount = players.length;
-  form.value.game_type =
-    playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
+  form.value.game_type = gameMode.value;
 
-  if (!form.value.game_type) {
+  if (playerCount !== maxTotal.value) {
     toast.add({
       severity: "error",
       summary: "ล้มเหลว",
-      detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)",
+      detail: `ต้องมีผู้เล่น ${maxTotal.value} คน (ตอนนี้มี ${playerCount} คน)`,
       life: 3000,
     });
     return;
@@ -276,11 +346,10 @@ const startNewGame = () => {
 const listNewGame = () => {
   const players = allGamePlayers();
   const playerCount = players.length;
-  form.value.game_type =
-    playerCount === 2 ? "double" : playerCount === 4 ? "quadruple" : null;
+  form.value.game_type = gameMode.value;
 
-  if (!form.value.game_type) {
-    toast.add({ severity: "error", summary: "ล้มเหลว", detail: "จำนวนผู้เล่นไม่ถูกต้อง (ต้องเป็น 2 หรือ 4 คน)", life: 3000 });
+  if (playerCount !== maxTotal.value) {
+    toast.add({ severity: "error", summary: "ล้มเหลว", detail: `ต้องมีผู้เล่น ${maxTotal.value} คน (ตอนนี้มี ${playerCount} คน)`, life: 3000 });
     return;
   }
 
@@ -345,36 +414,55 @@ const zoneBadgeClass = (zone) => {
         backgroundColor: (dropZoneActive === 'Team1' || dropZoneActive === 'Team2') ? '#cffafe' : '#f0fdf4'
       }"
     >
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <span class="badge badge-success badge-lg font-bold gap-1">🏸 Game</span>
-          <span class="text-xs text-base-content/50">{{ totalGamePlayers }}/4</span>
-        </div>
+      <!-- Header Row 1: Badge + Mode + Settings -->
+      <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5">
-          <!-- Shuttle select -->
-          <div class="flex items-center gap-1 bg-base-100/80 rounded-lg px-2 py-1">
-            <span class="text-xs text-base-content/60">🪶</span>
-            <select v-model="form.initial_shuttlecock_game" class="select select-ghost select-xs w-12 min-h-0 h-6 px-1">
-              <option v-for="i in [0, 1, 2, 3]" :key="i" :value="i">{{ i }}</option>
+          <span class="badge badge-success badge-sm font-bold gap-0.5">🏸 Game</span>
+          <span class="text-[10px] text-base-content/50">{{ totalGamePlayers }}/{{ maxTotal }}</span>
+          <!-- Mode toggle -->
+          <div class="flex gap-0.5 p-0.5 bg-base-100/80 rounded-md">
+            <button type="button" @click="gameMode = 'double'"
+              class="px-1.5 py-0.5 rounded text-[9px] font-bold border-0 cursor-pointer transition-all"
+              :class="gameMode === 'double' ? 'bg-primary text-white' : 'bg-transparent text-base-content/40 hover:text-base-content'"
+            >1v1</button>
+            <button type="button" @click="gameMode = 'quadruple'"
+              class="px-1.5 py-0.5 rounded text-[9px] font-bold border-0 cursor-pointer transition-all"
+              :class="gameMode === 'quadruple' ? 'bg-primary text-white' : 'bg-transparent text-base-content/40 hover:text-base-content'"
+            >2v2</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <button @click="openCourtDialog()"
+            class="flex items-center gap-0.5 bg-base-100/80 rounded px-1.5 py-0.5 border-0 cursor-pointer hover:bg-base-200 transition-colors text-[10px] font-bold"
+            :class="form.court_number ? 'text-primary' : 'text-warning'"
+          >{{ form.court_number ? `🏟️ ${t('game.court')} ${form.court_number}` : `🏟️ ${t('game.setCourt')}` }}</button>
+          <div class="flex items-center gap-0.5 bg-base-100/80 rounded px-1.5 py-0.5">
+            <img :src="shuttlecockIcon" alt="" class="w-3 h-3 inline" style="filter: brightness(0) saturate(100%) invert(40%);" />
+            <select v-model="form.initial_shuttlecock_game" class="select select-ghost select-xs w-10 min-h-0 h-5 px-0 text-[10px] font-bold">
+              <option v-for="i in [0, 1, 2, 3]" :key="i" :value="i">{{ i }} ลูก</option>
             </select>
           </div>
-          <!-- Actions -->
-          <button @click="autoSetPlayers" class="btn btn-info btn-xs gap-0.5" title="Auto Balance">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
-            Auto
+        </div>
+      </div>
+      <!-- Header Row 2: Action buttons -->
+      <div class="flex items-center gap-1 mb-2">
+        <button @click="autoSetPlayers" class="btn btn-info btn-xs h-6 min-h-0 gap-0.5 text-[10px]">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+          จัดอัตโนมัติ
+        </button>
+        <div class="ml-auto flex items-center gap-1">
+          <button @click="startNewGame" class="btn btn-success btn-xs h-6 min-h-0 gap-0.5 text-[10px]">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            เริ่มเกม
           </button>
-          <div class="join">
-            <button @click="startNewGame" class="btn btn-success btn-xs join-item" title="Start Game">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-            <button @click="listNewGame" class="btn btn-warning btn-xs join-item" title="List Game">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <button @click="releaseAllItems" class="btn btn-error btn-xs join-item" title="Reset">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            </button>
-          </div>
+          <button @click="listNewGame" class="btn btn-warning btn-xs h-6 min-h-0 gap-0.5 text-[10px]">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            ลีส
+          </button>
+          <button @click="releaseAllItems" class="btn btn-error btn-xs h-6 min-h-0 gap-0.5 text-[10px]">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            ล้าง
+          </button>
         </div>
       </div>
 
@@ -414,9 +502,9 @@ const zoneBadgeClass = (zone) => {
                     <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                     <div class="flex items-center gap-1 mt-0.5">
                       <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
-                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }} เกม</span>
+                      <span class="text-[9px] px-1 py-px rounded font-semibold" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                       <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
-                        :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
+                        :class="item.current_game ? gameNumClass(item.current_game_number) : 'bg-warning/15 text-warning'"
                       >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
@@ -425,7 +513,7 @@ const zoneBadgeClass = (zone) => {
             </template>
             <!-- Empty slot(s) for Team 1 -->
             <div
-              v-for="n in Math.max(0, 2 - dropZones.Team1.length)"
+              v-for="n in Math.max(0, maxPerTeam - dropZones.Team1.length)"
               :key="'t1-empty-' + n"
               class="rounded-xl border-2 border-dashed border-accent/20 flex items-center justify-center min-h-[4.5rem] text-accent/20"
             >
@@ -466,9 +554,9 @@ const zoneBadgeClass = (zone) => {
                     <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                     <div class="flex items-center gap-1 mt-0.5">
                       <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-semibold">Lv{{ item.rank_level }}</span>
-                      <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-semibold">{{ item.played }} เกม</span>
+                      <span class="text-[9px] px-1 py-px rounded font-semibold" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                       <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
-                        :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
+                        :class="item.current_game ? gameNumClass(item.current_game_number) : 'bg-warning/15 text-warning'"
                       >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
@@ -477,7 +565,7 @@ const zoneBadgeClass = (zone) => {
             </template>
             <!-- Empty slot(s) for Team 2 -->
             <div
-              v-for="n in Math.max(0, 2 - dropZones.Team2.length)"
+              v-for="n in Math.max(0, maxPerTeam - dropZones.Team2.length)"
               :key="'t2-empty-' + n"
               class="rounded-xl border-2 border-dashed border-secondary/20 flex items-center justify-center min-h-[4.5rem] text-secondary/20"
             >
@@ -526,7 +614,7 @@ const zoneBadgeClass = (zone) => {
                 <span class="text-xs font-semibold text-base-content leading-tight truncate">{{ item.title }}</span>
                 <div class="flex items-center gap-1 mt-0.5">
                   <span class="text-[9px] px-1 py-px rounded bg-success/15 text-success font-medium">Lv{{ item.rank_level }}</span>
-                  <span class="text-[9px] px-1 py-px rounded bg-info/15 text-info font-medium">{{ item.played }} เกม</span>
+                  <span class="text-[9px] px-1 py-px rounded font-medium" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                   <span class="text-[9px] px-1 py-px rounded font-medium ml-auto"
                     :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
                   >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
@@ -552,6 +640,36 @@ const zoneBadgeClass = (zone) => {
       <UserAvatar :src="draggedItem.avatar" :name="draggedItem.display_name || draggedItem.name" size="md" rounded="full" class="border-2 border-primary" />
       <span class="text-xs font-semibold text-base-content/80">{{ draggedItem.title }}</span>
     </div>
+    <!-- Court Number Dialog -->
+    <dialog class="modal" :class="{ 'modal-open': showCourtDialog }">
+      <div class="modal-box max-w-xs p-0">
+        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+          <h3 class="text-base font-bold text-base-content m-0">🏟️ {{ t('game.courtNumber') }}</h3>
+          <button @click="showCourtDialog = false" class="w-7 h-7 rounded-lg bg-base-200 hover:bg-base-300 border-0 cursor-pointer flex items-center justify-center transition-colors">
+            <span class="text-base-content/60 text-sm">✕</span>
+          </button>
+        </div>
+        <div class="px-4 pb-4">
+          <input
+            ref="courtInputRef"
+            v-model.number="tempCourtNumber"
+            type="number"
+            min="1"
+            :placeholder="t('game.courtNumber')"
+            class="w-full px-3 py-2.5 rounded-xl border border-base-300 bg-base-100 text-center text-2xl font-bold text-base-content focus:border-primary outline-hidden transition-all"
+            @keyup.enter="saveCourtFromDialog"
+          />
+          <button
+            @click="saveCourtFromDialog"
+            :disabled="!tempCourtNumber || tempCourtNumber < 1"
+            class="w-full mt-3 h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+          >{{ t('common.save') }}</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="showCourtDialog = false">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 

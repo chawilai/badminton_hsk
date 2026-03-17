@@ -17,6 +17,7 @@ class Game extends Model
         'party_id',
         'game_type',  // e.g., 'double' or 'quadruple'
         'status',     // e.g., 'setting', 'listing', 'playing', 'finished'
+        'court_number',
         'game_create_date',
         'game_list_date',
         'game_start_date',

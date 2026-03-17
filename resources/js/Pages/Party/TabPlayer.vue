@@ -1,5 +1,6 @@
 <script setup>
 import UserAvatar from "@/Components/UserAvatar.vue";
+import AddFriendButton from "@/Components/AddFriendButton.vue";
 import { useLocale } from "@/composables/useLocale";
 import { usePage, router } from "@inertiajs/vue3";
 import { useToast } from "@/composables/useToast";
@@ -11,6 +12,7 @@ const currentUserId = page.props.auth.user.id;
 
 const props = defineProps({
   party: { type: Object, required: true },
+  friendshipMap: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['updateDisplayName']);
@@ -94,6 +96,12 @@ const isCurrentUser = (member) => member.user_id === currentUserId;
           <span class="text-[10px] px-1.5 py-0.5 rounded font-medium"
             :class="member.role === 'Host' ? 'bg-shuttle/20 text-amber-700 dark:text-amber-300' : 'bg-base-200 text-base-content/60'"
           >{{ member.role || 'Member' }}</span>
+          <AddFriendButton
+            v-if="!isCurrentUser(member)"
+            :userId="member.user_id"
+            :status="friendshipMap[member.user_id]?.status || null"
+            :friendshipId="friendshipMap[member.user_id]?.friendship_id || null"
+          />
         </div>
       </div>
     </div>

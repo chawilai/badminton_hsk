@@ -10,6 +10,7 @@ use App\Models\Court;
 use Illuminate\Http\Request;
 use App\Http\Controllers\GameController;
 use Carbon\Carbon;
+use App\Models\Friendship;
 use Inertia\Inertia;
 
 class PartyController extends Controller
@@ -122,39 +123,79 @@ class PartyController extends Controller
                 ];
             });
 
+        $friendshipMap = [];
+        $userId = auth()->id();
+        $membersUserIds = $party->members->pluck('user_id')->filter(fn($mid) => $mid !== $userId);
+        $friendships = Friendship::where(fn($q) =>
+            $q->where(fn($q2) => $q2->where('sender_id', $userId)->whereIn('receiver_id', $membersUserIds))
+              ->orWhere(fn($q2) => $q2->where('receiver_id', $userId)->whereIn('sender_id', $membersUserIds))
+        )->get();
+        foreach ($friendships as $f) {
+            $otherId = $f->sender_id === $userId ? $f->receiver_id : $f->sender_id;
+            $status = 'accepted';
+            if ($f->status === 'pending') {
+                $status = $f->sender_id === $userId ? 'pending_sent' : 'pending_received';
+            }
+            $friendshipMap[$otherId] = [
+                'status' => $status,
+                'friendship_id' => $f->id,
+            ];
+        }
+
         return Inertia::render('Party', [
             'party' => $party,
             'games' => $games,
             'readyPlayers' => $readyPlayers,
             'playingPlayers' => $playingPlayers,
             'breakPlayers' => $breakPlayers,
+            'ably_key' => env('ABLY_KEY'),
+            'friendshipMap' => $friendshipMap,
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $hasBooking = $request->boolean('has_booking', true);
+
+        $rules = [
+            'name' => 'nullable|string|max:255',
+            'default_game_type' => 'nullable|in:double,quadruple',
             'play_date' => 'required|date',
             'max_players' => 'required|integer|min:1',
             'court_id' => 'required|integer',
-            'court_bookings' => 'required|array',
-            'court_bookings.*.court_field_number' => 'required|integer|min:1',
-            'court_bookings.*.start_time' => 'required',
-            'court_bookings.*.end_time' => 'required',
-        ]);
+            'cost_type' => 'nullable|in:free,per_person,split_equal',
+            'cost_amount' => 'nullable|numeric|min:0',
+            'shuttlecock_cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:2000',
+        ];
 
-        // Extract the date part from play_date
+        if ($hasBooking) {
+            $rules['court_bookings'] = 'required|array';
+            $rules['court_bookings.*.court_field_number'] = 'required|integer|min:1';
+            $rules['court_bookings.*.start_time'] = 'required';
+            $rules['court_bookings.*.end_time'] = 'required';
+        } else {
+            $rules['start_time'] = 'required';
+            $rules['end_time'] = 'required';
+        }
+
+        $validated = $request->validate($rules);
+
         $play_date = Carbon::parse($validated['play_date'])->toDateString();
 
-        // Calculate start_time and end_time from court_bookings
-        $start_time = collect($validated['court_bookings'])->min('start_time');
-        $end_time = collect($validated['court_bookings'])->max('end_time');
+        if ($hasBooking) {
+            $start_time = collect($validated['court_bookings'])->min('start_time');
+            $end_time = collect($validated['court_bookings'])->max('end_time');
+        } else {
+            $start_time = $validated['start_time'];
+            $end_time = $validated['end_time'];
+        }
 
-        // Calculate play_hours (difference in hours between start_time and end_time)
         $play_hours = Carbon::parse($start_time)->diffInHours(Carbon::parse($end_time));
 
-        // Create the Party
         $party = Party::create([
+            'name' => $validated['name'] ?? null,
+            'default_game_type' => $validated['default_game_type'] ?? 'quadruple',
             'court_id' => $validated['court_id'],
             'play_date' => $play_date,
             'play_hours' => $play_hours,
@@ -162,19 +203,64 @@ class PartyController extends Controller
             'start_time' => $start_time,
             'end_time' => $end_time,
             'creator_id' => auth()->id(),
+            'is_private' => $request->boolean('is_private'),
+            'cost_type' => $validated['cost_type'] ?? 'free',
+            'cost_amount' => $validated['cost_amount'] ?? null,
+            'shuttlecock_cost' => $validated['shuttlecock_cost'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
-        // Add Court Bookings
-        foreach ($validated['court_bookings'] as $booking) {
-            PartyCourtBooking::create([
-                'party_id' => $party->id,
-                'court_id' => $validated['court_id'],
-                'court_field_number' => $booking['court_field_number'],
-                'start_time' => $booking['start_time'],
-                'end_time' => $booking['end_time'],
-            ]);
+
+        if ($hasBooking) {
+            foreach ($validated['court_bookings'] as $booking) {
+                PartyCourtBooking::create([
+                    'party_id' => $party->id,
+                    'court_id' => $validated['court_id'],
+                    'court_field_number' => $booking['court_field_number'],
+                    'start_time' => $booking['start_time'],
+                    'end_time' => $booking['end_time'],
+                ]);
+            }
         }
 
         return back()->with('success', 'Party created successfully!');
+    }
+
+    public function update(Request $request, Party $party)
+    {
+        // Only owner can edit
+        if ($party->creator_id !== auth()->id()) {
+            abort(403, 'Only the party owner can edit.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'default_game_type' => 'nullable|in:double,quadruple',
+            'play_date' => 'required|date',
+            'max_players' => 'required|integer|min:1',
+            'court_id' => 'required|integer',
+            'is_private' => 'boolean',
+            'cost_type' => 'nullable|in:free,per_person,split_equal',
+            'cost_amount' => 'nullable|numeric|min:0',
+            'shuttlecock_cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:2000',
+            'status' => 'nullable|in:Open,Full,Over',
+        ]);
+
+        $party->update([
+            'name' => $validated['name'] ?? $party->name,
+            'default_game_type' => $validated['default_game_type'] ?? $party->default_game_type,
+            'play_date' => $validated['play_date'],
+            'max_players' => $validated['max_players'],
+            'court_id' => $validated['court_id'],
+            'is_private' => $request->boolean('is_private'),
+            'cost_type' => $validated['cost_type'] ?? $party->cost_type,
+            'cost_amount' => $validated['cost_amount'] ?? $party->cost_amount,
+            'shuttlecock_cost' => $validated['shuttlecock_cost'] ?? $party->shuttlecock_cost,
+            'notes' => $validated['notes'] ?? $party->notes,
+            'status' => $validated['status'] ?? $party->status,
+        ]);
+
+        return back()->with('success', 'Party updated successfully!');
     }
 
     public function joinParty(Request $request)
@@ -217,6 +303,18 @@ class PartyController extends Controller
             'request_date' => now(),
             'display_name' => $lastDisplayName ?? null, // Set the previous display name if available
         ]);
+
+        // Broadcast join notification
+        try {
+            $ably = new \Ably\AblyRest(env('ABLY_KEY'));
+            $channel = $ably->channels->get("party.{$partyId}");
+            $channel->publish('member.joined', [
+                'party_id' => $partyId,
+                'user_id' => $userId,
+                'user_name' => auth()->user()->name,
+                'message' => 'เข้าร่วมปาร์ตี้',
+            ]);
+        } catch (\Exception $e) {}
 
         return back()->with('success', 'Party joined successfully!');
     }

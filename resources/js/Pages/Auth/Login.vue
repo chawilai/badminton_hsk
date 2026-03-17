@@ -40,48 +40,31 @@ const submit = () => {
 const lineLoginUrl = route("social.login", "line");
 
 onMounted(() => {
-  const isGuest = ref(!page.props.auth.user);
+  try {
+    const isGuest = !page.props.auth.user;
+    if (!isGuest) return;
 
-  if (isGuest.value) {
     liff
       .init({ liffId: "2001165902-9zoxvoY1" })
       .then(() => {
-        console.log("LIFF initialization successful");
+        if (!liff.isInClient()) return;
+        if (!liff.isLoggedIn()) { liff.login(); return; }
 
-        if (!liff.isInClient()) {
-          console.error("LIFF must be accessed from LINE app.");
-          return;
-        }
-
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        }
-
-        liff
-          .getProfile()
+        liff.getProfile()
           .then((profile) => {
-            const userData = {
+            router.post(`login/lineliff`, {
               provider: "line",
               userId: profile.userId,
               displayName: profile.displayName,
               email: liff.getDecodedIDToken()?.email,
               pictureUrl: profile.pictureUrl,
-            };
-
-            router.post(`login/lineliff`, userData, {
-              preserveScroll: true,
-              onSuccess: (res) => {
-                isGuest.value = res.props.auth.user;
-              },
-            });
+            }, { preserveScroll: true });
           })
-          .catch((err) => {
-            console.error("Failed to get user profile:", err);
-          });
+          .catch(() => {});
       })
-      .catch((err) => {
-        console.error("LIFF Initialization failed", err);
-      });
+      .catch(() => {});
+  } catch (e) {
+    // LIFF not available — ignore, show normal login form
   }
 });
 </script>

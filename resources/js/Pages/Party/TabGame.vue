@@ -1,11 +1,56 @@
 <script setup>
 import UserAvatar from "@/Components/UserAvatar.vue";
-import { usePage } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { usePage, router } from "@inertiajs/vue3";
+import shuttlecockIcon from "@/../assets/images/shuttlecock.png";
+import { ref, computed, nextTick, onMounted, onUnmounted } from "vue";
 import { useLocale } from "@/composables/useLocale";
+import { useToast } from "@/composables/useToast";
 
 const page = usePage();
 const { t } = useLocale();
+const toast = useToast();
+
+// Court number dialog
+const courtDialogVisible = ref(false);
+const courtDialogGameId = ref(null);
+const courtDialogNumber = ref('');
+const courtInput = ref(null);
+const courtDialogCanEdit = ref(true);
+
+const openCourtDialog = (game) => {
+  // Don't allow editing finished games that already have court number
+  if (game.status === 'finished' && game.court_number) return;
+  courtDialogGameId.value = game.id;
+  courtDialogNumber.value = game.court_number || '';
+  courtDialogVisible.value = true;
+  nextTick(() => { courtInput.value?.focus(); });
+};
+
+const saveCourtNumber = () => {
+  if (!courtDialogNumber.value || courtDialogNumber.value < 1) return;
+  router.post(`/games/${courtDialogGameId.value}/update-court-number`, {
+    court_number: parseInt(courtDialogNumber.value),
+  }, {
+    preserveScroll: true,
+    headers: { Accept: "application/json" },
+    onSuccess: () => {
+      // Update locally so it shows immediately
+      const game = props.games.find(g => g.id === courtDialogGameId.value);
+      if (game) game.court_number = parseInt(courtDialogNumber.value);
+      courtDialogVisible.value = false;
+      toast.add({ severity: "success", summary: t('game.court'), detail: `${t('game.courtNumber')} ${courtDialogNumber.value}`, life: 2000 });
+    },
+  });
+};
+
+const canEditCourt = (game) => !(game.status === 'finished' && game.court_number);
+
+// Collect unique court numbers used in this party
+const usedCourtNumbers = computed(() => {
+  const nums = new Set();
+  props.games.forEach(g => { if (g.court_number) nums.add(g.court_number); });
+  return [...nums].sort((a, b) => a - b);
+});
 
 const activeFilter = ref('all');
 
@@ -98,6 +143,23 @@ const gameWinner = (game) => {
   return null;
 };
 
+// Elapsed time for playing games (updates every second)
+const now = ref(Date.now());
+let elapsedTimer = null;
+
+onMounted(() => {
+  elapsedTimer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+onUnmounted(() => { if (elapsedTimer) clearInterval(elapsedTimer); });
+
+const elapsedTime = (startDate) => {
+  if (!startDate) return '0 น. 0 วิ';
+  const seconds = Math.floor((now.value - new Date(startDate).getTime()) / 1000);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m} น. ${s} วิ`;
+};
+
 const sortedGames = computed(() => {
   return [...props.games].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
 });
@@ -105,14 +167,20 @@ const sortedGames = computed(() => {
 const filteredGames = computed(() => {
   if (activeFilter.value === 'all') return sortedGames.value;
   if (activeFilter.value === 'no_score') return sortedGames.value.filter(g => noScore(g));
+  if (activeFilter.value === 'finished') return sortedGames.value.filter(g => hasScore(g));
   return sortedGames.value.filter(g => g.status === activeFilter.value);
 });
 
 const statusCounts = computed(() => {
   const counts = { playing: 0, setting: 0, listing: 0, finished: 0, no_score: 0 };
   props.games.forEach(g => {
-    if (counts[g.status] !== undefined) counts[g.status]++;
-    if (noScore(g)) counts.no_score++;
+    if (g.status === 'finished') {
+      if (hasScore(g)) counts.finished++;
+      counts.no_score += noScore(g) ? 1 : 0;
+    } else if (counts[g.status] !== undefined) {
+      counts[g.status]++;
+    }
+    // Don't double-count no_score in finished
   });
   return counts;
 });
@@ -186,119 +254,153 @@ const filters = computed(() => [
           }"
         ></div>
 
-        <div class="p-4">
-          <!-- Header: Game number + Status + Shuttlecock -->
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-base-content/40">{{ t('game.game') }}</span>
-              <span class="text-lg font-bold text-base-content">#{{ games.length - games.indexOf(game) }}</span>
-              <span class="px-2 py-1 rounded-md text-xs font-semibold" :class="gameStatusClass(game.status)">{{ gameStatusLabel(game.status) }}</span>
-              <span v-if="noScore(game)" class="px-2 py-1 bg-error/15 text-error text-xs font-semibold rounded-md">{{ t('filter.noScore') }}</span>
+        <div class="px-3 py-2.5">
+          <!-- Row 1: Header -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm font-bold text-base-content">#{{ games.length - games.indexOf(game) }}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold" :class="gameStatusClass(game.status)">{{ gameStatusLabel(game.status) }}</span>
+              <span v-if="noScore(game)" class="px-1.5 py-0.5 bg-error/15 text-error text-[10px] font-semibold rounded">{{ t('filter.noScore') }}</span>
             </div>
-            <div class="flex items-center gap-1 bg-base-200 rounded-lg px-2 py-1">
-              <button @click="emit('returnShuttlecock', game.id)" class="w-5 h-5 rounded flex items-center justify-center bg-error/10 text-error border-0 cursor-pointer text-[10px] font-bold hover:bg-error/20 transition-colors">−</button>
-              <span class="text-xs font-semibold text-base-content/70 px-1" title="Shuttlecocks">🏸 {{ shuttlecocksTotal(game) }}</span>
-              <button @click="emit('addShuttlecock', game.id)" class="w-5 h-5 rounded flex items-center justify-center bg-primary/10 text-primary border-0 cursor-pointer text-[10px] font-bold hover:bg-primary/20 transition-colors">+</button>
+            <div class="flex items-center gap-1.5">
+              <!-- Shuttlecocks -->
+              <div class="flex items-center gap-0.5 bg-base-200 rounded-lg px-1.5 py-0.5">
+                <button @click="emit('returnShuttlecock', game.id)" class="w-4 h-4 rounded flex items-center justify-center bg-error/10 text-error border-0 cursor-pointer text-[9px] font-bold hover:bg-error/20 transition-colors">−</button>
+                <span class="text-[10px] font-semibold text-base-content/70 px-0.5"><img :src="shuttlecockIcon" alt="" class="w-3 h-3 inline dark:invert-0" style="filter: brightness(0) saturate(100%) invert(40%);" /> {{ shuttlecocksTotal(game) }}</span>
+                <button @click="emit('addShuttlecock', game.id)" class="w-4 h-4 rounded flex items-center justify-center bg-primary/10 text-primary border-0 cursor-pointer text-[9px] font-bold hover:bg-primary/20 transition-colors">+</button>
+              </div>
             </div>
           </div>
 
-          <!-- Teams display -->
-          <div class="flex items-stretch gap-2 mb-3">
+          <!-- Row 2: Teams — compact horizontal -->
+          <div class="flex items-center mb-2">
             <!-- Team 1 -->
-            <div class="flex-1 rounded-xl p-2.5 flex flex-col items-center relative"
-              :class="gameWinner(game) === 'team1' ? 'bg-warning/10 border border-warning/30' : 'bg-base-200/60'">
-              <span v-if="gameWinner(game) === 'team1'" class="absolute -top-3.5 -left-2 text-2xl -rotate-[25deg]">👑</span>
-              <div class="text-[10px] font-semibold uppercase tracking-wider mb-2"
-                :class="gameWinner(game) === 'team1' ? 'text-warning font-bold' : 'text-base-content/40'">Team 1</div>
-              <div class="flex items-center justify-center gap-2.5 flex-1">
-                <template v-for="player in game.game_players?.filter(p => isTeam1(p.team))" :key="player.id">
-                  <div class="flex flex-col items-center gap-0.5">
-                    <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" class="border-2 border-base-100" />
-                    <span class="text-[9px] text-base-content/60 max-w-[4rem] truncate text-center">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
-                  </div>
-                </template>
-                <template v-if="game.game_players?.filter(p => isTeam1(p.team)).length === 0">
-                  <span class="text-xs text-base-content/30 italic">ยังไม่มีผู้เล่น</span>
-                </template>
-              </div>
+            <div class="flex-1 flex items-center justify-center gap-1.5 py-1 min-w-0 relative"
+              :class="gameWinner(game) === 'team1' ? 'bg-warning/20 rounded-lg border border-warning/40' : ''">
+              <span v-if="gameWinner(game) === 'team1'" class="absolute -top-4 -left-2 text-2xl -rotate-[25deg]">👑</span>
+              <template v-for="player in game.game_players?.filter(p => isTeam1(p.team))" :key="player.id">
+                <div class="flex flex-col items-center gap-0.5 shrink-0">
+                  <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" class="border-2 border-base-100" />
+                  <span class="text-[8px] text-base-content/50 max-w-[3rem] truncate text-center leading-none">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
+                </div>
+              </template>
             </div>
 
-            <!-- VS -->
-            <div class="shrink-0 flex flex-col items-center justify-center px-1">
-              <span class="text-[10px] font-black text-base-content/30">VS</span>
-              <div v-if="game.status === 'finished' && game.game_sets?.length" class="mt-0.5">
-                <div v-for="game_set in game.game_sets" :key="game_set.id" class="text-[10px] font-bold text-center leading-tight"
-                  :class="game_set.winning_team ? 'text-base-content/70' : 'text-base-content/30'">
+            <!-- VS / Score / Court -->
+            <div class="shrink-0 flex flex-col items-center px-3 gap-0.5">
+              <!-- Court number -->
+              <button
+                @click="canEditCourt(game) ? openCourtDialog(game) : null"
+                class="text-[9px] font-bold px-1.5 py-0.5 rounded border-0 transition-colors leading-tight"
+                :class="game.court_number
+                  ? (canEditCourt(game) ? 'bg-primary/10 text-primary cursor-pointer hover:bg-primary/20' : 'bg-base-200 text-base-content/50 cursor-default')
+                  : 'bg-warning/15 text-warning cursor-pointer hover:bg-warning/25'"
+              >{{ game.court_number ? `${t('game.court')} ${game.court_number}` : t('game.setCourt') }}</button>
+              <!-- Score -->
+              <template v-if="game.status === 'finished' && game.game_sets?.length">
+                <div v-for="game_set in game.game_sets" :key="game_set.id" class="text-sm font-bold leading-snug"
+                  :class="game_set.winning_team ? 'text-base-content/80' : 'text-base-content/30'">
                   {{ game_set.winning_team ? `${game_set.team1_score}-${game_set.team2_score}` : '?-?' }}
                 </div>
-              </div>
+              </template>
+              <span v-else class="text-sm font-black text-base-content/20">VS</span>
             </div>
 
             <!-- Team 2 -->
-            <div class="flex-1 rounded-xl p-2.5 flex flex-col items-center relative"
-              :class="gameWinner(game) === 'team2' ? 'bg-warning/10 border border-warning/30' : 'bg-base-200/60'">
-              <span v-if="gameWinner(game) === 'team2'" class="absolute -top-3.5 -right-2 text-2xl rotate-[25deg]">👑</span>
-              <div class="text-[10px] font-semibold uppercase tracking-wider mb-2"
-                :class="gameWinner(game) === 'team2' ? 'text-warning font-bold' : 'text-base-content/40'">Team 2</div>
-              <div class="flex items-center justify-center gap-2.5 flex-1">
-                <template v-for="player in game.game_players?.filter(p => isTeam2(p.team))" :key="player.id">
-                  <div class="flex flex-col items-center gap-0.5">
-                    <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" class="border-2 border-base-100" />
-                    <span class="text-[9px] text-base-content/60 max-w-[4rem] truncate text-center">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
-                  </div>
-                </template>
-                <template v-if="game.game_players?.filter(p => isTeam2(p.team)).length === 0">
-                  <span class="text-xs text-base-content/30 italic">ยังไม่มีผู้เล่น</span>
-                </template>
-              </div>
+            <div class="flex-1 flex items-center justify-center gap-1.5 py-1 min-w-0 relative"
+              :class="gameWinner(game) === 'team2' ? 'bg-warning/20 rounded-lg border border-warning/40' : ''">
+              <span v-if="gameWinner(game) === 'team2'" class="absolute -top-4 -right-2 text-2xl rotate-[25deg]">👑</span>
+              <template v-for="player in game.game_players?.filter(p => isTeam2(p.team))" :key="player.id">
+                <div class="flex flex-col items-center gap-0.5 shrink-0">
+                  <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" class="border-2 border-base-100" />
+                  <span class="text-[8px] text-base-content/50 max-w-[3rem] truncate text-center leading-none">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
+                </div>
+              </template>
             </div>
           </div>
 
-          <!-- Unassigned players (no team yet) -->
-          <div v-if="game.game_players?.filter(p => isUnassigned(p.team)).length > 0" class="mb-3">
-            <div class="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider mb-1 text-center">{{ t('game.waitingTeam') }}</div>
-            <div class="flex items-center justify-center gap-2.5 flex-wrap">
-              <div v-for="player in game.game_players?.filter(p => isUnassigned(p.team))" :key="player.id" class="flex flex-col items-center gap-0.5">
-                <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="md" rounded="full" />
-                <span class="text-[9px] text-base-content/60 max-w-[4rem] truncate text-center">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
-              </div>
+          <!-- Unassigned players -->
+          <div v-if="game.game_players?.filter(p => isUnassigned(p.team)).length > 0" class="flex items-center justify-center gap-1.5 flex-wrap mb-2">
+            <div v-for="player in game.game_players?.filter(p => isUnassigned(p.team))" :key="player.id" class="flex items-center gap-1">
+              <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="xs" rounded="full" />
+              <span class="text-[9px] text-base-content/50">{{ (player.display_name || player.user?.name || '').split(' ')[0] }}</span>
             </div>
           </div>
 
-          <!-- Add player button -->
+          <!-- Add player -->
           <button
             v-if="!isGameIsFull(game) && ['setting', 'listing'].includes(game.status)"
             @click="emit('autoAddPlayers', game.id)"
-            class="w-full py-2 rounded-xl border-2 border-dashed border-base-300 bg-transparent text-base-content/40 cursor-pointer hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all text-xs font-medium mb-3"
+            class="w-full py-1.5 rounded-lg border border-dashed border-base-300 bg-transparent text-base-content/40 cursor-pointer hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all text-[10px] font-medium mb-1.5"
           >{{ t('game.addPlayers') }}</button>
 
-          <!-- Footer: Time + Actions -->
-          <div class="flex items-center justify-between pt-3 border-t border-base-200">
-            <div class="flex items-center gap-1.5 text-xs text-base-content/50">
+          <!-- Footer -->
+          <div class="flex items-center justify-between pt-1.5 border-t border-base-200">
+            <div class="flex items-center gap-1 text-[10px] text-base-content/50">
               <template v-if="game.status === 'finished'">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>{{ playTime(game.game_start_date, game.game_end_date) }}</span>
               </template>
               <template v-else-if="game.status === 'playing'">
-                <span class="inline-block w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                <span class="text-success font-medium">{{ t('game.playing') }}</span>
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+                <span class="text-success font-medium">{{ t('game.playing') }} ({{ elapsedTime(game.game_start_date) }})</span>
               </template>
               <template v-else>
-                <span>{{ game.game_players?.length || 0 }}/{{ getMaxPlayers(game.game_type) || '?' }} คน</span>
+                <span>{{ game.game_players?.length || 0 }}/{{ getMaxPlayers(game.game_type) || '?' }} {{ t('common.players') }}</span>
               </template>
             </div>
 
-            <div class="flex items-center gap-1.5">
-              <button v-show="game.status === 'setting'" @click="emit('listGame', game.id, $event)" class="btn btn-secondary btn-xs">{{ t('game.list') }}</button>
-              <button v-show="game.status === 'listing'" @click="emit('startGame', game.id)" class="btn btn-primary btn-xs">{{ t('game.start') }}</button>
-              <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs">{{ t('common.delete') }}</button>
-              <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs">{{ t('game.finish') }}</button>
-              <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs">{{ t('game.score') }}</button>
-              <span v-if="game.status === 'finished' && !game.game_sets?.[0]?.winning_team && !isPlayerInGame(game)" class="text-[10px] text-base-content/40">{{ t('game.waitingScore') }}</span>
+            <div class="flex items-center gap-1">
+              <button v-show="game.status === 'setting'" @click="emit('listGame', game.id, $event)" class="btn btn-secondary btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.list') }}</button>
+              <button v-show="game.status === 'listing'" @click="emit('startGame', game.id)" class="btn btn-primary btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.start') }}</button>
+              <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('common.delete') }}</button>
+              <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.finish') }}</button>
+              <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ hasScore(game) ? t('game.editScore') : t('game.score') }}</button>
+              <span v-if="game.status === 'finished' && noScore(game) && !isPlayerInGame(game)" class="text-[9px] text-base-content/40">{{ t('game.waitingScore') }}</span>
+              <span v-if="game.status === 'finished' && hasScore(game) && !isPlayerInGame(game)" class="text-[9px] text-success/60">{{ t('game.scored') }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <!-- Court Number Dialog -->
+    <dialog class="modal" :class="{ 'modal-open': courtDialogVisible }">
+      <div class="modal-box max-w-xs p-0">
+        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+          <h3 class="text-base font-bold text-base-content m-0">🏟️ {{ t('game.courtNumber') }}</h3>
+          <button @click="courtDialogVisible = false" class="w-7 h-7 rounded-lg bg-base-200 hover:bg-base-300 border-0 cursor-pointer flex items-center justify-center transition-colors">
+            <span class="text-base-content/60 text-sm">✕</span>
+          </button>
+        </div>
+        <div class="px-4 pb-4">
+          <!-- Quick select from used courts -->
+          <div v-if="usedCourtNumbers.length > 0" class="flex flex-wrap gap-1.5 mb-3">
+            <button
+              v-for="num in usedCourtNumbers"
+              :key="num"
+              @click="courtDialogNumber = num"
+              class="h-8 w-8 rounded-lg text-xs font-bold border-0 cursor-pointer transition-all active:scale-95"
+              :class="courtDialogNumber === num ? 'bg-primary text-white' : 'bg-base-200 text-base-content/70 hover:bg-base-300'"
+            >{{ num }}</button>
+          </div>
+          <input
+            ref="courtInput"
+            v-model.number="courtDialogNumber"
+            type="number"
+            min="1"
+            :placeholder="t('game.courtNumber')"
+            class="w-full px-3 py-2.5 rounded-xl border border-base-300 bg-base-100 text-center text-2xl font-bold text-base-content focus:border-primary focus:ring-2 focus:ring-primary/20 outline-hidden transition-all"
+            @keyup.enter="saveCourtNumber"
+          />
+          <button
+            @click="saveCourtNumber"
+            :disabled="!courtDialogNumber || courtDialogNumber < 1"
+            class="w-full mt-3 h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+          >{{ t('common.save') }}</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="courtDialogVisible = false">close</button>
+      </form>
+    </dialog>
   </div>
 </template>

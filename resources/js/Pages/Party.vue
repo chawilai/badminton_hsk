@@ -7,10 +7,11 @@ import TabInfo from "@/Pages/Party/TabInfo.vue";
 import TabPlayer from "@/Pages/Party/TabPlayer.vue";
 import TabStatistic from "@/Pages/Party/TabStatistic.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
-import { reactive, ref, computed, onMounted, watch } from "vue";
+import { reactive, ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useLocale } from "@/composables/useLocale";
+import { Realtime } from "ably";
 
 import crown from "@/../assets/images/crown.png";
 
@@ -48,7 +49,7 @@ game_data.party_id = party.value.id;
 const settingGame = page.props.games.find((sc) => sc.status === "setting") ?? null;
 
 const visibleGameId = ref(settingGame ? settingGame.id : null);
-const game_คน = ref(settingGame ? settingGame.game_คน : []);
+const game_players = ref(settingGame ? settingGame.game_players : []);
 
 const initial_shuttlecock_party = ref(0);
 
@@ -81,6 +82,15 @@ const showCrown = (index, team) => {
   if (team === "team2" && set.team2_score > set.team1_score) return true;
   return false;
 };
+
+const setWins = computed(() => {
+  let t1 = 0, t2 = 0;
+  sets.value.forEach(s => {
+    if (s.team1_score > s.team2_score) t1++;
+    else if (s.team2_score > s.team1_score) t2++;
+  });
+  return { t1, t2 };
+});
 
 const addNewSet = (overrides = {}) => {
   let newSet = {
@@ -183,7 +193,7 @@ const autoAddPlayers = (gameId) => {
         visibleGameId.value = gameId;
         fetchReadyPlayer(gameId);
         thisGame.value = games.value.find((sc) => sc.id == gameId);
-        game_คน.value = thisGame.value.game_คน;
+        game_players.value = thisGame.value.game_players;
         if (res.props.flash.success?.length > 0) {
           toast.add({ severity: "success", summary: "จัดผู้เล่น", detail: `ระบบได้จัดผู้เล่นที่เหมาะสมลงเกมแล้ว โปรดปรับเปลี่ยน`, life: 3000 });
         }
@@ -212,7 +222,7 @@ const listGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_คน.value = thisGame.value.game_คน;
+            game_players.value = thisGame.value.game_players;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "สำเร็จ", detail: `ลีสเกมลงรายการรอเล่นแล้ว`, life: 3000 });
             }
@@ -238,10 +248,10 @@ const createGame = () => {
       games.value = res.props.games;
       let newGame = res.props.games.find((sc) => sc.status === "setting");
       visibleGameId.value = newGame.id;
-      game_คน.value = newGame.game_คน;
+      game_players.value = newGame.game_players;
       fetchReadyPlayer(visibleGameId.value);
       thisGame.value = games.value.find((sc) => sc.id == newGame.id);
-      game_คน.value = thisGame.value.game_คน;
+      game_players.value = thisGame.value.game_players;
       if (res.props.flash.success?.length > 0) {
         toast.add({ severity: "success", summary: "สำเร็จ", detail: `สร้างเกมแล้วโปรดตั้งค่าเกม`, life: 3000 });
       }
@@ -254,6 +264,13 @@ const createGame = () => {
 };
 
 const startGame = (gameId) => {
+  // Check if court number is set
+  const game = games.value.find(g => g.id === gameId);
+  if (game && !game.court_number) {
+    toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
+    return;
+  }
+
   confirm({
     message: "Do you want to start the game ?",
     header: "Start Game",
@@ -269,7 +286,7 @@ const startGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_คน.value = thisGame.value.game_คน;
+            game_players.value = thisGame.value.game_players;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "สำเร็จ", detail: `เกมเริ่มต้นแล้ว`, life: 3000 });
             }
@@ -277,6 +294,7 @@ const startGame = (gameId) => {
           onError: (err) => {
             if (err.notInListing) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "เริ่มเกมได้เฉพาะเกมที่มีสถานะลีสรายการ", life: 3000 });
             if (err.playerPlaying) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีผู้เล่นบางคนกำลังเล่นในเกมอื่นอยู่ โปรดจบเกมนั้นก่อน", life: 3000 });
+            if (err.courtRequired) toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
           },
         }
       );
@@ -303,7 +321,7 @@ const finishGame = (gameId) => {
             games.value = res.props.games;
             fetchReadyPlayer(gameId);
             thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_คน.value = thisGame.value.game_คน;
+            game_players.value = thisGame.value.game_players;
             props.value = res.props;
             if (res.props.flash.success?.length > 0) {
               toast.add({ severity: "success", summary: "จบเกม", detail: `จบเกมเรียบร้อยแล้ว`, life: 3000 });
@@ -476,6 +494,51 @@ const tabs = computed(() => [
   { key: "player", label: t('party.tabPlayer'), icon: "👥" },
   { key: "stats", label: t('party.tabStats'), icon: "📊" },
 ]);
+
+// ===== Real-time updates via Ably =====
+let ablyInstance = null;
+let partyChannel = null;
+
+const handlePartyEvent = (message) => {
+  // Skip events triggered by the current user
+  if (message.data?.user_id === page.props.auth.user.id) return;
+
+  // Show notification toast
+  if (message.data?.message && message.data?.user_name) {
+    toast.add({
+      severity: 'info',
+      summary: message.data.user_name,
+      detail: message.data.message,
+      life: 4000,
+    });
+  }
+
+  // Reload page data silently
+  router.reload({ preserveScroll: true, only: ['games', 'party', 'readyPlayers', 'playingPlayers', 'breakPlayers'] });
+};
+
+onMounted(() => {
+  const ablyKey = page.props.ably_key;
+  if (ablyKey) {
+    ablyInstance = new Realtime({
+      key: ablyKey,
+      clientId: `${page.props.auth.user.id}`,
+    });
+
+    partyChannel = ablyInstance.channels.get(`party.${party.value.id}`);
+    partyChannel.subscribe(handlePartyEvent);
+  }
+});
+
+onUnmounted(() => {
+  if (partyChannel) {
+    partyChannel.unsubscribe();
+    partyChannel.detach();
+  }
+  if (ablyInstance) {
+    ablyInstance.close();
+  }
+});
 </script>
 
 <template>
@@ -486,21 +549,21 @@ const tabs = computed(() => [
     <div class="mb-4">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <h1 class="text-xl font-bold text-base-content m-0">
-            {{ party.court?.name || 'Party' }} <span class="text-base font-normal text-base-content/50">#{{ party.id }}</span>
+          <h1 class="text-base font-bold text-base-content m-0 leading-tight">
+            {{ party.name || party.court?.name || 'Party' }} <span class="text-xs font-normal text-base-content/50">#{{ party.id }}</span>
           </h1>
-          <p class="text-sm text-base-content/60 m-0 mt-0.5">
-            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_คน }} {{ t('common.players') }}
+          <p v-if="party.name && party.court?.name" class="text-[10px] text-base-content/40 m-0">🏟️ {{ party.court.name }}</p>
+          <p class="text-xs text-base-content/60 m-0 mt-0.5">
+            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_players }} {{ t('common.players') }}
           </p>
         </div>
         <div class="flex items-center gap-2">
           <button @click="reloadPage()" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer">
             <span class="text-sm">↻</span>
           </button>
-          <button @click="visibleTop = true" class="h-9 px-4 flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/80 text-white text-sm font-medium border-0 cursor-pointer transition-colors active:scale-[0.98]">
-            <span class="text-xs">+</span>
-            <span class="hidden sm:inline">{{ t('party.newGame') }}</span>
-            <span class="sm:hidden">{{ t('party.newGameShort') }}</span>
+          <button @click="visibleTop = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-primary hover:bg-primary/80 text-white text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
+            <span>+</span>
+            <span>{{ t('party.newGame') }}</span>
           </button>
         </div>
       </div>
@@ -543,6 +606,17 @@ const tabs = computed(() => [
         </div>
 
         <div class="px-4 pb-2">
+          <!-- Score Summary -->
+          <div class="flex items-center justify-center gap-3 mb-3 py-2">
+            <span class="text-sm font-bold text-base-content/60">Team 1</span>
+            <div class="flex items-center gap-1">
+              <span class="text-2xl font-black" :class="setWins.t1 > setWins.t2 ? 'text-warning' : 'text-base-content/40'">{{ setWins.t1 }}</span>
+              <span class="text-lg text-base-content/30 font-bold">:</span>
+              <span class="text-2xl font-black" :class="setWins.t2 > setWins.t1 ? 'text-warning' : 'text-base-content/40'">{{ setWins.t2 }}</span>
+            </div>
+            <span class="text-sm font-bold text-base-content/60">Team 2</span>
+          </div>
+
           <div v-for="(set, index) in sets" :key="index" class="mb-4">
             <div class="flex items-center justify-center mb-3">
               <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
@@ -556,27 +630,30 @@ const tabs = computed(() => [
                 :class="showCrown(index, 'team1') ? 'bg-warning/10 border border-warning/30' : 'bg-base-200 border border-base-300'">
                 <img v-show="showCrown(index, 'team1')" :src="crown" class="w-8 h-8 absolute -top-3 -left-1 -rotate-[25deg]" alt="" />
                 <p class="text-[10px] text-base-content/50 font-bold uppercase tracking-wider m-0 mb-2">Team 1</p>
-                <div class="flex justify-center gap-1 mb-3">
-                  <div v-for="player in setScoreGame.game_คน?.filter(p => p.team === 'team1' || p.team === 1)" :key="player.user.id" class="text-center">
-                    <UserAvatar :src="player.user.avatar" :name="player.display_name || player.user.name" size="lg" rounded="xl" class="border-2 border-white" />
-                    <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3rem]">{{ player.display_name }}</p>
+                <div class="flex justify-center gap-1.5 mb-3">
+                  <div v-for="player in setScoreGame.game_players?.filter(p => p.team === 'team1' || p.team === 1)" :key="player.user.id" class="text-center">
+                    <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="lg" rounded="xl" class="border-2 border-white" />
+                    <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3.5rem]">{{ player.display_name || player.user?.name }}</p>
                   </div>
                 </div>
-                <div class="text-3xl font-black m-0 mb-2" :class="showCrown(index, 'team1') ? 'text-warning' : 'text-base-content/80'">{{ set.team1_score }}</div>
-                <div class="flex items-center justify-center gap-1 mb-2">
+                <!-- Score + controls -->
+                <div class="flex items-center justify-center gap-2 mb-2">
                   <button type="button" @click="set.team1_score > 0 ? set.team1_score-- : null"
-                    class="w-8 h-8 rounded-lg bg-error/10 text-error border-0 cursor-pointer font-bold text-base hover:bg-error/20 transition-colors">-</button>
+                    class="w-9 h-9 rounded-lg bg-error/10 text-error border-0 cursor-pointer font-bold text-lg hover:bg-error/20 transition-colors">-</button>
+                  <div class="text-3xl font-black min-w-[2.5rem]" :class="showCrown(index, 'team1') ? 'text-warning' : 'text-base-content/80'">{{ set.team1_score }}</div>
                   <button type="button" @click="set.team1_score < 30 ? set.team1_score++ : null"
-                    class="w-8 h-8 rounded-lg bg-primary/10 text-primary border-0 cursor-pointer font-bold text-base hover:bg-primary/20 transition-colors">+</button>
+                    class="w-9 h-9 rounded-lg bg-primary/10 text-primary border-0 cursor-pointer font-bold text-lg hover:bg-primary/20 transition-colors">+</button>
                 </div>
-                <div class="flex justify-center gap-1">
+                <!-- Quick buttons -->
+                <div class="flex justify-center gap-1.5 mb-2">
                   <button type="button" @click="set.team1_score = 0"
-                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors">0</button>
+                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300/80 transition-colors">รีเซ็ต</button>
                   <button type="button" @click="set.team1_score = 21"
-                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors">21</button>
+                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300/80 transition-colors">21 แต้ม</button>
                 </div>
-                <div class="mt-2 px-1">
-                  <input type="range" :min="0" :max="30" v-model.number="set.team1_score" class="range range-primary range-xs w-full" />
+                <!-- Slider -->
+                <div class="px-1">
+                  <input type="range" :min="0" :max="30" v-model.number="set.team1_score" class="range range-primary range-sm w-full" />
                 </div>
               </div>
 
@@ -585,27 +662,30 @@ const tabs = computed(() => [
                 :class="showCrown(index, 'team2') ? 'bg-warning/10 border border-warning/30' : 'bg-base-200 border border-base-300'">
                 <img v-show="showCrown(index, 'team2')" :src="crown" class="w-8 h-8 absolute -top-3 -right-1 rotate-[25deg]" alt="" />
                 <p class="text-[10px] text-base-content/50 font-bold uppercase tracking-wider m-0 mb-2">Team 2</p>
-                <div class="flex justify-center gap-1 mb-3">
-                  <div v-for="player in setScoreGame.game_คน?.filter(p => p.team === 'team2' || p.team === 2)" :key="player.user.id" class="text-center">
-                    <UserAvatar :src="player.user.avatar" :name="player.display_name || player.user.name" size="lg" rounded="xl" class="border-2 border-white" />
-                    <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3rem]">{{ player.display_name }}</p>
+                <div class="flex justify-center gap-1.5 mb-3">
+                  <div v-for="player in setScoreGame.game_players?.filter(p => p.team === 'team2' || p.team === 2)" :key="player.user.id" class="text-center">
+                    <UserAvatar :src="player.user?.avatar" :name="player.display_name || player.user?.name" size="lg" rounded="xl" class="border-2 border-white" />
+                    <p class="text-[9px] text-base-content/60 m-0 mt-0.5 truncate max-w-[3.5rem]">{{ player.display_name || player.user?.name }}</p>
                   </div>
                 </div>
-                <div class="text-3xl font-black m-0 mb-2" :class="showCrown(index, 'team2') ? 'text-warning' : 'text-base-content/80'">{{ set.team2_score }}</div>
-                <div class="flex items-center justify-center gap-1 mb-2">
+                <!-- Score + controls -->
+                <div class="flex items-center justify-center gap-2 mb-2">
                   <button type="button" @click="set.team2_score > 0 ? set.team2_score-- : null"
-                    class="w-8 h-8 rounded-lg bg-error/10 text-error border-0 cursor-pointer font-bold text-base hover:bg-error/20 transition-colors">-</button>
+                    class="w-9 h-9 rounded-lg bg-error/10 text-error border-0 cursor-pointer font-bold text-lg hover:bg-error/20 transition-colors">-</button>
+                  <div class="text-3xl font-black min-w-[2.5rem]" :class="showCrown(index, 'team2') ? 'text-warning' : 'text-base-content/80'">{{ set.team2_score }}</div>
                   <button type="button" @click="set.team2_score < 30 ? set.team2_score++ : null"
-                    class="w-8 h-8 rounded-lg bg-primary/10 text-primary border-0 cursor-pointer font-bold text-base hover:bg-primary/20 transition-colors">+</button>
+                    class="w-9 h-9 rounded-lg bg-primary/10 text-primary border-0 cursor-pointer font-bold text-lg hover:bg-primary/20 transition-colors">+</button>
                 </div>
-                <div class="flex justify-center gap-1">
+                <!-- Quick buttons -->
+                <div class="flex justify-center gap-1.5 mb-2">
                   <button type="button" @click="set.team2_score = 0"
-                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors">0</button>
+                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300/80 transition-colors">รีเซ็ต</button>
                   <button type="button" @click="set.team2_score = 21"
-                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors">21</button>
+                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-base-300 text-base-content/70 border-0 cursor-pointer hover:bg-base-300/80 transition-colors">21 แต้ม</button>
                 </div>
-                <div class="mt-2 px-1">
-                  <input type="range" :min="0" :max="30" v-model.number="set.team2_score" class="range range-primary range-xs w-full" />
+                <!-- Slider -->
+                <div class="px-1">
+                  <input type="range" :min="0" :max="30" v-model.number="set.team2_score" class="range range-primary range-sm w-full" />
                 </div>
               </div>
             </div>
@@ -684,6 +764,7 @@ const tabs = computed(() => [
     <div v-show="activeTab === 'player'">
       <TabPlayer
         :party="party"
+        :friendshipMap="page.props.friendshipMap || {}"
         @updateDisplayName="updateDisplayName"
       />
     </div>

@@ -15,6 +15,8 @@ class Party extends Model
     // Define fillable properties to allow mass assignment
     protected $fillable = [
         'creator_id', // ID of the user who created or is hosting the party
+        'name',       // Party name
+        'default_game_type', // double (1v1) or quadruple (2v2)
         'play_date',  // Date of the party
         'court_id',   // Associated court for the party
         'play_hours', // Duration of play time
@@ -23,6 +25,10 @@ class Party extends Model
         'end_time',   // End time of the party
         'status',     // Status of the party (e.g., 'open', 'full', 'completed')
         'is_private',   // Whether the party is open to the public or private
+        'cost_type',    // per_person, split_equal, free
+        'cost_amount',  // Cost amount
+        'shuttlecock_cost', // Shuttlecock cost
+        'notes',        // Party notes/rules
         'is_inc_playing',   // Show playing player to make the game
         'is_break_aftergame',   // Set game_status to break after the game end
         'default_initial_shuttlecocks',   // Default shuttlecock
