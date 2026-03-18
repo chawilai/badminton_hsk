@@ -27,6 +27,8 @@ const form = useForm({
 });
 
 const previewUrl = ref(null);
+const expandedId = ref(null);
+const toggleExpand = (id) => { expandedId.value = expandedId.value === id ? null : id; };
 
 const isValid = computed(() => form.type && form.subject.trim() && form.description.trim());
 
@@ -198,18 +200,54 @@ onMounted(() => {
         <div
           v-for="fb in myFeedbacks"
           :key="fb.id"
-          class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3"
+          class="bg-base-100 rounded-xl border border-base-300 overflow-hidden"
         >
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :class="typeIconBg(fb.type)">
-            <span class="text-sm">{{ typeIcon(fb.type) }}</span>
+          <!-- Header (clickable) -->
+          <div class="p-3 flex items-center gap-3 cursor-pointer hover:bg-base-200/50 transition-colors" @click="toggleExpand(fb.id)">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :class="typeIconBg(fb.type)">
+              <span class="text-sm">{{ typeIcon(fb.type) }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-base-content truncate">{{ fb.subject }}</div>
+              <div class="text-[10px] text-base-content/50">{{ formatDate(fb.created_at) }}</div>
+            </div>
+            <span class="badge badge-xs" :class="statusBadgeClass(fb.status)">
+              {{ t('feedback.status_' + fb.status) }}
+            </span>
+            <span v-if="fb.replies?.length" class="text-[9px] text-primary font-bold">{{ fb.replies.length }} ตอบกลับ</span>
+            <svg class="w-3 h-3 text-base-content/30 transition-transform shrink-0" :class="{ 'rotate-180': expandedId === fb.id }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-xs font-bold text-base-content truncate">{{ fb.subject }}</div>
-            <div class="text-[10px] text-base-content/50">{{ formatDate(fb.created_at) }}</div>
+
+          <!-- Expanded -->
+          <div v-if="expandedId === fb.id" class="border-t border-base-200 p-3 space-y-2 bg-base-200/30">
+            <!-- Original message -->
+            <div class="bg-base-100 rounded-lg p-2.5">
+              <p class="text-xs text-base-content/80 m-0 whitespace-pre-wrap">{{ fb.description }}</p>
+            </div>
+
+            <!-- Replies -->
+            <div v-if="fb.replies?.length > 0" class="space-y-1.5">
+              <div
+                v-for="reply in fb.replies"
+                :key="reply.id"
+                class="rounded-lg p-2.5 flex items-start gap-2"
+                :class="reply.is_admin ? 'bg-primary/10 ml-4' : 'bg-base-100'"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span v-if="reply.is_admin" class="px-1 py-0.5 rounded text-[8px] font-bold bg-primary/20 text-primary">ADMIN</span>
+                    <span class="text-[10px] font-bold text-base-content">{{ reply.user?.name }}</span>
+                    <span class="text-[9px] text-base-content/30">{{ formatDate(reply.created_at) }}</span>
+                  </div>
+                  <p class="text-xs text-base-content/80 m-0 mt-0.5 whitespace-pre-wrap">{{ reply.message }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="text-center py-2">
+              <span class="text-[10px] text-base-content/40">ยังไม่มีการตอบกลับ</span>
+            </div>
           </div>
-          <span class="badge badge-xs" :class="statusBadgeClass(fb.status)">
-            {{ t('feedback.status_' + fb.status) }}
-          </span>
         </div>
       </div>
     </div>

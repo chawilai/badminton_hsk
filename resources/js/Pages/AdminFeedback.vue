@@ -58,7 +58,28 @@ const updateStatus = (feedbackId, newStatus) => {
   router.patch(`/admin/feedbacks/${feedbackId}/status`, { status: newStatus }, {
     preserveScroll: true,
     onSuccess: () => {
-      toast.add({ severity: 'success', summary: 'อัพเดทสถานะเรียบร้อย', life: 2000 });
+      toast.add({ severity: 'success', summary: 'อัพเดทสถานะ + แจ้ง LINE เรียบร้อย', life: 2000 });
+    },
+  });
+};
+
+// Reply
+const replyText = ref({});
+const replySubmitting = ref({});
+
+const submitReply = (feedbackId) => {
+  const msg = replyText.value[feedbackId]?.trim();
+  if (!msg || replySubmitting.value[feedbackId]) return;
+
+  replySubmitting.value[feedbackId] = true;
+  router.post(`/admin/feedbacks/${feedbackId}/reply`, { message: msg }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      replyText.value[feedbackId] = '';
+      toast.add({ severity: 'success', summary: 'ตอบกลับ + แจ้ง LINE เรียบร้อย', life: 2000 });
+    },
+    onFinish: () => {
+      replySubmitting.value[feedbackId] = false;
     },
   });
 };
@@ -171,6 +192,53 @@ onMounted(() => {
               <img :src="'/storage/' + fb.screenshot_path" class="max-w-full rounded-lg border border-base-300" />
             </div>
 
+            <!-- Replies -->
+            <div v-if="fb.replies?.length > 0">
+              <div class="text-[10px] font-semibold text-base-content/50 mb-1.5 uppercase">การสนทนา ({{ fb.replies.length }})</div>
+              <div class="space-y-2">
+                <div
+                  v-for="reply in fb.replies"
+                  :key="reply.id"
+                  class="rounded-lg p-2.5 flex items-start gap-2"
+                  :class="reply.is_admin ? 'bg-primary/10 ml-4' : 'bg-base-100 mr-4'"
+                >
+                  <UserAvatar :src="reply.user?.avatar" :name="reply.user?.name" size="xs" rounded="full" class="mt-0.5" />
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[10px] font-bold text-base-content">{{ reply.user?.name }}</span>
+                      <span v-if="reply.is_admin" class="px-1 py-0.5 rounded text-[8px] font-bold bg-primary/20 text-primary">ADMIN</span>
+                      <span class="text-[9px] text-base-content/30">{{ formatDate(reply.created_at) }}</span>
+                    </div>
+                    <p class="text-xs text-base-content/80 m-0 mt-0.5 whitespace-pre-wrap">{{ reply.message }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reply form -->
+            <div class="bg-base-100 rounded-lg p-3">
+              <div class="text-[10px] font-semibold text-base-content/50 mb-1.5 uppercase">ตอบกลับ</div>
+              <div class="flex gap-2">
+                <textarea
+                  v-model="replyText[fb.id]"
+                  rows="2"
+                  class="textarea textarea-bordered textarea-sm flex-1 text-xs"
+                  placeholder="พิมพ์คำตอบ..."
+                  maxlength="2000"
+                  @click.stop
+                ></textarea>
+                <button
+                  @click.stop="submitReply(fb.id)"
+                  :disabled="!replyText[fb.id]?.trim() || replySubmitting[fb.id]"
+                  class="self-end h-8 px-3 rounded-lg text-[10px] font-semibold border-0 cursor-pointer bg-primary text-white hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.97] shrink-0"
+                >
+                  <span v-if="replySubmitting[fb.id]" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>ส่ง</span>
+                </button>
+              </div>
+              <div class="text-[9px] text-base-content/30 mt-1">จะส่ง LINE แจ้งผู้ใช้อัตโนมัติ</div>
+            </div>
+
             <!-- Status update -->
             <div>
               <div class="text-[10px] font-semibold text-base-content/50 mb-1.5 uppercase">เปลี่ยนสถานะ</div>
@@ -187,6 +255,7 @@ onMounted(() => {
                   {{ statusLabel(s) }}
                 </button>
               </div>
+              <div class="text-[9px] text-base-content/30 mt-1">จะส่ง LINE แจ้งผู้ใช้อัตโนมัติ</div>
             </div>
           </div>
         </div>

@@ -114,6 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
     Route::get('/admin/feedbacks', [AdminController::class, 'feedbacks'])->name('admin.feedbacks');
     Route::patch('/admin/feedbacks/{feedback}/status', [AdminController::class, 'updateFeedbackStatus'])->name('admin.feedbacks.status');
+    Route::post('/admin/feedbacks/{feedback}/reply', [AdminController::class, 'replyFeedback'])->name('admin.feedbacks.reply');
 
     // MMR Assessment
     Route::get('/mmr-assessment', [MmrController::class, 'showAssessment']);

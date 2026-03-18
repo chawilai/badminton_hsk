@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\Feedback;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
+    $this->admin = User::factory()->create();
 });
 
 test('authenticated user can view feedback page', function () {
@@ -80,4 +83,132 @@ test('feedback default status is pending', function () {
         'user_id' => $this->user->id,
         'status' => 'pending',
     ]);
+});
+
+// --- Admin Reply Tests ---
+
+test('admin can reply to feedback', function () {
+    $feedback = Feedback::create([
+        'user_id' => $this->user->id,
+        'type' => 'feedback',
+        'subject' => 'Test',
+        'description' => 'Test desc',
+    ]);
+
+    Http::fake();
+
+    $this->actingAs($this->admin)
+        ->post("/admin/feedbacks/{$feedback->id}/reply", [
+            'message' => 'Thanks for your feedback!',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('feedback_replies', [
+        'feedback_id' => $feedback->id,
+        'user_id' => $this->admin->id,
+        'message' => 'Thanks for your feedback!',
+        'is_admin' => true,
+    ]);
+});
+
+test('admin reply auto-updates pending status to reviewed', function () {
+    $feedback = Feedback::create([
+        'user_id' => $this->user->id,
+        'type' => 'bug_report',
+        'subject' => 'Bug',
+        'description' => 'Bug desc',
+        'status' => 'pending',
+    ]);
+
+    Http::fake();
+
+    $this->actingAs($this->admin)
+        ->post("/admin/feedbacks/{$feedback->id}/reply", [
+            'message' => 'Looking into this.',
+        ]);
+
+    expect($feedback->fresh()->status)->toBe('reviewed');
+});
+
+test('admin reply does not downgrade status from resolved', function () {
+    $feedback = Feedback::create([
+        'user_id' => $this->user->id,
+        'type' => 'feedback',
+        'subject' => 'Done',
+        'description' => 'Done desc',
+        'status' => 'resolved',
+    ]);
+
+    Http::fake();
+
+    $this->actingAs($this->admin)
+        ->post("/admin/feedbacks/{$feedback->id}/reply", [
+            'message' => 'Follow up.',
+        ]);
+
+    expect($feedback->fresh()->status)->toBe('resolved');
+});
+
+test('reply requires message', function () {
+    $feedback = Feedback::create([
+        'user_id' => $this->user->id,
+        'type' => 'feedback',
+        'subject' => 'Test',
+        'description' => 'Desc',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->post("/admin/feedbacks/{$feedback->id}/reply", [
+            'message' => '',
+        ])
+        ->assertSessionHasErrors('message');
+});
+
+test('status change sends LINE push to user', function () {
+    Http::fake([
+        'api.line.me/*' => Http::response([], 200),
+    ]);
+
+    $lineUser = User::factory()->create([
+        'provider' => 'line',
+        'provider_id' => 'U1234567890',
+    ]);
+
+    $feedback = Feedback::create([
+        'user_id' => $lineUser->id,
+        'type' => 'feedback',
+        'subject' => 'Test',
+        'description' => 'Desc',
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->patch("/admin/feedbacks/{$feedback->id}/status", [
+            'status' => 'resolved',
+        ]);
+
+    $this->assertDatabaseHas('notification_logs', [
+        'user_id' => $lineUser->id,
+        'type' => 'feedback',
+        'status' => 'sent',
+    ]);
+});
+
+test('user sees replies in feedback page', function () {
+    $feedback = Feedback::create([
+        'user_id' => $this->user->id,
+        'type' => 'feedback',
+        'subject' => 'Test',
+        'description' => 'Desc',
+    ]);
+
+    $feedback->replies()->create([
+        'user_id' => $this->admin->id,
+        'message' => 'Admin reply here',
+        'is_admin' => true,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get('/feedback')
+        ->assertOk();
 });

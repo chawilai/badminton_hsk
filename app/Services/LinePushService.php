@@ -43,7 +43,7 @@ class LinePushService
             ])->post($this->apiUrl, [
                 'to' => $lineUserId,
                 'messages' => [
-                    $this->buildFlexMessage($type, $title, $message),
+                    $this->buildFlexMessage($type, $title, $message, $metadata),
                 ],
             ]);
 
@@ -148,58 +148,118 @@ class LinePushService
     /**
      * Build a Flex Message for LINE.
      */
-    private function buildFlexMessage(string $type, string $title, string $message): array
+    private function buildFlexMessage(string $type, string $title, string $message, array $metadata = []): array
     {
-        $iconMap = [
-            'party_invite' => '🎉',
-            'party_reminder' => '⏰',
-            'game_start' => '🏸',
-            'game_result' => '🏆',
-            'friend_request' => '👋',
-            'party_member_joined' => '👥',
+        $themeMap = [
+            'party_invite'        => ['icon' => '🎉', 'headerBg' => '#f0fdf4', 'headerColor' => '#166534', 'accent' => '#22c55e'],
+            'party_reminder'      => ['icon' => '⏰', 'headerBg' => '#fefce8', 'headerColor' => '#854d0e', 'accent' => '#eab308'],
+            'game_start'          => ['icon' => '🏸', 'headerBg' => '#f0fdf4', 'headerColor' => '#166534', 'accent' => '#22c55e'],
+            'game_result'         => ['icon' => '🏆', 'headerBg' => '#fef9c3', 'headerColor' => '#854d0e', 'accent' => '#f59e0b'],
+            'friend_request'      => ['icon' => '👋', 'headerBg' => '#eff6ff', 'headerColor' => '#1e40af', 'accent' => '#3b82f6'],
+            'party_member_joined' => ['icon' => '👥', 'headerBg' => '#f0fdf4', 'headerColor' => '#166534', 'accent' => '#22c55e'],
+            'feedback'            => ['icon' => '💬', 'headerBg' => '#eff6ff', 'headerColor' => '#1e40af', 'accent' => '#3b82f6'],
         ];
 
-        $icon = $iconMap[$type] ?? '🔔';
+        $theme = $themeMap[$type] ?? ['icon' => '🔔', 'headerBg' => '#f0fdf4', 'headerColor' => '#166534', 'accent' => '#22c55e'];
 
-        return [
-            'type' => 'flex',
-            'altText' => "{$icon} {$title}",
-            'contents' => [
-                'type' => 'bubble',
-                'size' => 'kilo',
-                'header' => [
+        // Build body contents
+        $bodyContents = [];
+
+        // Parse message lines into label-value pairs or plain text
+        foreach (explode("\n", $message) as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            if (str_contains($line, ':') && !str_starts_with($line, 'http')) {
+                [$label, $value] = array_map('trim', explode(':', $line, 2));
+                $bodyContents[] = [
                     'type' => 'box',
                     'layout' => 'horizontal',
                     'contents' => [
-                        [
-                            'type' => 'text',
-                            'text' => "{$icon} {$title}",
-                            'weight' => 'bold',
-                            'size' => 'sm',
-                            'color' => '#1a6b3c',
-                        ],
+                        ['type' => 'text', 'text' => $label, 'size' => 'xs', 'color' => '#999999', 'flex' => 0, 'weight' => 'bold'],
+                        ['type' => 'text', 'text' => $value, 'size' => 'sm', 'color' => '#333333', 'flex' => 1, 'wrap' => true, 'align' => 'end'],
                     ],
-                    'paddingAll' => '15px',
-                    'backgroundColor' => '#f0fdf4',
-                ],
-                'body' => [
-                    'type' => 'box',
-                    'layout' => 'vertical',
-                    'contents' => [
-                        [
-                            'type' => 'text',
-                            'text' => $message,
-                            'size' => 'sm',
-                            'color' => '#333333',
-                            'wrap' => true,
-                        ],
+                    'spacing' => 'sm',
+                    'margin' => 'md',
+                ];
+            } else {
+                $bodyContents[] = [
+                    'type' => 'text',
+                    'text' => $line,
+                    'size' => 'sm',
+                    'color' => '#333333',
+                    'wrap' => true,
+                    'margin' => 'md',
+                ];
+            }
+        }
+
+        // Separator + app branding
+        $bodyContents[] = ['type' => 'separator', 'margin' => 'lg'];
+        $bodyContents[] = [
+            'type' => 'text',
+            'text' => '🏸 Badminton Party',
+            'size' => 'xxs',
+            'color' => '#aaaaaa',
+            'margin' => 'md',
+            'align' => 'center',
+        ];
+
+        $bubble = [
+            'type' => 'bubble',
+            'size' => 'kilo',
+            'header' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'text',
+                        'text' => "{$theme['icon']} {$title}",
+                        'weight' => 'bold',
+                        'size' => 'md',
+                        'color' => $theme['headerColor'],
                     ],
-                    'paddingAll' => '15px',
                 ],
-                'styles' => [
-                    'header' => ['separator' => false],
-                ],
+                'paddingAll' => '15px',
+                'backgroundColor' => $theme['headerBg'],
             ],
+            'body' => [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => $bodyContents,
+                'paddingAll' => '15px',
+            ],
+        ];
+
+        // Add footer with action button if URL provided
+        $appUrl = config('app.url', '');
+        $actionUrl = $metadata['action_url'] ?? null;
+        if ($actionUrl || $appUrl) {
+            $url = $actionUrl ?: ($appUrl . '/feedback');
+            $bubble['footer'] = [
+                'type' => 'box',
+                'layout' => 'vertical',
+                'contents' => [
+                    [
+                        'type' => 'button',
+                        'action' => [
+                            'type' => 'uri',
+                            'label' => $metadata['action_label'] ?? 'ดูรายละเอียด',
+                            'uri' => $url,
+                        ],
+                        'style' => 'primary',
+                        'color' => $theme['accent'],
+                        'height' => 'sm',
+                    ],
+                ],
+                'paddingAll' => '12px',
+            ];
+        }
+
+        return [
+            'type' => 'flex',
+            'altText' => "{$theme['icon']} {$title}",
+            'contents' => $bubble,
         ];
     }
 

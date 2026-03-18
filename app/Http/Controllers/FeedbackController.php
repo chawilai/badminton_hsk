@@ -13,6 +13,7 @@ class FeedbackController extends Controller
     public function index(): Response
     {
         $myFeedbacks = Feedback::where('user_id', auth()->id())
+            ->with(['replies.user'])
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
