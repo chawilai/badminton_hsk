@@ -44,7 +44,8 @@ return [
     'line' => [
         'client_id' => env('LINE_CLIENT_ID'),
         'client_secret' => env('LINE_CLIENT_SECRET'),
-        'redirect' => env('LINE_REDIRECT_URI')
+        'redirect' => env('LINE_REDIRECT_URI'),
+        'channel_access_token' => env('LINE_CHANNEL_ACCESS_TOKEN'),
     ],
 
     'apple' => [

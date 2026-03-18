@@ -2,12 +2,20 @@
 import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { Head, usePage, Link, router } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useLocale } from "@/composables/useLocale";
+import { useToast } from "@/composables/useToast";
 import MmrBadge from "@/Components/MmrBadge.vue";
 
 const { t, locale } = useLocale();
+const toast = useToast();
 const page = usePage();
+
+onMounted(() => {
+  if (page.props.flash?.success) {
+    toast.add({ severity: 'success', summary: page.props.flash.success, life: 3000 });
+  }
+});
 const user = computed(() => page.props.profileUser || page.props.auth.user);
 const mmrLevel = computed(() => page.props.mmrLevel);
 const stats = computed(() => page.props.stats || {});
@@ -46,6 +54,10 @@ const formatDate = (d) => {
         <UserAvatar :src="user.avatar" :name="user.name" size="2xl" rounded="full" class="mx-auto border-4 border-base-100 shadow-lg mb-3" />
         <h1 class="text-lg font-bold text-base-content m-0">{{ user.name }}</h1>
         <p class="text-xs text-base-content/50 m-0 mt-0.5">{{ user.email }}</p>
+        <Link v-if="user.id === page.props.auth.user?.id" :href="route('profile.edit')" class="inline-flex items-center gap-1 mt-1.5 px-3 py-1 rounded-lg bg-base-content/10 text-[11px] text-base-content/60 no-underline hover:bg-base-content/20 transition-colors">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          แก้ไขโปรไฟล์
+        </Link>
         <div class="flex items-center justify-center gap-2 mt-2">
           <MmrBadge v-if="mmrLevel"
             :level="mmrLevel.level"
@@ -126,6 +138,26 @@ const formatDate = (d) => {
           <div class="text-[10px] text-base-content/50">จัดการรายชื่อเพื่อน</div>
         </div>
         <span v-if="page.props.pendingFriendCount > 0" class="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold">{{ page.props.pendingFriendCount }}</span>
+        <svg class="w-4 h-4 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </Link>
+
+      <!-- Notification Settings Link -->
+      <Link href="/notifications/settings" class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3 no-underline hover:bg-base-200 transition-colors">
+        <span class="text-2xl">🔔</span>
+        <div class="flex-1">
+          <div class="text-sm font-bold text-base-content">ตั้งค่าแจ้งเตือน</div>
+          <div class="text-[10px] text-base-content/50">แจ้งเตือนผ่าน LINE OA</div>
+        </div>
+        <svg class="w-4 h-4 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </Link>
+
+      <!-- Feedback Link -->
+      <Link href="/feedback" class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3 no-underline hover:bg-base-200 transition-colors">
+        <span class="text-2xl">💬</span>
+        <div class="flex-1">
+          <div class="text-sm font-bold text-base-content">{{ t('feedback.title') }}</div>
+          <div class="text-[10px] text-base-content/50">{{ t('feedback.subtitle') }}</div>
+        </div>
         <svg class="w-4 h-4 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </Link>
 

@@ -10,6 +10,9 @@ use App\Http\Controllers\LineMessagingController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MmrController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +99,21 @@ Route::middleware('auth')->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Feedback
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+
+    // Notifications
+    Route::get('/notifications/settings', [NotificationController::class, 'settings'])->name('notifications.settings');
+    Route::patch('/notifications/settings', [NotificationController::class, 'updateSettings'])->name('notifications.settings.update');
+    Route::post('/notifications/test', [NotificationController::class, 'sendTest'])->name('notifications.test');
+
+    // Admin
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::get('/admin/feedbacks', [AdminController::class, 'feedbacks'])->name('admin.feedbacks');
+    Route::patch('/admin/feedbacks/{feedback}/status', [AdminController::class, 'updateFeedbackStatus'])->name('admin.feedbacks.status');
 
     // MMR Assessment
     Route::get('/mmr-assessment', [MmrController::class, 'showAssessment']);

@@ -5,7 +5,7 @@
     <div class="space-y-4">
       <!-- Header -->
       <div>
-        <h1 class="text-xl font-bold text-base-content m-0">{{ t('nav.myParties') }}</h1>
+        <div class="text-xl font-bold text-base-content m-0">{{ t('nav.myParties') }}</div>
         <p class="text-sm text-base-content/60 m-0 mt-0.5">{{ t('partyList.joined', { count: parties.length }) }}</p>
       </div>
 
@@ -23,9 +23,9 @@
             <!-- Top: Court name + Status -->
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="min-w-0 flex-1">
-                <h3 class="text-base font-semibold text-base-content m-0 truncate">
+                <div class="text-base font-semibold text-base-content m-0 truncate">
                   {{ party.court?.name || 'Unknown Court' }}
-                </h3>
+                </div>
                 <p class="text-xs text-base-content/50 m-0 mt-0.5">#{{ party.id }}</p>
               </div>
               <span
@@ -37,37 +37,20 @@
             </div>
 
             <!-- Info grid -->
-            <div class="grid grid-cols-3 gap-3 mb-3">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <i class="pi pi-calendar text-primary text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.date') }}</p>
-                  <p class="text-sm font-medium text-base-content m-0 truncate">{{ formatDate(party.play_date) }}</p>
-                </div>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <div class="text-center">
+                <p class="text-[10px] text-base-content/50 m-0">📅 วันที่</p>
+                <p class="text-xs font-medium text-base-content m-0 mt-0.5">{{ formatDate(party.play_date) }}</p>
               </div>
-
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <i class="pi pi-clock text-primary text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.hours') }}</p>
-                  <p class="text-sm font-medium text-base-content m-0">{{ party.play_hours }}h</p>
-                </div>
+              <div class="text-center">
+                <p class="text-[10px] text-base-content/50 m-0">⏰ เวลา</p>
+                <p class="text-xs font-medium text-base-content m-0 mt-0.5">{{ party.start_time?.substring(0,5) || '-' }}-{{ party.end_time?.substring(0,5) || '-' }} <span class="text-[10px] text-base-content/40">({{ party.play_hours }}h)</span></p>
               </div>
-
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <i class="pi pi-users text-primary text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-[10px] text-base-content/50 m-0 uppercase tracking-wide">{{ t('partyList.players') }}</p>
-                  <p class="text-sm font-medium m-0" :class="party.members_count >= party.max_players ? 'text-error' : 'text-base-content'">
-                    {{ party.members_count }}/{{ party.max_players }}
-                  </p>
-                </div>
+              <div class="text-center">
+                <p class="text-[10px] text-base-content/50 m-0">👥 ผู้เล่น</p>
+                <p class="text-xs font-medium m-0 mt-0.5" :class="party.members_count >= party.max_players ? 'text-error' : 'text-base-content'">
+                  {{ party.members_count }}/{{ party.max_players }}
+                </p>
               </div>
             </div>
 
@@ -129,7 +112,8 @@ const formatDate = (dateStr) => {
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDate();
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${day} ${months[d.getMonth()]}`;
+  const days = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  return `${days[d.getDay()]}. ${day} ${months[d.getMonth()]}`;
 };
 
 const statusBadgeClass = (status) => {

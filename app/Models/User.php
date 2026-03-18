@@ -154,6 +154,16 @@ class User extends Authenticatable
         return $this->hasMany(MmrHistory::class);
     }
 
+    public function notificationSetting()
+    {
+        return $this->hasOne(NotificationSetting::class);
+    }
+
+    public function notificationLogs()
+    {
+        return $this->hasMany(NotificationLog::class);
+    }
+
     /**
      * Accessor for mmr_level attribute.
      */
