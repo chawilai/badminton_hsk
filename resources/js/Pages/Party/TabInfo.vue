@@ -1,17 +1,63 @@
 <script setup>
 import { useLocale } from "@/composables/useLocale";
+import { useToast } from "@/composables/useToast";
+import { ref } from "vue";
+import { usePage, router } from "@inertiajs/vue3";
+import axios from "axios";
 
 const { t } = useLocale();
+const toast = useToast();
+const page = usePage();
 
 const props = defineProps({
   party: { type: Object, required: true },
   costSummary: { type: Object, default: () => ({}) },
 });
 
+const isHost = props.party.creator_id === page.props.auth.user?.id;
+
 const costTypeLabel = (type) => {
   const map = { free: 'ฟรี', per_person: 'จ่ายรายหัว', split_equal: 'หารเท่า' };
   return map[type] || '-';
 };
+
+// Invite system
+const inviteUrl = ref('');
+const passcode = ref(props.party.invite_passcode || '');
+const generatingLink = ref(false);
+const savingPasscode = ref(false);
+
+const generateInviteLink = async () => {
+  generatingLink.value = true;
+  try {
+    const res = await axios.post(`/party/${props.party.id}/generate-invite`);
+    inviteUrl.value = res.data.invite_url;
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', life: 2000 });
+  }
+  generatingLink.value = false;
+};
+
+const copyLink = () => {
+  navigator.clipboard.writeText(inviteUrl.value);
+  toast.add({ severity: 'success', summary: 'คัดลอกลิงก์แล้ว', life: 2000 });
+};
+
+const savePasscode = () => {
+  savingPasscode.value = true;
+  router.post(`/party/${props.party.id}/set-passcode`, { passcode: passcode.value }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({ severity: 'success', summary: 'ตั้งรหัสเรียบร้อย', life: 2000 });
+    },
+    onFinish: () => { savingPasscode.value = false; },
+  });
+};
+
+// Init invite URL if token exists
+if (props.party.invite_token) {
+  inviteUrl.value = `${window.location.origin}/party/${props.party.id}/invite/${props.party.invite_token}`;
+}
 </script>
 
 <template>
@@ -84,6 +130,36 @@ const costTypeLabel = (type) => {
         <div class="flex items-center justify-between">
           <span class="text-sm text-base-content/60">{{ t('info.shuttlecocks') }}</span>
           <span class="text-sm font-medium text-base-content">{{ party.default_initial_shuttlecocks ?? 0 }} {{ t('info.shuttleUnit') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invite Settings (Host only, private party) -->
+    <div v-if="isHost && party.is_private" class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
+      <div class="px-4 py-3 border-b border-base-200">
+        <div class="text-base font-bold text-base-content m-0">🔒 ตั้งค่าการเข้าร่วม</div>
+      </div>
+      <div class="p-4 space-y-4">
+        <!-- Invite Link -->
+        <div>
+          <div class="text-xs font-semibold text-base-content/60 mb-1.5">🔗 ลิงก์เชิญ</div>
+          <div v-if="inviteUrl" class="flex gap-2">
+            <input type="text" :value="inviteUrl" readonly class="input input-bordered input-sm flex-1 text-xs" />
+            <button @click="copyLink" class="btn btn-primary btn-sm text-xs">คัดลอก</button>
+          </div>
+          <button v-else @click="generateInviteLink" :disabled="generatingLink" class="btn btn-outline btn-primary btn-sm text-xs w-full">
+            <span v-if="generatingLink" class="loading loading-spinner loading-xs"></span>
+            🔗 สร้างลิงก์เชิญ
+          </button>
+        </div>
+
+        <!-- Passcode -->
+        <div>
+          <div class="text-xs font-semibold text-base-content/60 mb-1.5">🔢 รหัสเข้าร่วม (4 หลัก)</div>
+          <div class="flex gap-2">
+            <input type="text" v-model="passcode" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="0000" class="input input-bordered input-sm w-28 text-center tracking-widest font-bold" />
+            <button @click="savePasscode" :disabled="savingPasscode || !passcode || passcode.length < 4" class="btn btn-primary btn-sm text-xs">บันทึก</button>
+          </div>
         </div>
       </div>
     </div>

@@ -318,6 +318,13 @@ export default {
   'feedback.status_resolved': 'Resolved',
   'feedback.status_closed': 'Closed',
 
+  // Invite
+  'invite.title': 'Join Party',
+  'invite.confirmJoin': 'Confirm Join',
+  'invite.partyFull': 'Party is Full',
+  'invite.enterPasscode': 'Enter Passcode',
+  'invite.wrongPasscode': 'Wrong passcode',
+
   'mmr.resultTitle': 'Assessment Result',
   'mmr.yourLevel': 'Your Level',
   'mmr.yourMmr': 'MMR Score',

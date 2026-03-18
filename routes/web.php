@@ -54,6 +54,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/party/{party}/end', [PartyController::class, 'endParty'])->name('parties.end');
     Route::post('/party/{party}/duplicate', [PartyController::class, 'duplicate'])->name('parties.duplicate');
     Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
+
+    // Party Invite System
+    Route::post('/party/{party}/generate-invite', [PartyController::class, 'generateInviteLink'])->name('parties.generate-invite');
+    Route::post('/party/{party}/set-passcode', [PartyController::class, 'setPasscode'])->name('parties.set-passcode');
+    Route::post('/party/{party}/verify-passcode', [PartyController::class, 'verifyPasscode'])->name('parties.verify-passcode');
+    Route::get('/party/{id}/invite/{token}', [PartyController::class, 'showInvitePreview'])->name('parties.invite-token');
+    Route::get('/party/{id}/invite-preview', [PartyController::class, 'showInvitePreview'])->name('parties.invite-preview');
+    Route::post('/party/{party}/confirm-join', [PartyController::class, 'confirmJoinFromInvite'])->name('parties.confirm-join');
     Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
     Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 

@@ -224,6 +224,12 @@
                 <input type="checkbox" v-model="form.is_private" class="checkbox checkbox-primary checkbox-sm" />
                 <span class="text-xs font-medium text-base-content/70">{{ t('createParty.private') }}</span>
               </label>
+
+              <!-- Passcode (when private) -->
+              <div v-if="form.is_private" class="flex items-center gap-2 pl-7">
+                <span class="text-[10px] text-base-content/50">🔢 รหัสเข้าร่วม</span>
+                <input type="text" v-model="form.invite_passcode" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="0000" class="input input-bordered input-xs w-20 text-center tracking-widest font-bold" />
+              </div>
             </div>
 
             <!-- Section 2: Cost -->
@@ -317,7 +323,8 @@
                     <div>
                       <label class="text-[10px] text-base-content/50 block mb-0.5">{{ t('createParty.courtNumber') }}</label>
                       <select v-model="booking.court_field_number" class="select select-bordered select-xs w-full" :class="{ 'select-error': formErrors[`booking_${index}_court`] }">
-                        <option v-for="i in 12" :key="i" :value="i">{{ i }}</option>
+                        <option :value="null" disabled>เลือก</option>
+                        <option v-for="i in 12" :key="i" :value="i" :disabled="usedCourtNumbers.includes(i) && booking.court_field_number !== i">{{ i }}</option>
                       </select>
                       <p v-if="formErrors[`booking_${index}_court`]" class="text-[9px] text-error m-0 mt-0.5">{{ formErrors[`booking_${index}_court`] }}</p>
                     </div>
@@ -400,7 +407,7 @@ const openCreateDialog = () => {
   editingPartyId.value = null;
   form.value = {
     name: '', default_game_type: 'quadruple', play_date: null, court_id: null, max_players: 18, status: "Open",
-    is_private: false, cost_type: "per_person", cost_amount: null, shuttlecock_cost: null,
+    is_private: false, invite_passcode: '', cost_type: "per_person", cost_amount: null, shuttlecock_cost: null,
     notes: "", has_booking: true, start_time: "", end_time: "",
     court_bookings: [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
   };
@@ -418,6 +425,7 @@ const openEditDialog = (party) => {
     max_players: party.max_players,
     status: party.status,
     is_private: party.is_private || false,
+    invite_passcode: party.invite_passcode || '',
     cost_type: party.cost_type || 'per_person',
     cost_amount: party.cost_amount,
     shuttlecock_cost: party.shuttlecock_cost,
@@ -640,8 +648,18 @@ const bookingSummary = computed(() => {
 });
 
 const addCourtBooking = () => {
-  form.value.court_bookings.push({ court_id: form.court_id, court_field_number: null, start_time: "", end_time: "" });
+  const last = form.value.court_bookings[form.value.court_bookings.length - 1];
+  form.value.court_bookings.push({
+    court_id: form.value.court_id,
+    court_field_number: null,
+    start_time: last?.start_time || "",
+    end_time: last?.end_time || "",
+  });
 };
+
+const usedCourtNumbers = computed(() =>
+  form.value.court_bookings.map(b => b.court_field_number).filter(n => n != null)
+);
 
 const removeCourtBooking = (index) => {
   form.value.court_bookings.splice(index, 1);

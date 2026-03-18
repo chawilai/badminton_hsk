@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Party extends Model
 {
@@ -40,6 +41,8 @@ class Party extends Model
         'court_booking_details', // Details about court bookings
         'min_mmr_level', // Minimum MMR level filter
         'max_mmr_level', // Maximum MMR level filter
+        'invite_token',
+        'invite_passcode',
     ];
 
     protected $casts = [
@@ -126,5 +129,17 @@ class Party extends Model
     public function courtBookings()
     {
         return $this->hasMany(PartyCourtBooking::class);
+    }
+
+    public function generateInviteToken(): string
+    {
+        if ($this->invite_token) return $this->invite_token;
+
+        do {
+            $token = Str::random(12);
+        } while (static::where('invite_token', $token)->exists());
+
+        $this->update(['invite_token' => $token]);
+        return $token;
     }
 }

@@ -9,6 +9,7 @@ import TabStatistic from "@/Pages/Party/TabStatistic.vue";
 import EndPartyDialog from "@/Components/EndPartyDialog.vue";
 import DuplicatePartyDialog from "@/Components/DuplicatePartyDialog.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
+import axios from "axios";
 import { reactive, ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
@@ -47,6 +48,43 @@ games.value = page.props.games;
 const costSummary = page.props.costSummary || {};
 const showEndParty = ref(false);
 const showDuplicate = ref(false);
+
+const sharePartyLink = async () => {
+  const baseUrl = window.location.origin;
+  const partyName = party.value.name || party.value.court?.name || 'ปาร์ตี้';
+
+  // Always use invite token link — generate if not exists
+  let token = party.value.invite_token;
+  if (!token) {
+    try {
+      const res = await axios.post(`/party/${party.value.id}/generate-invite`);
+      token = res.data.token;
+      party.value.invite_token = token;
+    } catch (e) {
+      // Fallback to plain link if generate fails
+    }
+  }
+
+  const url = token
+    ? `${baseUrl}/party/${party.value.id}/invite/${token}`
+    : `${baseUrl}/party/${party.value.id}`;
+
+  const text = `🏸 ${partyName}\n📅 ${party.value.play_date} ⏰ ${party.value.start_time?.substring(0,5)}-${party.value.end_time?.substring(0,5)}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: partyName, text, url });
+      return;
+    } catch (e) {}
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast.add({ severity: 'success', summary: 'คัดลอกลิงก์แล้ว', life: 2000 });
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'คัดลอกไม่สำเร็จ', life: 2000 });
+  }
+};
 
 data.party_id = party.value.id;
 game_data.party_id = party.value.id;
@@ -559,15 +597,20 @@ onUnmounted(() => {
           </div>
           <p v-if="party.name && party.court?.name" class="text-[10px] text-base-content/40 m-0">🏟️ {{ party.court.name }}</p>
           <p class="text-xs text-base-content/60 m-0 mt-0.5">
-            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_players }} {{ t('common.players') }}
+            {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }}
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <button v-if="party.creator_id === page.props.auth.user?.id" @click="sharePartyLink" class="h-8 px-3 flex items-center gap-1 rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer text-xs font-medium">
+            <span class="text-sm">🔗</span>
+            <span>ลิงก์เชิญ</span>
+          </button>
           <button v-if="party.status === 'Over'" @click="showDuplicate = true" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer" title="ตั้งตี้ใหม่">
             <span class="text-sm">🔄</span>
           </button>
           <button v-if="party.status !== 'Over'" @click="showEndParty = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-error/10 hover:bg-error/20 text-error text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
             <span>🏁</span>
+            <span>จบปาร์ตี้</span>
           </button>
           <button v-if="party.status === 'Over'" @click="showEndParty = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-info/10 hover:bg-info/20 text-info text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
             <span>💰</span>

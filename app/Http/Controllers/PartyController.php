@@ -172,6 +172,7 @@ class PartyController extends Controller
             'cost_amount' => 'nullable|numeric|min:0',
             'shuttlecock_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
+            'invite_passcode' => 'nullable|string|regex:/^\d{4}$/',
         ];
 
         if ($hasBooking) {
@@ -213,6 +214,7 @@ class PartyController extends Controller
             'cost_amount' => $validated['cost_amount'] ?? null,
             'shuttlecock_cost' => $validated['shuttlecock_cost'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'invite_passcode' => $validated['invite_passcode'] ?? null,
         ]);
 
         if ($hasBooking) {
@@ -637,5 +639,104 @@ class PartyController extends Controller
                 );
             }
         }
+    }
+
+    // ===== Invite System =====
+
+    public function generateInviteLink(Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $token = $party->generateInviteToken();
+        $url = config('app.url') . "/party/{$party->id}/invite/{$token}";
+
+        return response()->json(['invite_url' => $url, 'token' => $token]);
+    }
+
+    public function setPasscode(Request $request, Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'passcode' => 'required|string|regex:/^\d{4}$/',
+        ]);
+
+        $party->update(['invite_passcode' => $request->passcode]);
+
+        return back()->with('success', 'ตั้งรหัสเข้าร่วมเรียบร้อย');
+    }
+
+    public function verifyPasscode(Request $request, Party $party)
+    {
+        $request->validate(['passcode' => 'required|string']);
+
+        if ($request->passcode !== $party->invite_passcode) {
+            return response()->json(['message' => 'รหัสเข้าร่วมไม่ถูกต้อง'], 422);
+        }
+
+        session()->put("invite_verified_{$party->id}", true);
+
+        return response()->json(['redirect' => "/party/{$party->id}/invite-preview"]);
+    }
+
+    public function showInvitePreview(Request $request, $id, $token = null)
+    {
+        $party = Party::with(['court', 'members.user'])
+            ->withCount('members')
+            ->findOrFail($id);
+
+        // Validate access: either valid token or passcode-verified session
+        if ($token) {
+            if (!$party->invite_token || $party->invite_token !== $token) {
+                abort(404, 'ลิงก์เชิญไม่ถูกต้อง');
+            }
+        } else {
+            if (!session()->has("invite_verified_{$id}")) {
+                abort(403, 'กรุณายืนยันรหัสเข้าร่วมก่อน');
+            }
+        }
+
+        // Already a member? redirect to party
+        $isMember = $party->members->contains('user_id', auth()->id());
+        if ($isMember) {
+            return redirect("/party/{$id}")->with('success', 'คุณเป็นสมาชิกอยู่แล้ว');
+        }
+
+        return Inertia::render('PartyInvitePreview', [
+            'party' => $party,
+            'members' => $party->members,
+            'isFull' => $party->members_count >= $party->max_players,
+        ]);
+    }
+
+    public function confirmJoinFromInvite(Request $request, Party $party)
+    {
+        $userId = auth()->id();
+
+        // Already member?
+        if (PartyMember::where('party_id', $party->id)->where('user_id', $userId)->exists()) {
+            return redirect("/party/{$party->id}")->with('success', 'คุณเป็นสมาชิกอยู่แล้ว');
+        }
+
+        // Full?
+        $memberCount = PartyMember::where('party_id', $party->id)->count();
+        if ($memberCount >= $party->max_players) {
+            return back()->with('error', 'ปาร์ตี้เต็มแล้ว');
+        }
+
+        PartyMember::create([
+            'party_id' => $party->id,
+            'user_id' => $userId,
+            'role' => 'Member',
+            'status' => 'Confirmed',
+            'game_status' => 'ready',
+            'confirm_date' => now(),
+        ]);
+
+        return redirect("/party/{$party->id}")->with('success', 'เข้าร่วมปาร์ตี้เรียบร้อย!');
     }
 }

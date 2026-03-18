@@ -318,6 +318,13 @@ export default {
   'feedback.status_resolved': 'แก้ไขแล้ว',
   'feedback.status_closed': 'ปิดแล้ว',
 
+  // Invite
+  'invite.title': 'เข้าร่วมปาร์ตี้',
+  'invite.confirmJoin': 'ยืนยันเข้าร่วม',
+  'invite.partyFull': 'ปาร์ตี้เต็มแล้ว',
+  'invite.enterPasscode': 'กรอกรหัสเข้าร่วม',
+  'invite.wrongPasscode': 'รหัสไม่ถูกต้อง',
+
   'mmr.resultTitle': 'ผลการประเมิน',
   'mmr.yourLevel': 'ระดับของคุณ',
   'mmr.yourMmr': 'คะแนน MMR',

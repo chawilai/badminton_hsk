@@ -74,12 +74,12 @@ const unfixedPlayers = computed(() => players.value.filter(p => !p.fixed));
 const remainingAmount = computed(() => totalCost.value - fixedTotal.value);
 const perUnfixedPerson = computed(() => {
   const count = unfixedPlayers.value.length;
-  return count > 0 ? remainingAmount.value / count : 0;
+  return count > 0 ? Math.max(0, remainingAmount.value / count) : 0;
 });
 
 // Display amount for each player
 const playerAmount = (p) => {
-  if (p.fixed) return Number(p.customAmount || 0);
+  if (p.fixed) return Math.max(0, Number(p.customAmount || 0));
   return perUnfixedPerson.value;
 };
 
