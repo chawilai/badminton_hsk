@@ -14,15 +14,15 @@ return new class extends Migration
         Schema::create('courts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('address');
+            $table->string('address')->nullable();
             $table->string('geolocation')->nullable();
             $table->string('location')->nullable();
             $table->string('phone')->nullable();
-            $table->string('contact_url')->nullable(); // Can be used for Facebook page or website
-            $table->integer('field_total');
-            $table->string('court_type'); // Material of the court e.g., rubber, wood
-            $table->decimal('play_price', 8, 2);
-            $table->string('additional_facilities')->nullable(); // Such as showers, equipment rental, etc.
+            $table->string('contact_url')->nullable();
+            $table->integer('field_total')->nullable();
+            $table->string('court_type')->nullable();
+            $table->decimal('play_price', 8, 2)->nullable();
+            $table->text('additional_facilities')->nullable(); // Such as showers, equipment rental, etc.
             $table->boolean('available_for_booking')->default(true); // To check if the court is available for booking
             $table->timestamps();
         });

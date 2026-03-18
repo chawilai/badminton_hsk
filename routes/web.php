@@ -1,298 +1,109 @@
 <?php
 
-use Ably\AblyRest;
-use App\Events\MessageSent;
-use App\Events\PrivateEvent;
-use App\Events\PublicEvent;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CourtController;
+use App\Http\Controllers\FriendController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\LineMessagingController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MmrController;
 use App\Http\Controllers\UserController;
-use App\Http\Middleware\CheckUserSetup;
-use App\Models\Game;
-use App\Models\Party;
-use App\Models\User;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\FriendController;
-// $user = User::findOrFail(1);
-// Auth::login($user);
+// ==================== Public ====================
 
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
+Route::get('/', fn() => Inertia::render('Home'))->name('home');
+Route::get('/home', fn() => Inertia::render('Home'));
 
-// Route::get('/', function () {
-//     Auth::logout();
-//     return Inertia::render('Prime');
-// });
-
-Route::get('/', function () {
-
-    return redirect('/party-lists');
-
-    // return Inertia::render('Warrior', [
-    //     'canLogin' => Route::has('login'),
-    //     'canRegister' => Route::has('register'),
-    //     'laravelVersion' => Application::VERSION,
-    //     'phpVersion' => PHP_VERSION,
-    // ]);
-})->name('home');
-
-Route::get('/organic', function () {
-    return Inertia::render('Organic');
-});
-
-Route::get('/reverb/{text}', function (Request $request) {
-
-    event(new PublicEvent('$request->text'));
-    event(new PrivateEvent(auth()->user(), auth()->user()->id));
-
-    // return to_route('party');
-});
-
-Route::get('/ably/{text}', function (Request $request) {
-
-    // event(new PublicEvent('$request->text'));
-    // event(new PrivateEvent(auth()->user(), auth()->user()->id));
-
-    // dd($request->text);
-
-
-    $ably = new AblyRest(env('ABLY_KEY'));
-
-    $channel = $ably->channels->get("ably.". auth()->user()->id);
-    $channel->publish('message', ['text' => $request->text]);
-
-    // dd($ably);
-
-    return response()->json(['success' => true]);
-
-    // return to_route('party');
-});
-Route::post('/ably/{text}', function (Request $request) {
-
-    // event(new PublicEvent('$request->text'));
-    // event(new PrivateEvent(auth()->user(), auth()->user()->id));
-
-    // dd($request->text);
-
-
-    $ably = new AblyRest(env('ABLY_KEY'));
-
-    $channel = $ably->channels->get("ably.". auth()->user()->id);
-    $channel->publish('message', ['text' => $request->text]);
-
-    // dd($ably);
-
-    // return response()->json(['success' => true]);
-
-    // return to_route('party');
-});
-
-Route::get('/broadcast', function () {
-    $message = [
-        'user' => 'John Doe',
-        'content' => 'Hello, this is a broadcast message!',
-        'time' => now(),
-    ];
-
-    event(new MessageSent($message));
-
-    return 'Message broadcasted successfully!';
-});
-
-
-Route::get('/test', function () {
-
-    return Inertia::render('MenuAnimate');
-});
-
-Route::post('/webhook', function () {
-
-    return Inertia::render('Test');
-});
-
+// LINE webhook
 Route::post('/webhook', [LineMessagingController::class, 'webhook']);
-
-
-Route::get('/primevue3', function () {
-
-    return Inertia::render('TestPrimeVue3');
-});
-
-Route::get('/dragdrop', function () {
-
-    return Inertia::render('TestDragDrop');
-});
-
-Route::get('/dragable', function () {
-
-    return Inertia::render('TestDragAble');
-});
-
-Route::get('/dragable2', function () {
-
-    return Inertia::render('TestDragAble2');
-});
-
-Route::get('/dragable3', function () {
-
-    return Inertia::render('TestDragAble3');
-});
-
-Route::get('/dragable4', function () {
-
-    return Inertia::render('TestDragAble4');
-});
-
-Route::get('/card', function () {
-
-    return Inertia::render('TestDragAbleCard');
-});
-
-Route::get('/test2', function () {
-
-    return Inertia::render('Test2');
-});
-
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::get('/landing', function () {
-    return Inertia::render('Landing');
-});
-
-Route::get('/home', function () {
-    return redirect('/party-lists');
-});
-
-Route::get('/crud', function () {
-    return Inertia::render('Prime/Crud');
-});
-
-// Chat
-Route::get('/chat', [ChatController::class, 'showChat']);
-Route::post('/chat/create', [ChatController::class, 'createChat']);
-Route::post('/chat/messages', [ChatController::class, 'getMessages']);
-Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
-Route::post('/chat/{chat_id}/read', [ChatController::class, 'markAsRead']);
-Route::post('/games/{game}/update-court-number', [GameController::class, 'updateCourtNumber']);
-// Chat
-
-// Friends
-Route::get('/friends', [FriendController::class, 'index']);
-Route::post('/friends/send', [FriendController::class, 'sendRequest']);
-Route::post('/friends/{friendship}/accept', [FriendController::class, 'acceptRequest']);
-Route::delete('/friends/{friendship}', [FriendController::class, 'cancelRequest']);
-// Friends
-
-// game
-// Using web routes (if your application uses CSRF protection and sessions)
-Route::post('/games', [GameController::class, 'store'])->name('games.store');
-
-// // Using API routes (for stateless API)
-// Route::post('/games', [GameController::class, 'store'])->name('games.store');
-
-// Add a route to add a player to a game
-Route::post('/games/{game}/add-player', [GameController::class, 'addPlayer'])->name('games.add-player');
-Route::post('/games/{game}/remove-player', [GameController::class, 'removePlayer'])->name('games.remove-player');
-Route::post('/games/{game}/list', [GameController::class, 'listGame'])->name('games.list');
-Route::post('/games/{game}/start', [GameController::class, 'startGame'])->name('games.start');
-Route::post('/games/{game}/finish', [GameController::class, 'finishGame'])->name('games.finish');
-Route::post('/games/{game}/auto-add-players', [GameController::class, 'autoAddPlayers'])->name('games.auto-add-players');
-Route::post('/games/{game}/set-game-initial-shuttlecocks', [GameController::class, 'setInitialShuttlecocks'])->name('games.set-game-initial-shuttlecocks');
-Route::post('/games/{game}/add-shuttlecock', [GameController::class, 'addAdditionalShuttlecocks'])->name('games.add-shuttlecock');
-Route::post('/games/{game}/return-shuttlecocks', [GameController::class, 'returnShuttlecocks'])->name('games.returnShuttlecocks');
-Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
-Route::post('/games/{game}/update-game-sets/', [GameController::class, 'updateGameSets'])->name('game-sets.update');
-Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
-
-Route::post('/games/create-game', [GameController::class, 'createGame'])->name('createGame');
-// game
-
 
 // LINE LIFF
 Route::post('/register-line', [RegisteredUserController::class, 'storeLine']);
-// LINE LIFF
 
-// OAuth Provider
-Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
-Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
-// OAuth Provider
-
-Route::middleware('auth')->group(function () {
-
-// party
-Route::get('/party-lists', [PartyController::class, 'partyLists'])->name('parties.lists');
-Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.my-parties');
-Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
-Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
-Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
-Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
-Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
-Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
-Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');
-Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
-
-Route::get('/dashboard', function () {
-    return redirect('/party-lists');
-})->name('dashboard');
-
-    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-
-    Route::get('/games', [GameController::class, 'index'])->name('games');
-
-    Route::get('/party_home', [PartyController::class, 'partyHome'])->name('party-home');
-    Route::get('/party', [PartyController::class, 'index'])->name('party');
-    // Route::get('/party', [PartyController::class, 'index'])->name('party')->middleware(CheckUserSetup::class);
-});
-
-Route::get('/setup', [UserController::class, 'showSetupForm'])->name('user.setup');
-Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.update');
-
+// OAuth
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
 
-// Route::post('/broadcasting/auth', function () {
-//     return Auth::user();
-//  });
+// User setup
+Route::get('/setup', [UserController::class, 'showSetupForm'])->name('user.setup');
+Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.update');
 
-Route::fallback(function () {
-    return Inertia::render('404');
+// ==================== Auth Required ====================
+
+Route::middleware('auth')->group(function () {
+
+    // Dashboard redirect
+    Route::get('/dashboard', fn() => redirect('/party-lists'))->name('dashboard');
+
+    // Party
+    Route::get('/party-lists', [PartyController::class, 'partyLists'])->name('parties.lists');
+    Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.my-parties');
+    Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
+    Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
+    Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
+    Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
+    Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
+    Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
+
+    // Party Members
+    Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
+    Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');
+
+    // Games
+    Route::post('/games', [GameController::class, 'store'])->name('games.store');
+    Route::post('/games/create-game', [GameController::class, 'createGame'])->name('createGame');
+    Route::post('/games/{game}/add-player', [GameController::class, 'addPlayer'])->name('games.add-player');
+    Route::post('/games/{game}/remove-player', [GameController::class, 'removePlayer'])->name('games.remove-player');
+    Route::post('/games/{game}/list', [GameController::class, 'listGame'])->name('games.list');
+    Route::post('/games/{game}/start', [GameController::class, 'startGame'])->name('games.start');
+    Route::post('/games/{game}/finish', [GameController::class, 'finishGame'])->name('games.finish');
+    Route::post('/games/{game}/delete', [GameController::class, 'deleteGame'])->name('game.delete');
+    Route::post('/games/{game}/auto-add-players', [GameController::class, 'autoAddPlayers'])->name('games.auto-add-players');
+    Route::post('/games/{game}/set-game-initial-shuttlecocks', [GameController::class, 'setInitialShuttlecocks'])->name('games.set-game-initial-shuttlecocks');
+    Route::post('/games/{game}/add-shuttlecock', [GameController::class, 'addAdditionalShuttlecocks'])->name('games.add-shuttlecock');
+    Route::post('/games/{game}/return-shuttlecocks', [GameController::class, 'returnShuttlecocks'])->name('games.returnShuttlecocks');
+    Route::post('/games/{game}/update-game-sets', [GameController::class, 'updateGameSets'])->name('game-sets.update');
+    Route::post('/games/{game}/update-court-number', [GameController::class, 'updateCourtNumber']);
+    Route::post('/party_player', [GameController::class, 'fetchReadyPlayers'])->name('games.fetch-ready-player');
+
+    // Chat
+    Route::get('/chat', [ChatController::class, 'showChat']);
+    Route::post('/chat/create', [ChatController::class, 'createChat']);
+    Route::post('/chat/messages', [ChatController::class, 'getMessages']);
+    Route::post('/chat/{chat_id}/send-message', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/{chat_id}/read', [ChatController::class, 'markAsRead']);
+
+    // Friends
+    Route::get('/friends', [FriendController::class, 'index']);
+    Route::post('/friends/send', [FriendController::class, 'sendRequest']);
+    Route::post('/friends/{friendship}/accept', [FriendController::class, 'acceptRequest']);
+    Route::delete('/friends/{friendship}', [FriendController::class, 'cancelRequest']);
+
+    // Courts (admin)
+    Route::get('/courts', [CourtController::class, 'index']);
+    Route::get('/court', fn() => redirect('/courts'));
+    Route::post('/courts', [CourtController::class, 'store']);
+    Route::post('/courts/{court}/update', [CourtController::class, 'update']);
+    Route::delete('/courts/{court}', [CourtController::class, 'destroy']);
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+
+    // MMR Assessment
+    Route::get('/mmr-assessment', [MmrController::class, 'showAssessment']);
+    Route::post('/mmr-assessment', [MmrController::class, 'submitAssessment']);
+    Route::get('/mmr-result', [MmrController::class, 'showResult']);
 });
 
+// 404 fallback
+Route::fallback(fn() => Inertia::render('404'));
+
 require __DIR__ . '/auth.php';
-
-// Route::get('/login', function () {
-//     return Inertia::render('Login');
-// })->name('login');
-
-// Route::post('/logout', function () {
-//     Auth::logout();
-//     request()->session()->invalidate();
-//     request()->session()->regenerateToken();
-//     return redirect('/');
-// })->name('logout');

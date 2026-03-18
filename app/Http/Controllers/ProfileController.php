@@ -138,8 +138,12 @@ class ProfileController extends Controller
                 ];
             });
 
+        // MMR data
+        $mmrLevel = \App\Services\MmrService::getLevelForMmr($user->mmr ?? 1000);
+
         return Inertia::render('Profile', [
             'profileUser' => $user,
+            'mmrLevel' => $mmrLevel,
             'stats' => [
                 'partiesJoined' => $partiesJoined,
                 'courtsVisited' => $courtsVisited,

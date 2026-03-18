@@ -123,8 +123,17 @@ const unfriend = (friendshipId, friendName) => {
   });
 };
 
-const goToChat = () => {
-  router.visit("/chat");
+const goToChat = async (friendUserId) => {
+  try {
+    const res = await axios.post('/chat/create', {
+      user_ids: [page.props.auth.user.id, friendUserId],
+      is_group: false,
+      name: null,
+    });
+    router.visit(`/chat?chatId=${res.data.chat_id}`);
+  } catch (e) {
+    router.visit("/chat");
+  }
 };
 
 // === Real-time via Ably ===
@@ -237,7 +246,7 @@ onUnmounted(() => {
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button
-                @click="goToChat"
+                @click="goToChat(friend.user?.id)"
                 class="h-7 px-2.5 rounded-lg text-[10px] font-semibold bg-info/10 text-info border-0 cursor-pointer hover:bg-info/20 transition-colors"
               >
                 {{ t("friends.chat") }}

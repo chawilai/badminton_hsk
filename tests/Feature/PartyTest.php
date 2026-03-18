@@ -23,9 +23,8 @@ test('unauthenticated user is redirected from party lists', function () {
         ->assertRedirect('/login');
 });
 
-test('home redirects to party lists', function () {
-    $this->get('/')
-        ->assertRedirect('/party-lists');
+test('home page renders successfully', function () {
+    $this->get('/')->assertOk();
 });
 
 // ==================== Create Party ====================

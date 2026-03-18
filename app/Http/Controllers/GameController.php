@@ -170,7 +170,7 @@ class GameController extends Controller
         if ($currentTeamPlayerCount >= $maxPlayersPerTeam) {
 
             session()->flash('error', ['team_player_limit' => "The maximum number of players for {$request->team} in a {$game->game_type} game has already been reached."]);
-            return redirect()->route('party');
+            return redirect('/party-lists');
         }
 
         // Fetch the party member
@@ -313,8 +313,8 @@ class GameController extends Controller
                 'avatar' => $player->user->avatar,
                 'age' => $player->user->age,
                 'date_of_birth' => $player->user->date_of_birth,
-                'badminton_level' => $player->user->badmintonRank->id,
-                'badminton_rank' => $player->user->badmintonRank->education_rank,
+                'badminton_level' => $player->user->badmintonRank->id ?? 0,
+                'badminton_rank' => $player->user->badmintonRank->education_rank ?? '',
                 'game_status' => $player->game_status,
                 'finished_games_count' => $finishedGamesCount,
                 'games' => $gameDetails,  // Include game details for each player
@@ -406,8 +406,8 @@ class GameController extends Controller
                 'avatar' => $player->user->avatar,
                 'age' => $player->user->age,
                 'date_of_birth' => $player->user->date_of_birth,
-                'badminton_level' => $player->user->badmintonRank->id,
-                'badminton_rank' => $player->user->badmintonRank->education_rank,
+                'badminton_level' => $player->user->badmintonRank->id ?? 0,
+                'badminton_rank' => $player->user->badmintonRank->education_rank ?? '',
                 'game_status' => $player->game_status,
                 'finished_games_count' => $finishedGamesCount,
                 'waiting_time' => $waitingTime,
@@ -729,6 +729,9 @@ class GameController extends Controller
                 ->where('party_id', $game->party_id)
                 ->update(['game_status' => 'break']);
         }
+
+        // Adjust MMR for all players in the game
+        \App\Services\MmrService::adjustMmr($game);
 
         // Retrieve returned shuttlecocks count from the request
         $returnedShuttlecocks = $request->input('returned_shuttlecocks', 0);

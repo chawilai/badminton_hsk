@@ -4,10 +4,12 @@ import UserAvatar from "@/Components/UserAvatar.vue";
 import { Head, usePage, Link, router } from "@inertiajs/vue3";
 import { ref, computed } from "vue";
 import { useLocale } from "@/composables/useLocale";
+import MmrBadge from "@/Components/MmrBadge.vue";
 
-const { t } = useLocale();
+const { t, locale } = useLocale();
 const page = usePage();
 const user = computed(() => page.props.profileUser || page.props.auth.user);
+const mmrLevel = computed(() => page.props.mmrLevel);
 const stats = computed(() => page.props.stats || {});
 const recentParties = computed(() => page.props.recentParties || []);
 const recentGames = computed(() => page.props.recentGames || []);
@@ -45,8 +47,20 @@ const formatDate = (d) => {
         <h1 class="text-lg font-bold text-base-content m-0">{{ user.name }}</h1>
         <p class="text-xs text-base-content/50 m-0 mt-0.5">{{ user.email }}</p>
         <div class="flex items-center justify-center gap-2 mt-2">
-          <span v-if="user.badminton_rank" class="badge badge-sm badge-primary">{{ user.badminton_rank?.education_rank || `Lv${user.badminton_rank_id}` }}</span>
+          <MmrBadge v-if="mmrLevel"
+            :level="mmrLevel.level"
+            :tierName="locale === 'th' ? mmrLevel.name_th : mmrLevel.name_en"
+            :tierColor="mmrLevel.tier_color"
+            size="md"
+          />
           <span v-if="user.gender" class="badge badge-sm badge-ghost">{{ genderLabel(user.gender) }}</span>
+        </div>
+        <!-- MMR Score -->
+        <div v-if="user.mmr" class="flex items-center justify-center gap-3 mt-2">
+          <div class="text-center">
+            <div class="text-lg font-black text-primary">{{ user.mmr }}</div>
+            <div class="text-[9px] text-base-content/40 uppercase">MMR</div>
+          </div>
         </div>
       </div>
 

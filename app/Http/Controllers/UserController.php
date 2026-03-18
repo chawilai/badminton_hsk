@@ -23,6 +23,6 @@ class UserController extends Controller
         $user = $request->user();
         $user->update($request->only('badminton_rank_id', 'gender', 'date_of_birth'));
 
-        return redirect()->route('party'); // Redirect back to /party after setup
+        return redirect('/party-lists'); // Redirect back to /party after setup
     }
 }

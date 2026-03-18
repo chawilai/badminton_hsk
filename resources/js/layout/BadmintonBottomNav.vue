@@ -6,10 +6,11 @@ import { useLocale } from '@/composables/useLocale';
 const { t } = useLocale();
 
 const page = usePage();
+const isAuthenticated = computed(() => !!page.props.auth?.user);
 const unreadCount = computed(() => page.props.unreadChatCount || 0);
 
 const tabs = computed(() => [
-    { label: t('nav.home'), href: '/party-lists', icon: 'home' },
+    { label: t('nav.home'), href: '/home', icon: 'home' },
     { label: t('nav.parties'), href: '/my-parties', icon: 'play' },
     { label: t('nav.chat'), href: '/chat', icon: 'chat' },
     { label: t('nav.profile'), href: '/profile', icon: 'user' },
@@ -17,15 +18,15 @@ const tabs = computed(() => [
 
 const isActive = (href) => {
     const url = page.url;
-    if (href === '/party-lists') {
-        return url === '/party-lists' || url.startsWith('/party-lists/');
+    if (href === '/home') {
+        return url === '/' || url === '/home';
     }
     return url === href || url.startsWith(href + '/');
 };
 </script>
 
 <template>
-    <nav class="bottom-nav-safe lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-base-100/90 backdrop-blur-xl border-t border-base-300">
+    <nav v-if="isAuthenticated" class="bottom-nav-safe lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-base-100/90 backdrop-blur-xl border-t border-base-300">
         <div class="flex items-stretch justify-around h-16">
             <Link
                 v-for="tab in tabs"

@@ -29,8 +29,12 @@ class DemoSeeder extends Seeder
         $this->command->info('Seeding demo user + 49 users...');
         $demoUser = $this->seedUsers();
 
-        $this->command->info('Seeding 10 courts...');
-        $courts = $this->seedCourts();
+        $this->command->info('Seeding MMR levels...');
+        $this->call(MmrLevelSeeder::class);
+
+        $this->command->info('Seeding courts (Chiang Mai)...');
+        $this->call(CourtSeeder::class);
+        $courts = Court::all();
 
         $this->command->info('Seeding parties with members...');
         $parties = $this->seedParties($demoUser, $courts);

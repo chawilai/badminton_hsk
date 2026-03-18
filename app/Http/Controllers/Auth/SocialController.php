@@ -22,7 +22,12 @@ class SocialController extends Controller
         $socialUser = Socialite::driver($provider)->stateless()->user();
         $authUser = $this->findOrCreateUser($socialUser, $provider);
         Auth::login($authUser, true);
-        return redirect()->route('party');
+
+        if (!$authUser->mmr_quiz_completed) {
+            return redirect('/mmr-assessment');
+        }
+
+        return redirect('/party-lists');
     }
 
     public function findOrCreateUser($socialUser, $provider)
@@ -143,6 +148,11 @@ class SocialController extends Controller
     {
         $authUser = $this->checkLineLiff($request);
         Auth::login($authUser, true); // Login the user and "remember" them
-        return redirect()->route('party'); // Redirect to the home route
+
+        if (!$authUser->mmr_quiz_completed) {
+            return redirect('/mmr-assessment');
+        }
+
+        return redirect('/party-lists'); // Redirect to the home route
     }
 }

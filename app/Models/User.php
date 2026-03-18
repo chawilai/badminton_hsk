@@ -30,6 +30,10 @@ class User extends Authenticatable
         'gender',
         'date_of_birth',
         'badminton_rank_id',
+        'mmr',
+        'mmr_games_played',
+        'mmr_calibrated',
+        'mmr_quiz_completed',
     ];
 
     /**
@@ -60,6 +64,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'mmr_calibrated' => 'boolean',
+            'mmr_quiz_completed' => 'boolean',
         ];
     }
 
@@ -128,5 +134,31 @@ class User extends Authenticatable
             ->pluck('sender_id');
 
         return $sent->merge($received)->unique()->values();
+    }
+
+    /**
+     * Get the MmrLevel for the user's current MMR.
+     */
+    public function mmrLevel(): ?MmrLevel
+    {
+        return MmrLevel::where('min_mmr', '<=', $this->mmr)
+            ->where('max_mmr', '>=', $this->mmr)
+            ->first();
+    }
+
+    /**
+     * MMR history relationship.
+     */
+    public function mmrHistory()
+    {
+        return $this->hasMany(MmrHistory::class);
+    }
+
+    /**
+     * Accessor for mmr_level attribute.
+     */
+    public function getMmrLevelAttribute(): ?MmrLevel
+    {
+        return $this->mmrLevel();
     }
 }

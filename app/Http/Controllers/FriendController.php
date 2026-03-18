@@ -17,20 +17,29 @@ class FriendController extends Controller
     {
         $userId = auth()->id();
 
-        // Accepted friends
+        // Accepted friends — map to show the "other" user
         $friends = Friendship::acceptedFor($userId)
             ->with(['sender', 'receiver'])
-            ->get();
+            ->get()
+            ->map(function ($f) use ($userId) {
+                $other = $f->sender_id === $userId ? $f->receiver : $f->sender;
+                return [
+                    'id' => $f->id,
+                    'user' => $other,
+                ];
+            });
 
-        // Pending requests received by the current user
+        // Pending requests received — show sender as user
         $receivedPending = Friendship::pendingFor($userId)
             ->with('sender')
-            ->get();
+            ->get()
+            ->map(fn($f) => ['id' => $f->id, 'user' => $f->sender]);
 
-        // Pending requests sent by the current user
+        // Pending requests sent — show receiver as user
         $sentPending = Friendship::sentBy($userId)
             ->with('receiver')
-            ->get();
+            ->get()
+            ->map(fn($f) => ['id' => $f->id, 'user' => $f->receiver]);
 
         return Inertia::render('Friends', [
             'friends' => $friends,

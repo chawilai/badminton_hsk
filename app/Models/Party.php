@@ -38,6 +38,8 @@ class Party extends Model
         'party_start_date', // When the Owner make party start
         'party_end_date', // When the Owner make party end
         'court_booking_details', // Details about court bookings
+        'min_mmr_level', // Minimum MMR level filter
+        'max_mmr_level', // Maximum MMR level filter
     ];
 
     protected $casts = [

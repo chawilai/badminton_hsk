@@ -1,5 +1,5 @@
 <script setup>
-import OrganicLayout from "@/Layouts/OrganicLayout.vue";
+import AppLayout from "@/layout/AppLayout.vue";
 import DeleteUserForm from "./Partials/DeleteUserForm.vue";
 import UpdatePasswordForm from "./Partials/UpdatePasswordForm.vue";
 import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm.vue";
@@ -18,7 +18,7 @@ defineProps({
 <template>
     <Head title="Profile" />
 
-    <OrganicLayout>
+    <AppLayout>
         <template #header>
             <h2
                 class="font-semibold text-xl text-base-content leading-tight"
@@ -56,5 +56,5 @@ defineProps({
                 </div>
             </div>
         </div>
-    </OrganicLayout>
+    </AppLayout>
 </template>

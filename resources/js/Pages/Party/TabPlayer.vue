@@ -73,7 +73,7 @@ const isCurrentUser = (member) => member.user_id === currentUserId;
             @blur="handleBlur(member)"
             @focus="setOriginalDisplayName(member)"
           />
-          <span class="text-xs text-base-content/50 truncate hidden sm:inline">({{ member.user?.name }})</span>
+          <span class="text-[10px] text-base-content/40 truncate max-w-[5rem]">{{ member.user?.name }}</span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
           <!-- Status toggle for current user -->

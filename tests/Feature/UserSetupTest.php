@@ -13,7 +13,7 @@ test('user can update setup', function () {
         'badminton_rank_id' => 1,
         'gender' => 'male',
         'date_of_birth' => '1990-05-15',
-    ])->assertRedirect(route('party'));
+    ])->assertRedirect('/party-lists');
 
     $user->refresh();
     $this->assertEquals(1, $user->badminton_rank_id);

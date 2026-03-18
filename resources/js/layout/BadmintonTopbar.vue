@@ -23,7 +23,7 @@ onMounted(() => document.addEventListener('click', onDocumentClick));
 onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick));
 
 const navLinks = computed(() => [
-    { label: t('nav.home'), href: '/party-lists', icon: 'home' },
+    { label: t('nav.home'), href: '/home', icon: 'home' },
     { label: t('nav.myParties'), href: '/my-parties', icon: 'play' },
     { label: t('nav.chat'), href: '/chat', icon: 'chat' },
     { label: t('nav.profile'), href: '/profile', icon: 'user' },
@@ -31,8 +31,13 @@ const navLinks = computed(() => [
 
 const isActive = (href) => {
     const url = page.url;
+    if (href === '/home') {
+        return url === '/' || url === '/home';
+    }
     return url === href || url.startsWith(href + '/');
 };
+
+const isAuthenticated = computed(() => !!page.props.auth?.user);
 
 const toggleProfileMenu = () => {
     profileMenuVisible.value = !profileMenuVisible.value;
@@ -46,7 +51,7 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
     <header class="topbar-accent sticky top-0 z-50 h-14 lg:h-16 flex items-center px-4 lg:px-8 bg-base-100/80 backdrop-blur-xl border-b border-base-300">
         <!-- Left: Logo -->
         <div class="flex items-center gap-3 shrink-0">
-            <Link href="/party-lists" class="flex items-center gap-2 no-underline">
+            <Link href="/home" class="flex items-center gap-2 no-underline">
                 <span class="text-2xl">🏸</span>
                 <span class="font-bold text-lg text-primary hidden sm:inline">
                     Badminton Party
@@ -82,8 +87,13 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
             <LocaleSwitcher />
             <LayoutSwitcher />
 
-            <!-- Profile dropdown -->
-            <div class="profile-dropdown relative" @click.stop>
+            <!-- Login button (guest) -->
+            <Link v-if="!isAuthenticated" href="/login" class="h-8 px-4 rounded-lg bg-primary text-primary-content text-xs font-semibold no-underline flex items-center hover:bg-primary/80 transition-colors">
+                {{ t('auth.login') }}
+            </Link>
+
+            <!-- Profile dropdown (authenticated) -->
+            <div v-else class="profile-dropdown relative" @click.stop>
                 <button
                     @click="toggleProfileMenu"
                     class="rounded-full overflow-hidden border-2 border-primary/30 cursor-pointer p-0 bg-transparent transition-all hover:border-primary"

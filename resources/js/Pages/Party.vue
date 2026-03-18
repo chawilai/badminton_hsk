@@ -549,9 +549,9 @@ onUnmounted(() => {
     <div class="mb-4">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <h1 class="text-base font-bold text-base-content m-0 leading-tight">
+          <div class="text-base font-bold text-base-content m-0 leading-tight">
             {{ party.name || party.court?.name || 'Party' }} <span class="text-xs font-normal text-base-content/50">#{{ party.id }}</span>
-          </h1>
+          </div>
           <p v-if="party.name && party.court?.name" class="text-[10px] text-base-content/40 m-0">🏟️ {{ party.court.name }}</p>
           <p class="text-xs text-base-content/60 m-0 mt-0.5">
             {{ party.play_date }} · {{ party.start_time?.substring(0,5) }} - {{ party.end_time?.substring(0,5) }} · {{ party.members?.length || 0 }}/{{ party.max_players }} {{ t('common.players') }}

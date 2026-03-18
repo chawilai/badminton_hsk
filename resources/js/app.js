@@ -21,7 +21,7 @@ import "@/../css/badminton-theme.css";
 
 // Apply theme early to prevent flash
 const darkThemes = ['badminton-dark', 'dark', 'synthwave', 'halloween', 'forest', 'black', 'luxury', 'dracula', 'business', 'night', 'coffee', 'dim', 'sunset', 'abyss'];
-const storedTheme = localStorage.getItem('badminton-theme') || 'badminton';
+const storedTheme = localStorage.getItem('badminton-theme') || 'badminton-dark';
 document.documentElement.setAttribute('data-theme', storedTheme);
 if (darkThemes.includes(storedTheme)) {
     document.documentElement.classList.add('dark');

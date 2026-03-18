@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 
-const currentTheme = ref('badminton');
+const currentTheme = ref('badminton-dark');
 
 const availableThemes = [
     { name: 'badminton', label: '🏸 Badminton', dark: false },
