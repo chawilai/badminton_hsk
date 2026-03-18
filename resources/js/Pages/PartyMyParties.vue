@@ -14,7 +14,8 @@
         <div
           v-for="party in parties"
           :key="party.id"
-          class="badminton-card bg-base-100 rounded-xl border border-base-300 overflow-hidden cursor-pointer"
+          class="badminton-card rounded-xl border overflow-hidden cursor-pointer"
+          :class="party.status === 'Over' ? 'bg-neutral/15 border-neutral/30' : 'bg-base-100 border-base-300'"
           @click="enterParty(party.id)"
         >
           <div class="h-1" :class="statusAccentColor(party.status)"></div>
@@ -32,7 +33,7 @@
                 class="shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold"
                 :class="statusBadgeClass(party.status)"
               >
-                {{ party.status }}
+                {{ { Open: 'เปิดอยู่', Full: 'เต็ม', Over: 'จบแล้ว' }[party.status] || party.status }}
               </span>
             </div>
 
@@ -97,14 +98,24 @@
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Head, usePage, router } from "@inertiajs/vue3";
 import { useLocale } from "@/composables/useLocale";
 
 const { t } = useLocale();
 
 const page = usePage();
-const parties = ref(page.props.parties ?? []);
+const rawParties = page.props.parties ?? [];
+const parties = computed(() =>
+  [...rawParties].sort((a, b) => {
+    // Open/Full first, Over last
+    const aOver = a.status === 'Over' ? 1 : 0;
+    const bOver = b.status === 'Over' ? 1 : 0;
+    if (aOver !== bOver) return aOver - bOver;
+    // Within same group: newest first
+    return b.play_date.localeCompare(a.play_date);
+  })
+);
 const authUser = page.props.auth.user;
 
 const formatDate = (dateStr) => {
@@ -120,7 +131,7 @@ const statusBadgeClass = (status) => {
   switch (status) {
     case 'Open': return 'bg-primary/10 text-primary';
     case 'Full': return 'bg-warning/20 text-warning';
-    case 'Over': return 'bg-base-200 text-base-content/60';
+    case 'Over': return 'bg-error/20 text-error';
     default: return 'bg-base-200 text-base-content/70';
   }
 };

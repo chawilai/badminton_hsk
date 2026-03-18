@@ -7,6 +7,7 @@ import TabInfo from "@/Pages/Party/TabInfo.vue";
 import TabPlayer from "@/Pages/Party/TabPlayer.vue";
 import TabStatistic from "@/Pages/Party/TabStatistic.vue";
 import EndPartyDialog from "@/Components/EndPartyDialog.vue";
+import DuplicatePartyDialog from "@/Components/DuplicatePartyDialog.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { reactive, ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useToast } from "@/composables/useToast";
@@ -45,6 +46,7 @@ party.value = page.props.party;
 games.value = page.props.games;
 const costSummary = page.props.costSummary || {};
 const showEndParty = ref(false);
+const showDuplicate = ref(false);
 
 data.party_id = party.value.id;
 game_data.party_id = party.value.id;
@@ -561,8 +563,8 @@ onUnmounted(() => {
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button @click="reloadPage()" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer">
-            <span class="text-sm">↻</span>
+          <button v-if="party.status === 'Over'" @click="showDuplicate = true" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer" title="ตั้งตี้ใหม่">
+            <span class="text-sm">🔄</span>
           </button>
           <button v-if="party.status !== 'Over'" @click="showEndParty = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-error/10 hover:bg-error/20 text-error text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
             <span>🏁</span>
@@ -783,6 +785,13 @@ onUnmounted(() => {
     <div v-show="activeTab === 'stats'">
       <TabStatistic :games="games" :party="party" />
     </div>
+    <!-- Duplicate Party Dialog -->
+    <DuplicatePartyDialog
+      :show="showDuplicate"
+      :party="party"
+      @close="showDuplicate = false"
+    />
+
     <!-- End Party Dialog -->
     <EndPartyDialog
       :show="showEndParty"

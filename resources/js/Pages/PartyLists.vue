@@ -154,6 +154,22 @@
           </div>
 
           <form @submit.prevent="createParty" class="px-5 pb-5 space-y-4 overflow-y-auto max-h-[75vh]">
+            <!-- Load from old party -->
+            <div v-if="!isEditing && myPastParties.length > 0">
+              <label class="text-xs font-semibold text-base-content/60 mb-1.5 block">📋 ดึงจากก๊วนเก่า</label>
+              <div class="flex gap-1.5 overflow-x-auto pb-1">
+                <button
+                  v-for="pp in myPastParties"
+                  :key="pp.id"
+                  type="button"
+                  @click="loadFromTemplate(pp)"
+                  class="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium border border-base-300 bg-base-200 text-base-content/70 hover:bg-primary/10 hover:border-primary/40 hover:text-primary cursor-pointer transition-all whitespace-nowrap"
+                >
+                  {{ pp.name || pp.court?.name || `#${pp.id}` }}
+                </button>
+              </div>
+            </div>
+
             <!-- Section 1: Basic Info -->
             <div class="space-y-3">
               <!-- Party Name + Game Type -->
@@ -423,6 +439,35 @@ const page = usePage();
 const parties = ref(page.props.parties ?? []);
 const courts = ref(page.props.courts ?? []);
 const statuses = ["Open", "Full", "Over"];
+
+// Past parties where user was host — for "use old settings" template
+const myPastParties = computed(() =>
+  parties.value
+    .filter(p => p.creator_id === authUser?.id)
+    .sort((a, b) => b.play_date.localeCompare(a.play_date))
+    .slice(0, 10)
+);
+
+const loadFromTemplate = (party) => {
+  form.value = {
+    ...form.value,
+    name: party.name || '',
+    default_game_type: party.default_game_type || 'quadruple',
+    court_id: party.court_id,
+    max_players: party.max_players,
+    is_private: party.is_private || false,
+    cost_type: party.cost_type || 'per_person',
+    cost_amount: party.cost_amount,
+    shuttlecock_cost: party.shuttlecock_cost,
+    notes: party.notes || '',
+    has_booking: party.court_bookings?.length > 0,
+    start_time: party.start_time || '',
+    end_time: party.end_time || '',
+    court_bookings: party.court_bookings?.length
+      ? party.court_bookings.map(b => ({ court_id: b.court_id, court_field_number: b.court_field_number, start_time: b.start_time, end_time: b.end_time }))
+      : [{ court_id: null, court_field_number: null, start_time: '', end_time: '' }],
+  };
+};
 const currentPage = ref(1);
 const perPage = 10;
 

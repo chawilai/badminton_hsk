@@ -230,6 +230,66 @@ class PartyController extends Controller
         return back()->with('success', 'Party created successfully!');
     }
 
+    /**
+     * Duplicate a party with settings + members from original.
+     */
+    public function duplicate(Request $request, Party $party)
+    {
+        $validated = $request->validate([
+            'play_date' => 'required|date',
+            'member_ids' => 'array',
+            'member_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $party->load(['courtBookings', 'members']);
+
+        // Create new party with same settings
+        $newParty = Party::create([
+            'name' => $party->name,
+            'default_game_type' => $party->default_game_type,
+            'court_id' => $party->court_id,
+            'play_date' => $validated['play_date'],
+            'play_hours' => $party->play_hours,
+            'max_players' => $party->max_players,
+            'start_time' => $party->start_time,
+            'end_time' => $party->end_time,
+            'creator_id' => auth()->id(),
+            'is_private' => $party->is_private,
+            'cost_type' => $party->cost_type,
+            'cost_amount' => $party->cost_amount,
+            'shuttlecock_cost' => $party->shuttlecock_cost,
+            'notes' => $party->notes,
+        ]);
+
+        // Copy court bookings
+        foreach ($party->courtBookings as $booking) {
+            PartyCourtBooking::create([
+                'party_id' => $newParty->id,
+                'court_id' => $booking->court_id,
+                'court_field_number' => $booking->court_field_number,
+                'start_time' => $booking->start_time,
+                'end_time' => $booking->end_time,
+            ]);
+        }
+
+        // Add selected members (host already added by booted())
+        $memberIds = $validated['member_ids'] ?? [];
+        foreach ($memberIds as $userId) {
+            if ($userId == auth()->id()) continue; // Skip host (already added)
+
+            PartyMember::create([
+                'party_id' => $newParty->id,
+                'user_id' => $userId,
+                'role' => 'Member',
+                'status' => 'Confirmed',
+                'game_status' => 'ready',
+                'confirm_date' => now(),
+            ]);
+        }
+
+        return redirect("/party/{$newParty->id}")->with('success', 'สร้างปาร์ตี้ใหม่จากปาร์ตี้เดิมเรียบร้อย!');
+    }
+
     public function update(Request $request, Party $party)
     {
         // Only owner can edit
