@@ -6,6 +6,7 @@ import TabGame from "@/Pages/Party/TabGame.vue";
 import TabInfo from "@/Pages/Party/TabInfo.vue";
 import TabPlayer from "@/Pages/Party/TabPlayer.vue";
 import TabStatistic from "@/Pages/Party/TabStatistic.vue";
+import EndPartyDialog from "@/Components/EndPartyDialog.vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import { reactive, ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useToast } from "@/composables/useToast";
@@ -42,6 +43,8 @@ const game_data = reactive({
 
 party.value = page.props.party;
 games.value = page.props.games;
+const costSummary = page.props.costSummary || {};
+const showEndParty = ref(false);
 
 data.party_id = party.value.id;
 game_data.party_id = party.value.id;
@@ -489,9 +492,9 @@ const playerSortWaiting = computed(() => {
 });
 
 const tabs = computed(() => [
-  { key: "game", label: t('party.tabGame'), icon: "🏸" },
+  { key: "game", label: t('party.tabGame'), icon: "🏸", count: games.value?.length || 0 },
   { key: "info", label: t('party.tabInfo'), icon: "ℹ️" },
-  { key: "player", label: t('party.tabPlayer'), icon: "👥" },
+  { key: "player", label: t('party.tabPlayer'), icon: "👥", count: party.value?.members?.length || 0 },
   { key: "stats", label: t('party.tabStats'), icon: "📊" },
 ]);
 
@@ -561,7 +564,14 @@ onUnmounted(() => {
           <button @click="reloadPage()" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer">
             <span class="text-sm">↻</span>
           </button>
-          <button @click="visibleTop = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-primary hover:bg-primary/80 text-white text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
+          <button v-if="party.status !== 'Over'" @click="showEndParty = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-error/10 hover:bg-error/20 text-error text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
+            <span>🏁</span>
+          </button>
+          <button v-if="party.status === 'Over'" @click="showEndParty = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-info/10 hover:bg-info/20 text-info text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
+            <span>💰</span>
+            <span>สรุปค่าใช้จ่าย</span>
+          </button>
+          <button v-if="party.status !== 'Over'" @click="visibleTop = true" class="h-8 px-3 flex items-center gap-1 rounded-lg bg-primary hover:bg-primary/80 text-white text-xs font-medium border-0 cursor-pointer transition-colors active:scale-[0.98] whitespace-nowrap shrink-0">
             <span>+</span>
             <span>{{ t('party.newGame') }}</span>
           </button>
@@ -737,6 +747,7 @@ onUnmounted(() => {
       >
         <span>{{ tab.icon }}</span>
         <span>{{ tab.label }}</span>
+        <span v-if="tab.count != null" class="text-[10px] opacity-70">({{ tab.count }})</span>
       </button>
     </div>
 
@@ -758,7 +769,7 @@ onUnmounted(() => {
     </div>
 
     <div v-show="activeTab === 'info'">
-      <TabInfo :party="party" />
+      <TabInfo :party="party" :costSummary="costSummary" />
     </div>
 
     <div v-show="activeTab === 'player'">
@@ -772,6 +783,14 @@ onUnmounted(() => {
     <div v-show="activeTab === 'stats'">
       <TabStatistic :games="games" :party="party" />
     </div>
+    <!-- End Party Dialog -->
+    <EndPartyDialog
+      :show="showEndParty"
+      :party="party"
+      :games="games"
+      :costSummary="costSummary"
+      @close="showEndParty = false"
+    />
   </AppLayout>
 </template>
 

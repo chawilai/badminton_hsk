@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
     Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
     Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
+    Route::post('/party/{party}/end', [PartyController::class, 'endParty'])->name('parties.end');
     Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
     Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
     Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');

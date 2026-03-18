@@ -135,13 +135,13 @@ export default {
   // Zones
   'zone.ready': 'พร้อมเล่น',
   'zone.playing': 'กำลังเล่น',
-  'zone.break': 'พักผ่อน',
+  'zone.break': 'หยุดพัก',
   'zone.listing': 'รอเริ่ม',
   'zone.finish': 'จบแล้ว',
 
   // Player status
   'playerStatus.ready': 'พร้อมเล่น',
-  'playerStatus.break': 'พักผ่อน',
+  'playerStatus.break': 'หยุดพัก',
   'playerStatus.setReady': 'พร้อมเล่น',
   'playerStatus.setBreak': 'พัก',
 

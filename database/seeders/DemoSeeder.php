@@ -12,6 +12,7 @@ use App\Models\GameScore;
 use App\Models\GameSet;
 use App\Models\GameShuttlecock;
 use App\Models\Message;
+use App\Models\NotificationSetting;
 use App\Models\Party;
 use App\Models\PartyCourtBooking;
 use App\Models\PartyMember;
@@ -26,8 +27,8 @@ class DemoSeeder extends Seeder
         $this->command->info('Seeding badminton ranks...');
         $this->seedRanks();
 
-        $this->command->info('Seeding demo user + 49 users...');
-        $demoUser = $this->seedUsers();
+        $this->command->info('Seeding real user + demo users...');
+        $realUser = $this->seedUsers();
 
         $this->command->info('Seeding MMR levels...');
         $this->call(MmrLevelSeeder::class);
@@ -37,16 +38,19 @@ class DemoSeeder extends Seeder
         $courts = Court::all();
 
         $this->command->info('Seeding parties with members...');
-        $parties = $this->seedParties($demoUser, $courts);
+        [$parties, $partyGameCounts] = $this->seedParties($realUser, $courts);
 
         $this->command->info('Seeding games with scores...');
-        $this->seedGames($parties);
+        $this->seedGames($parties, $partyGameCounts);
 
         $this->command->info('Seeding chats...');
-        $this->seedChats($demoUser);
+        $this->seedChats($realUser);
+
+        $this->command->info('Seeding notification settings...');
+        NotificationSetting::create(['user_id' => $realUser->id, 'enabled' => true]);
 
         $this->command->info('Demo seeding complete!');
-        $this->command->info('Login: demo@badminton.com / password');
+        $this->command->info("Real user: {$realUser->name} (ID: {$realUser->id})");
     }
 
     private function seedRanks(): void
@@ -87,170 +91,165 @@ class DemoSeeder extends Seeder
 
     private function seedUsers(): User
     {
-        // Demo user that can login with email/password
-        $demoUser = User::create([
-            'name' => 'Demo Player',
-            'email' => 'demo@badminton.com',
-            'email_verified_at' => now(),
+        // Real user (ID 1) — LINE account for testing push notifications
+        $realUser = User::create([
+            'name' => 'Whattttt!!',
+            'email' => 'wat.chawilai@gmail.com',
             'password' => Hash::make('password'),
-            'badminton_rank_id' => 10,
+            'provider' => 'line',
+            'provider_id' => 'Ub27246e34d17f341e146a358d3baa95e',
+            'avatar' => 'https://profile.line-scdn.net/0h269TEiS9bRkELXwoT2QSTjhoY3RzA2tRfBwkeyclMX59GShGaxl2LCN6NS4qSC5MOBx2fCd_Zysg',
+            'profile_picture' => 'https://profile.line-scdn.net/0h269TEiS9bRkELXwoT2QSTjhoY3RzA2tRfBwkeyclMX59GShGaxl2LCN6NS4qSC5MOBx2fCd_Zysg',
+            'mmr' => 1171,
+            'mmr_quiz_completed' => true,
             'gender' => 'male',
-            'date_of_birth' => '1995-06-15',
-            'player_motto' => 'Never give up!',
-            'avatar' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
         ]);
 
-        // Create 49 more users via factory
-        User::factory(49)->create();
-
-        return $demoUser;
-    }
-
-    private function seedCourts(): \Illuminate\Support\Collection
-    {
-        $courtNames = [
-            'สนามแบดมินตัน สุขุมวิท',
-            'Ratchada Badminton Club',
-            'สนามแบดมินตัน พระราม 9',
-            'BKK Smash Arena',
-            'สนามลาดพร้าว แบดมินตัน',
-            'Bangna Badminton Center',
-            'สนามแบดมินตัน รังสิต',
-            'Shuttle King Court',
-            'Victory Badminton Hall',
-            'สนามแบดมินตัน อ่อนนุช',
+        // Thai-named demo players
+        $thaiNames = [
+            'สมชาย ใจดี', 'สมหญิง รักแบด', 'พิชัย ตบแรง', 'นภา เสิร์ฟเทพ',
+            'กิตติ ฟุตเวิร์ค', 'อรุณ สแมชเก่ง', 'ปิยะ ดีเฟนส์', 'วิภา เน็ตเพลย์',
+            'ธนา ไดรฟ์หนัก', 'สุดา ดร็อปแม่น', 'ชัยวัฒน์ พลังตบ', 'มานี แรลลี่ยาว',
+            'ประเสริฐ ลูกหยอด', 'จันทร์ ตบข้ามศีรษะ', 'วีระ บล็อคเทพ',
+            'สายฝน เคลื่อนไว', 'ธีระ สแมชดุ', 'ลัดดา ยืดหยุ่น',
+            'อนุชา ตีมุม', 'พรทิพย์ หลอกเก่ง',
         ];
 
-        $courts = collect();
-        foreach ($courtNames as $i => $name) {
-            $courts->push(Court::create([
+        $mmrRanges = [800, 900, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1400];
+
+        foreach ($thaiNames as $i => $name) {
+            User::create([
                 'name' => $name,
-                'address' => fake()->address(),
-                'geolocation' => '13.' . rand(6000, 9000) . ', 100.' . rand(4000, 6000),
-                'phone' => '0' . rand(80, 99) . '-' . rand(100, 999) . '-' . rand(1000, 9999),
-                'field_total' => rand(4, 12),
-                'court_type' => ['rubber', 'wood', 'synthetic'][rand(0, 2)],
-                'play_price' => [80, 100, 120, 150, 200][rand(0, 4)],
-                'additional_facilities' => json_encode(fake()->randomElements(
-                    ['Showers', 'Locker', 'Parking', 'Air Conditioning', 'Cafe', 'Pro Shop', 'Wi-Fi Access'],
-                    rand(2, 5)
-                )),
-                'available_for_booking' => true,
-            ]));
+                'email' => 'player' . ($i + 1) . '@badminton.test',
+                'password' => Hash::make('password'),
+                'avatar' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=player' . ($i + 1),
+                'mmr' => $mmrRanges[array_rand($mmrRanges)] + rand(-50, 50),
+                'mmr_quiz_completed' => true,
+                'gender' => $i < 10 ? 'male' : 'female',
+            ]);
         }
 
-        return $courts;
+        return $realUser;
     }
 
-    private function seedParties(User $demoUser, $courts): \Illuminate\Support\Collection
+    private function seedParties(User $realUser, $courts): array
     {
         $allUsers = User::all();
         $parties = collect();
+        $partyGameCounts = [];
+        $partyDefs = [
+            // Party 1: Host = realUser, TODAY, Open — 18 players, 16 finished games (2 courts × 2 hrs)
+            [
+                'name' => 'ก๊วนกีกี้ วันพฤหัสบดี',
+                'creator' => $realUser,
+                'court' => $courts[0],
+                'playDate' => now()->format('Y-m-d'),
+                'startTime' => '19:00:00',
+                'playHours' => 2,
+                'maxPlayers' => 18,
+                'status' => 'Open',
+                'memberCount' => 17, // + creator = 18
+                'costType' => 'split_equal',
+                'costAmount' => 120,
+                'shuttlecockCost' => 15,
+                'seedGames' => 16,
+            ],
+            // Party 2: Host = realUser, yesterday, Over
+            [
+                'name' => 'ตีแบดหลังเลิกงาน',
+                'creator' => $realUser,
+                'court' => $courts[1] ?? $courts[0],
+                'playDate' => now()->subDay()->format('Y-m-d'),
+                'startTime' => '18:00:00',
+                'playHours' => 3,
+                'maxPlayers' => 12,
+                'status' => 'Over',
+                'memberCount' => 10,
+                'costType' => 'split_equal',
+                'costAmount' => 150,
+                'shuttlecockCost' => 12,
+            ],
+            // Party 3: someone else hosts, realUser joins, tomorrow
+            [
+                'name' => 'ก๊วนแบดวันศุกร์',
+                'creator' => null,
+                'court' => $courts[2] ?? $courts[0],
+                'playDate' => now()->addDay()->format('Y-m-d'),
+                'startTime' => '17:00:00',
+                'playHours' => 3,
+                'maxPlayers' => 16,
+                'status' => 'Open',
+                'memberCount' => 12,
+                'costType' => 'per_person',
+                'costAmount' => 80,
+                'shuttlecockCost' => 15,
+                'joinRealUser' => true,
+            ],
+            // Party 4: Full party, 2 days ago
+            [
+                'name' => 'แบดมินตัน Saturday',
+                'creator' => null,
+                'court' => $courts[3] ?? $courts[0],
+                'playDate' => now()->subDays(2)->format('Y-m-d'),
+                'startTime' => '09:00:00',
+                'playHours' => 4,
+                'maxPlayers' => 8,
+                'status' => 'Over',
+                'memberCount' => 8,
+                'costType' => 'split_equal',
+                'costAmount' => 100,
+                'shuttlecockCost' => 10,
+            ],
+            // Party 5: Free party
+            [
+                'name' => 'ซ้อมแบดฟรี',
+                'creator' => null,
+                'court' => $courts[4] ?? $courts[0],
+                'playDate' => now()->addDays(3)->format('Y-m-d'),
+                'startTime' => '16:00:00',
+                'playHours' => 2,
+                'maxPlayers' => 10,
+                'status' => 'Open',
+                'memberCount' => 6,
+                'costType' => 'free',
+                'costAmount' => 0,
+                'shuttlecockCost' => 0,
+            ],
+        ];
 
-        // --- Party 1: Demo user's party (TODAY, Open, actively playing) ---
-        $parties->push($this->createParty(
-            creator: $demoUser,
-            court: $courts[0],
-            playDate: now()->format('Y-m-d'),
-            startTime: '18:00:00',
-            playHours: 3,
-            maxPlayers: 16,
-            status: 'Open',
-            members: $allUsers->where('id', '!=', $demoUser->id)->random(12),
-        ));
+        foreach ($partyDefs as $def) {
+            $creator = $def['creator'] ?? $allUsers->where('id', '!=', $realUser->id)->random();
+            $members = $allUsers->where('id', '!=', $creator->id)->random(min($def['memberCount'], $allUsers->count() - 1));
+            $extraMember = ($def['joinRealUser'] ?? false) ? $realUser : null;
 
-        // --- Party 2: Demo user joined, yesterday (Over) ---
-        $creator2 = $allUsers->where('id', '!=', $demoUser->id)->random();
-        $parties->push($this->createParty(
-            creator: $creator2,
-            court: $courts[1],
-            playDate: now()->subDay()->format('Y-m-d'),
-            startTime: '19:00:00',
-            playHours: 2,
-            maxPlayers: 12,
-            status: 'Over',
-            members: $allUsers->where('id', '!=', $creator2->id)->random(10),
-            extraMember: $demoUser,
-        ));
-
-        // --- Party 3: Demo user joined, tomorrow (Open) ---
-        $creator3 = $allUsers->where('id', '!=', $demoUser->id)->random();
-        $parties->push($this->createParty(
-            creator: $creator3,
-            court: $courts[2],
-            playDate: now()->addDay()->format('Y-m-d'),
-            startTime: '17:00:00',
-            playHours: 3,
-            maxPlayers: 18,
-            status: 'Open',
-            members: $allUsers->where('id', '!=', $creator3->id)->random(14),
-            extraMember: $demoUser,
-        ));
-
-        // --- Party 4: Full party, 2 days ago (Over) ---
-        $creator4 = $allUsers->random();
-        $parties->push($this->createParty(
-            creator: $creator4,
-            court: $courts[3],
-            playDate: now()->subDays(2)->format('Y-m-d'),
-            startTime: '20:00:00',
-            playHours: 2,
-            maxPlayers: 8,
-            status: 'Over',
-            members: $allUsers->where('id', '!=', $creator4->id)->random(7),
-        ));
-
-        // --- Party 5: Full party, today ---
-        $creator5 = $allUsers->random();
-        $parties->push($this->createParty(
-            creator: $creator5,
-            court: $courts[4],
-            playDate: now()->format('Y-m-d'),
-            startTime: '16:00:00',
-            playHours: 4,
-            maxPlayers: 10,
-            status: 'Full',
-            members: $allUsers->where('id', '!=', $creator5->id)->random(9),
-        ));
-
-        // --- Parties 6-10: Various upcoming parties ---
-        for ($i = 0; $i < 5; $i++) {
-            $creator = $allUsers->random();
-            $memberCount = rand(4, 14);
-            $maxPlayers = $memberCount + rand(2, 6);
-            $parties->push($this->createParty(
+            $party = $this->createParty(
                 creator: $creator,
-                court: $courts[5 + $i],
-                playDate: now()->addDays(rand(1, 14))->format('Y-m-d'),
-                startTime: sprintf('%02d:00:00', rand(8, 20)),
-                playHours: rand(2, 4),
-                maxPlayers: $maxPlayers,
-                status: 'Open',
-                members: $allUsers->where('id', '!=', $creator->id)->random(min($memberCount, $allUsers->count() - 1)),
-            ));
+                court: $def['court'],
+                name: $def['name'],
+                playDate: $def['playDate'],
+                startTime: $def['startTime'],
+                playHours: $def['playHours'],
+                maxPlayers: $def['maxPlayers'],
+                status: $def['status'],
+                members: $members,
+                extraMember: $extraMember,
+                costType: $def['costType'],
+                costAmount: $def['costAmount'],
+                shuttlecockCost: $def['shuttlecockCost'],
+            );
+            $parties->push($party);
+            if (isset($def['seedGames'])) {
+                $partyGameCounts[$party->id] = $def['seedGames'];
+            }
         }
 
-        // --- Parties 11-15: Past parties (Over) ---
-        for ($i = 0; $i < 5; $i++) {
-            $creator = $allUsers->random();
-            $parties->push($this->createParty(
-                creator: $creator,
-                court: $courts->random(),
-                playDate: now()->subDays(rand(3, 30))->format('Y-m-d'),
-                startTime: sprintf('%02d:00:00', rand(8, 20)),
-                playHours: rand(2, 4),
-                maxPlayers: rand(8, 20),
-                status: 'Over',
-                members: $allUsers->where('id', '!=', $creator->id)->random(rand(6, 16)),
-            ));
-        }
-
-        return $parties;
+        return [$parties, $partyGameCounts];
     }
 
     private function createParty(
         User $creator,
         Court $court,
+        string $name,
         string $playDate,
         string $startTime,
         int $playHours,
@@ -258,14 +257,17 @@ class DemoSeeder extends Seeder
         string $status,
         $members,
         ?User $extraMember = null,
+        string $costType = 'free',
+        float $costAmount = 0,
+        float $shuttlecockCost = 0,
     ): Party {
         $endTime = \DateTime::createFromFormat('H:i:s', $startTime)
             ->add(new \DateInterval('PT' . $playHours . 'H'))
             ->format('H:i:s');
 
-        // Create party (auto-creates Host member via Party::booted)
         $party = Party::create([
             'creator_id' => $creator->id,
+            'name' => $name,
             'play_date' => $playDate,
             'court_id' => $court->id,
             'play_hours' => $playHours,
@@ -273,8 +275,11 @@ class DemoSeeder extends Seeder
             'start_time' => $startTime,
             'end_time' => $endTime,
             'status' => $status,
-            'is_private' => fake()->boolean(15),
-            'default_initial_shuttlecocks' => rand(0, 3),
+            'is_private' => false,
+            'default_initial_shuttlecocks' => rand(1, 3),
+            'cost_type' => $costType,
+            'cost_amount' => $costAmount,
+            'shuttlecock_cost' => $shuttlecockCost,
             'party_start_date' => $status === 'Over' ? $playDate . ' ' . $startTime : null,
             'party_end_date' => $status === 'Over' ? $playDate . ' ' . $endTime : null,
         ]);
@@ -283,30 +288,26 @@ class DemoSeeder extends Seeder
         PartyCourtBooking::create([
             'party_id' => $party->id,
             'court_id' => $court->id,
-            'court_field_number' => rand(1, $court->field_total),
+            'court_field_number' => rand(1, max(1, $court->field_total ?? 1)),
             'start_time' => $startTime,
             'end_time' => $endTime,
         ]);
 
         // Add members
-        $confirmedStatuses = ['Confirmed', 'Confirmed', 'Confirmed', 'Accepted', 'Checked-in'];
         $addedUserIds = [$creator->id];
-
         foreach ($members as $user) {
             if (in_array($user->id, $addedUserIds)) continue;
             $addedUserIds[] = $user->id;
-
             PartyMember::create([
                 'party_id' => $party->id,
                 'user_id' => $user->id,
                 'role' => 'Member',
-                'status' => $confirmedStatuses[array_rand($confirmedStatuses)],
+                'status' => 'Confirmed',
                 'game_status' => ['ready', 'ready', 'ready', 'break'][rand(0, 3)],
                 'confirm_date' => now()->subHours(rand(1, 48)),
             ]);
         }
 
-        // Add extra member (e.g., demo user) if specified
         if ($extraMember && !in_array($extraMember->id, $addedUserIds)) {
             PartyMember::create([
                 'party_id' => $party->id,
@@ -321,7 +322,7 @@ class DemoSeeder extends Seeder
         return $party;
     }
 
-    private function seedGames($parties): void
+    private function seedGames($parties, array $partyGameCounts = []): void
     {
         foreach ($parties as $party) {
             $confirmedMembers = PartyMember::where('party_id', $party->id)
@@ -331,34 +332,45 @@ class DemoSeeder extends Seeder
 
             if ($confirmedMembers->count() < 4) continue;
 
-            $isOverParty = $party->status === 'Over';
-            $gameCount = $isOverParty ? rand(4, 8) : rand(1, 3);
+            // Determine game count
+            if (isset($partyGameCounts[$party->id])) {
+                $gameCount = $partyGameCounts[$party->id];
+            } elseif ($party->status === 'Over') {
+                $gameCount = rand(5, 10);
+            } else {
+                continue; // Skip parties without explicit game count
+            }
+
+            // Create games with realistic time sequence
+            $partyStart = \Carbon\Carbon::parse($party->play_date . ' ' . $party->start_time);
+            $usedPairings = [];
 
             for ($g = 0; $g < $gameCount; $g++) {
-                // Pick 4 players for doubles
-                $players = $confirmedMembers->random(min(4, $confirmedMembers->count()));
+                // Shuffle members for variety — avoid repeating same 4 players
+                $players = $confirmedMembers->shuffle()->take(4);
                 if ($players->count() < 4) continue;
 
                 $team1 = $players->take(2);
                 $team2 = $players->skip(2)->take(2);
 
-                if ($isOverParty) {
-                    $status = 'finished';
-                } else {
-                    $statuses = ['setting', 'listing', 'playing', 'finished'];
-                    $status = $statuses[$g] ?? 'finished';
-                }
+                $status = 'finished';
 
-                $gameCreateDate = now()->subMinutes(rand(10, 180));
+                // Realistic time: each game ~15 min with 2 min gap
+                $gameCreateDate = $partyStart->copy()->addMinutes($g * 17);
+
+                $gameDuration = rand(12, 20); // realistic 12-20 min per game
+                $gameStartDate = $gameCreateDate->copy()->addMinutes(2);
+                $gameEndDate = $gameStartDate->copy()->addMinutes($gameDuration);
 
                 $game = Game::create([
                     'party_id' => $party->id,
                     'game_type' => 'quadruple',
                     'status' => $status,
+                    'court_number' => ($g % 2) + 1, // alternate court 1 & 2
                     'game_create_date' => $gameCreateDate,
-                    'game_list_date' => in_array($status, ['listing', 'playing', 'finished']) ? $gameCreateDate->copy()->addMinutes(1) : null,
-                    'game_start_date' => in_array($status, ['playing', 'finished']) ? $gameCreateDate->copy()->addMinutes(2) : null,
-                    'game_end_date' => $status === 'finished' ? $gameCreateDate->copy()->addMinutes(rand(15, 40)) : null,
+                    'game_list_date' => $gameCreateDate->copy()->addMinutes(1),
+                    'game_start_date' => $gameStartDate,
+                    'game_end_date' => $gameEndDate,
                 ]);
 
                 // Shuttlecocks
@@ -368,7 +380,7 @@ class DemoSeeder extends Seeder
                     'quantity' => rand(1, 3),
                 ]);
 
-                // Assign players to teams (skip for 'setting' status — team is required enum)
+                // Assign players to teams
                 if ($status !== 'setting') {
                     foreach ($team1 as $member) {
                         GamePlayer::create([
@@ -396,22 +408,19 @@ class DemoSeeder extends Seeder
                         $t1Score = rand(10, 21);
                         $t2Score = rand(10, 21);
 
-                        // Ensure winner has 21 (or 2 point lead)
                         if ($status === 'finished') {
-                            if ($s <= $setCount) {
-                                $winner = ($team1Wins < 2 && $team2Wins < 2)
-                                    ? (rand(0, 1) ? 'team1' : 'team2')
-                                    : ($team1Wins >= 2 ? 'team1' : 'team2');
+                            $winner = ($team1Wins < 2 && $team2Wins < 2)
+                                ? (rand(0, 1) ? 'team1' : 'team2')
+                                : ($team1Wins >= 2 ? 'team1' : 'team2');
 
-                                if ($winner === 'team1') {
-                                    $t1Score = 21;
-                                    $t2Score = rand(8, 19);
-                                    $team1Wins++;
-                                } else {
-                                    $t2Score = 21;
-                                    $t1Score = rand(8, 19);
-                                    $team2Wins++;
-                                }
+                            if ($winner === 'team1') {
+                                $t1Score = 21;
+                                $t2Score = rand(8, 19);
+                                $team1Wins++;
+                            } else {
+                                $t2Score = 21;
+                                $t1Score = rand(8, 19);
+                                $team2Wins++;
                             }
                         }
 
@@ -427,7 +436,6 @@ class DemoSeeder extends Seeder
                             'winning_team' => $winningTeam,
                         ]);
 
-                        // Player scores
                         $allPlayers = $team1->merge($team2);
                         foreach ($allPlayers as $member) {
                             $team = $team1->contains($member) ? 'team1' : 'team2';
@@ -457,25 +465,23 @@ class DemoSeeder extends Seeder
         }
     }
 
-    private function seedChats(User $demoUser): void
+    private function seedChats(User $realUser): void
     {
-        $otherUsers = User::where('id', '!=', $demoUser->id)->inRandomOrder()->take(8)->get();
+        $otherUsers = User::where('id', '!=', $realUser->id)->inRandomOrder()->take(8)->get();
 
         $chatMessages = [
             ['ว่างเล่นวันนี้ไหมครับ?', 'ว่างครับ กี่โมงดี?', 'สัก 6 โมงได้ไหม?', 'ได้เลยครับ เจอกัน!'],
             ['ลูกหมดแล้วครับ ต้องซื้อเพิ่ม', 'เอาลูก RSL ดีไหม?', 'ได้ครับ กระป๋องละเท่าไหร่?', 'ประมาณ 500 ครับ 12 ลูก'],
             ['เกมส์สุดท้ายสนุกมาก!', 'สแมชเราแรงขึ้นเยอะ', 'ต้องซ้อมอีกเยอะ 555', 'ไว้นัดซ้อมกันอีกนะ'],
-            ['สนามรัชดาเปิดใหม่ดีมาก', 'พื้นยางดีมากครับ', 'ค่าสนามเท่าไหร่?', 'ชม.ละ 120 ถูกมาก'],
         ];
 
-        // 1-on-1 chats with demo user
         for ($i = 0; $i < min(3, $otherUsers->count()); $i++) {
             $chat = Chat::create(['is_group' => false]);
-            ChatParticipant::create(['chat_id' => $chat->id, 'user_id' => $demoUser->id]);
+            ChatParticipant::create(['chat_id' => $chat->id, 'user_id' => $realUser->id]);
             ChatParticipant::create(['chat_id' => $chat->id, 'user_id' => $otherUsers[$i]->id]);
 
             $msgs = $chatMessages[$i] ?? $chatMessages[0];
-            $senders = [$demoUser->id, $otherUsers[$i]->id];
+            $senders = [$realUser->id, $otherUsers[$i]->id];
             foreach ($msgs as $j => $content) {
                 Message::create([
                     'chat_id' => $chat->id,
@@ -486,25 +492,23 @@ class DemoSeeder extends Seeder
             }
         }
 
-        // Group chat: badminton group
+        // Group chat
         if ($otherUsers->count() >= 5) {
             $groupChat = Chat::create(['is_group' => true, 'name' => 'กลุ่มแบดมินตัน HSK']);
-            ChatParticipant::create(['chat_id' => $groupChat->id, 'user_id' => $demoUser->id]);
+            ChatParticipant::create(['chat_id' => $groupChat->id, 'user_id' => $realUser->id]);
             for ($i = 0; $i < 5; $i++) {
                 ChatParticipant::create(['chat_id' => $groupChat->id, 'user_id' => $otherUsers[$i]->id]);
             }
 
             $groupMsgs = [
-                [$demoUser->id, 'สวัสดีทุกคนครับ!'],
+                [$realUser->id, 'สวัสดีทุกคนครับ!'],
                 [$otherUsers[0]->id, 'สวัสดีครับ'],
                 [$otherUsers[1]->id, 'วันนี้ใครว่างเล่นบ้าง?'],
-                [$demoUser->id, 'ผมว่างครับ หลัง 5 โมง'],
+                [$realUser->id, 'ผมว่างครับ หลัง 5 โมง'],
                 [$otherUsers[2]->id, 'ผมก็ว่างเหมือนกัน!'],
                 [$otherUsers[3]->id, 'ไปสนามไหนดี?'],
-                [$otherUsers[0]->id, 'สนามรัชดาดีครับ เพิ่งไปมา'],
-                [$demoUser->id, 'โอเคครับ เจอกัน 5 โมงเย็น'],
-                [$otherUsers[4]->id, 'ผมตามไปด้วยนะ!'],
-                [$otherUsers[1]->id, 'อย่าลืมเอาลูกมาด้วย'],
+                [$otherUsers[0]->id, 'ตีรดี แบดมินตันดีครับ เพิ่งไปมา'],
+                [$realUser->id, 'โอเคครับ เจอกัน 5 โมงเย็น'],
             ];
 
             foreach ($groupMsgs as $j => [$senderId, $content]) {
@@ -513,35 +517,6 @@ class DemoSeeder extends Seeder
                     'sender_id' => $senderId,
                     'content' => $content,
                     'created_at' => now()->subMinutes(count($groupMsgs) - $j),
-                ]);
-            }
-        }
-
-        // Group chat: weekend players
-        if ($otherUsers->count() >= 8) {
-            $weekendChat = Chat::create(['is_group' => true, 'name' => 'นักตบวันหยุด']);
-            ChatParticipant::create(['chat_id' => $weekendChat->id, 'user_id' => $demoUser->id]);
-            for ($i = 3; $i < 8; $i++) {
-                ChatParticipant::create(['chat_id' => $weekendChat->id, 'user_id' => $otherUsers[$i]->id]);
-            }
-
-            $weekendMsgs = [
-                [$otherUsers[3]->id, 'เสาร์นี้เล่นกันไหม?'],
-                [$otherUsers[4]->id, 'เอาเลย กี่คนแล้ว?'],
-                [$demoUser->id, 'นับผมด้วย 1 ครับ'],
-                [$otherUsers[5]->id, 'ผมก็ไป 2 คนแล้ว'],
-                [$otherUsers[6]->id, '+1 ครับ'],
-                [$otherUsers[7]->id, 'ผมไปได้ตอนบ่ายนะ'],
-                [$otherUsers[3]->id, '6 คนพอเล่นได้แล้ว จองสนามเลย!'],
-                [$demoUser->id, 'จองสนามอ่อนนุช 2 คอร์ท ได้ไหมครับ'],
-            ];
-
-            foreach ($weekendMsgs as $j => [$senderId, $content]) {
-                Message::create([
-                    'chat_id' => $weekendChat->id,
-                    'sender_id' => $senderId,
-                    'content' => $content,
-                    'created_at' => now()->subHours(3)->addMinutes($j * 2),
                 ]);
             }
         }

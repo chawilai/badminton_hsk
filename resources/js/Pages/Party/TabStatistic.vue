@@ -39,15 +39,6 @@ const playerStats = computed(() => {
   finishedGames.value.forEach(game => {
     if (!game.game_players || !game.game_sets?.length) return;
 
-    // Determine game winner from sets
-    let team1SetWins = 0;
-    let team2SetWins = 0;
-    game.game_sets.forEach(s => {
-      if (s.winning_team === 'team1') team1SetWins++;
-      else if (s.winning_team === 'team2') team2SetWins++;
-    });
-    const gameWinnerTeam = team1SetWins > team2SetWins ? 'team1' : (team2SetWins > team1SetWins ? 'team2' : null);
-
     game.game_players.forEach(player => {
       const uid = player.user_id;
       if (!stats[uid]) {
@@ -56,6 +47,7 @@ const playerStats = computed(() => {
           name: player.display_name || player.user?.name || 'Unknown',
           avatar: player.user?.avatar,
           games: 0,
+          sets: 0,
           wins: 0,
           losses: 0,
           totalSeconds: 0,
@@ -71,12 +63,17 @@ const playerStats = computed(() => {
         if (dur > 0) stats[uid].totalSeconds += dur;
       }
 
-      if (gameWinnerTeam && hasTeam(player.team)) {
-        if ((isTeam1(player.team) && gameWinnerTeam === 'team1') || (isTeam2(player.team) && gameWinnerTeam === 'team2')) {
-          stats[uid].wins++;
-        } else {
-          stats[uid].losses++;
-        }
+      // Count wins/losses per SET (not per game)
+      if (hasTeam(player.team)) {
+        game.game_sets.forEach(s => {
+          if (!s.winning_team) return;
+          stats[uid].sets++;
+          if ((isTeam1(player.team) && s.winning_team === 'team1') || (isTeam2(player.team) && s.winning_team === 'team2')) {
+            stats[uid].wins++;
+          } else {
+            stats[uid].losses++;
+          }
+        });
       }
 
       // Track teammates and opponents
@@ -93,7 +90,7 @@ const playerStats = computed(() => {
     });
   });
 
-  return Object.values(stats).sort((a, b) => b.games - a.games);
+  return Object.values(stats).sort((a, b) => b.sets - a.sets);
 });
 
 // MVP: highest win rate with min 2 games
@@ -122,11 +119,11 @@ const estimateCalories = (seconds) => {
 };
 
 const mvp = computed(() => {
-  const eligible = playerStats.value.filter(p => p.games >= 2);
+  const eligible = playerStats.value.filter(p => p.sets >= 3);
   if (!eligible.length) return null;
   return eligible.reduce((best, p) => {
-    const rate = p.games > 0 ? p.wins / p.games : 0;
-    const bestRate = best.games > 0 ? best.wins / best.games : 0;
+    const rate = p.sets > 0 ? p.wins / p.sets : 0;
+    const bestRate = best.sets > 0 ? best.wins / best.sets : 0;
     return rate > bestRate ? p : best;
   });
 });
@@ -224,8 +221,8 @@ const filteredHeadToHead = computed(() => headToHead.value.filter(matchesSearch)
 const filteredTeammates = computed(() => teammates.value.filter(matchesSearch));
 
 const winRate = (player) => {
-  if (player.games === 0) return 0;
-  return Math.round((player.wins / player.games) * 100);
+  if (player.sets === 0) return 0;
+  return Math.round((player.wins / player.sets) * 100);
 };
 
 const formatDuration = (minutes) => {
@@ -268,7 +265,7 @@ const formatDuration = (minutes) => {
           <div class="text-xs font-bold text-warning uppercase tracking-wider">MVP</div>
           <div class="text-base font-bold text-base-content">{{ mvp.name }}</div>
           <div class="text-xs text-base-content/60 mt-0.5">
-            {{ mvp.wins }}W {{ mvp.losses }}L · {{ winRate(mvp) }}% win rate · {{ mvp.games }} games
+            {{ mvp.wins }}W {{ mvp.losses }}L · {{ winRate(mvp) }}% · {{ mvp.games }} เกม {{ mvp.sets }} เซ็ต
           </div>
         </div>
       </div>
@@ -300,7 +297,7 @@ const formatDuration = (minutes) => {
             <tr class="text-xs text-base-content/50">
               <th class="pl-4">#</th>
               <th>{{ t('stats.player') }}</th>
-              <th class="text-center">{{ t('stats.games') }}</th>
+              <th class="text-center">เซ็ต</th>
               <th class="text-center">{{ t('stats.wins') }}</th>
               <th class="text-center">{{ t('stats.losses') }}</th>
               <th class="text-center">Win%</th>
@@ -312,10 +309,13 @@ const formatDuration = (minutes) => {
               <td>
                 <div class="flex items-center gap-2">
                   <UserAvatar :src="player.avatar" :name="player.name" size="sm" rounded="full" />
-                  <span class="text-sm font-medium text-base-content truncate max-w-[8rem]">{{ player.name }}</span>
+                  <div class="min-w-0">
+                    <span class="text-sm font-medium text-base-content truncate block max-w-[7rem]">{{ player.name }}</span>
+                    <span class="text-[9px] text-base-content/40">{{ player.games }} เกม</span>
+                  </div>
                 </div>
               </td>
-              <td class="text-center text-sm font-semibold">{{ player.games }}</td>
+              <td class="text-center text-sm font-semibold">{{ player.sets }}</td>
               <td class="text-center text-sm text-success font-semibold">{{ player.wins }}</td>
               <td class="text-center text-sm text-error font-semibold">{{ player.losses }}</td>
               <td class="text-center">
@@ -340,7 +340,7 @@ const formatDuration = (minutes) => {
               <th>{{ t('stats.player') }}</th>
               <th class="text-center">{{ t('stats.playTime') }}</th>
               <th class="text-center">{{ t('stats.avgPerGame') }}</th>
-              <th class="text-center">{{ t('stats.games') }}</th>
+              <th class="text-center">เกม</th>
               <th class="text-center">🔥 {{ t('stats.calories') }}</th>
             </tr>
           </thead>
@@ -389,7 +389,9 @@ const formatDuration = (minutes) => {
           </div>
           <div class="shrink-0 flex items-center gap-1">
             <span class="text-[10px] font-black text-base-content/30">VS</span>
-            <span class="badge badge-sm badge-primary font-bold">{{ pair.count }}x</span>
+            <span class="badge badge-sm font-bold"
+              :class="pair.count >= 4 ? 'badge-error' : pair.count >= 3 ? 'badge-warning' : pair.count >= 2 ? 'badge-info' : 'badge-ghost'"
+            >{{ pair.count }}x</span>
           </div>
           <div class="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
             <span class="text-sm text-base-content truncate">{{ (pair.player2.name || '').split(' ')[0] }}</span>
@@ -411,8 +413,10 @@ const formatDuration = (minutes) => {
             <span class="text-sm text-base-content truncate">{{ (pair.player1.name || '').split(' ')[0] }}</span>
           </div>
           <div class="shrink-0 flex items-center gap-1">
-            <span class="text-[10px] font-black text-base-content/30">🤝</span>
-            <span class="badge badge-sm badge-success font-bold">{{ pair.count }}x</span>
+            <span class="text-[10px]">🤝</span>
+            <span class="badge badge-sm font-bold"
+              :class="pair.count >= 4 ? 'badge-error' : pair.count >= 3 ? 'badge-warning' : pair.count >= 2 ? 'badge-info' : 'badge-ghost'"
+            >{{ pair.count }}x</span>
           </div>
           <div class="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
             <span class="text-sm text-base-content truncate">{{ (pair.player2.name || '').split(' ')[0] }}</span>

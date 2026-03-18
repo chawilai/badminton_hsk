@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\GameController;
 use Carbon\Carbon;
 use App\Models\Friendship;
+use App\Services\LinePushService;
+use App\Services\PartyCostService;
 use Inertia\Inertia;
 
 class PartyController extends Controller
@@ -142,6 +144,8 @@ class PartyController extends Controller
             ];
         }
 
+        $costSummary = PartyCostService::calculate($party);
+
         return Inertia::render('Party', [
             'party' => $party,
             'games' => $games,
@@ -150,6 +154,7 @@ class PartyController extends Controller
             'breakPlayers' => $breakPlayers,
             'ably_key' => env('ABLY_KEY'),
             'friendshipMap' => $friendshipMap,
+            'costSummary' => $costSummary,
         ]);
     }
 
@@ -246,6 +251,8 @@ class PartyController extends Controller
             'status' => 'nullable|in:Open,Full,Over',
         ]);
 
+        $oldStatus = $party->status;
+
         $party->update([
             'name' => $validated['name'] ?? $party->name,
             'default_game_type' => $validated['default_game_type'] ?? $party->default_game_type,
@@ -259,6 +266,11 @@ class PartyController extends Controller
             'notes' => $validated['notes'] ?? $party->notes,
             'status' => $validated['status'] ?? $party->status,
         ]);
+
+        // Send party summary via LINE when party ends
+        if ($oldStatus !== 'Over' && $party->status === 'Over') {
+            $this->sendPartySummary($party);
+        }
 
         return back()->with('success', 'Party updated successfully!');
     }
@@ -433,5 +445,137 @@ class PartyController extends Controller
         $party->save();
 
         return back()->with('success', 'Initial shuttlecocks set successfully.');
+    }
+
+    /**
+     * End party with settlement details and send personalized LINE push to each member.
+     */
+    public function endParty(Request $request, Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403, 'Only the party owner can end the party.');
+        }
+
+        $validated = $request->validate([
+            'court_cost_per_hour' => 'numeric|min:0',
+            'play_hours' => 'numeric|min:0',
+            'shuttlecock_cost_per_unit' => 'numeric|min:0',
+            'shuttlecock_used' => 'integer|min:0',
+            'total_cost' => 'numeric|min:0',
+            'settlements' => 'required|array',
+            'settlements.*.user_id' => 'required|integer',
+            'settlements.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        // Update party cost fields & status
+        $party->update([
+            'cost_amount' => $validated['court_cost_per_hour'],
+            'play_hours' => $validated['play_hours'],
+            'shuttlecock_cost' => $validated['shuttlecock_cost_per_unit'],
+            'status' => 'Over',
+            'party_end_date' => now(),
+        ]);
+
+        // Send personalized LINE push to each member
+        $party->load(['members.user', 'games.gameSets', 'games.gamePlayers.user', 'court']);
+        $partyName = $party->name ?: $party->court?->name ?: 'Party';
+        $appUrl = config('app.url', '');
+        $service = new LinePushService();
+
+        $finishedGames = $party->games->where('status', 'finished');
+        $settlementMap = collect($validated['settlements'])->keyBy('user_id');
+
+        foreach ($party->members as $member) {
+            if (!$member->user) continue;
+
+            $userId = $member->user_id;
+            $settlement = $settlementMap[$userId] ?? null;
+            $amount = $settlement ? ceil($settlement['amount']) : 0;
+
+            // Player stats: sets, time, calories
+            $setsWon = 0;
+            $setsLost = 0;
+            $gamesPlayed = 0;
+            $totalPlaySeconds = 0;
+            foreach ($finishedGames as $game) {
+                $gp = $game->gamePlayers->firstWhere('user_id', $userId);
+                if (!$gp) continue;
+                $gamesPlayed++;
+
+                // Count per set
+                foreach ($game->gameSets as $set) {
+                    if (!$set->winning_team) continue;
+                    if ($set->winning_team === $gp->team) $setsWon++;
+                    else $setsLost++;
+                }
+
+                // Play duration
+                if ($game->game_start_date && $game->game_end_date) {
+                    $dur = max(0, strtotime($game->game_end_date) - strtotime($game->game_start_date));
+                    $totalPlaySeconds += $dur;
+                }
+            }
+
+            $totalSets = $setsWon + $setsLost;
+            $playMinutes = round($totalPlaySeconds / 60);
+            $calories = round(($totalPlaySeconds / 60) * 7); // ~7 kcal/min badminton
+
+            $lines = [];
+            $lines[] = "สนาม: {$party->court?->name}";
+            $lines[] = "เล่น: {$validated['play_hours']} ชม. · {$party->members->count()} คน";
+            $lines[] = "";
+            $lines[] = "🏸 {$gamesPlayed} เกม · {$totalSets} เซ็ต ({$setsWon}W/{$setsLost}L)";
+            $lines[] = "⏱️ เวลาเล่นจริง: {$playMinutes} นาที";
+            $lines[] = "🔥 เผาผลาญ: ~{$calories} kcal";
+            if ($amount > 0) {
+                $lines[] = "";
+                $lines[] = "💰 ค่าใช้จ่ายของคุณ: ฿" . number_format($amount);
+            }
+
+            $service->sendPush(
+                $member->user,
+                'game_result',
+                "📊 สรุป {$partyName}",
+                implode("\n", $lines),
+                [
+                    'party_id' => $party->id,
+                    'action_url' => $appUrl . '/party/' . $party->id,
+                    'action_label' => 'ดูรายละเอียดปาร์ตี้',
+                ]
+            );
+        }
+
+        return back()->with('success', 'จบปาร์ตี้เรียบร้อย! ส่งสรุปเข้า LINE แล้ว');
+    }
+
+    /**
+     * Send party summary via LINE when party status changes to Over (from edit).
+     */
+    private function sendPartySummary(Party $party): void
+    {
+        $party->load(['members.user', 'games.shuttlecocks', 'games.gameSets', 'games.gamePlayers.user', 'court']);
+
+        $summary = PartyCostService::calculate($party);
+        $message = PartyCostService::buildSummaryMessage($party, $summary);
+        $partyName = $party->name ?: $party->court?->name ?: 'Party';
+        $appUrl = config('app.url', '');
+
+        $service = new LinePushService();
+
+        foreach ($party->members as $member) {
+            if ($member->user) {
+                $service->sendPush(
+                    $member->user,
+                    'game_result',
+                    "📊 สรุป {$partyName}",
+                    $message,
+                    [
+                        'party_id' => $party->id,
+                        'action_url' => $appUrl . '/party/' . $party->id,
+                        'action_label' => 'ดูรายละเอียดปาร์ตี้',
+                    ]
+                );
+            }
+        }
     }
 }

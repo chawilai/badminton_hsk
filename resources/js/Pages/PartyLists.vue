@@ -458,7 +458,7 @@ const authUser = page.props.auth.user;
 const filteredParties = computed(() => {
   const today = new Date().toISOString().split("T")[0];
   return parties.value
-    .filter((party) => party.play_date >= today)
+    .filter((party) => party.status !== 'Over' && party.play_date >= today)
     .sort((a, b) => a.play_date.localeCompare(b.play_date));
 });
 

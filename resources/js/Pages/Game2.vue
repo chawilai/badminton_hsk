@@ -387,12 +387,12 @@ onMounted(() => {
 });
 
 const zoneConfig = computed(() => ({
-  Game:    { label: 'Game',            color: 'emerald', borderColor: '#86efac', bgColor: '#f0fdf4' },
-  Ready:   { label: t('zone.ready'),   color: 'blue',    borderColor: '#93c5fd', bgColor: '#eff6ff' },
-  Playing: { label: t('zone.playing'), color: 'teal',    borderColor: '#5eead4', bgColor: '#f0fdfa' },
-  Listing: { label: t('zone.listing'), color: 'pink',    borderColor: '#f9a8d4', bgColor: '#fdf2f8' },
-  Break:   { label: t('zone.break'),   color: 'amber',   borderColor: '#fde047', bgColor: '#fefce8' },
-  Finish:  { label: t('zone.finish'),  color: 'purple',  borderColor: '#c4b5fd', bgColor: '#faf5ff' },
+  Game:    { label: 'Game',            cssClass: 'border-success/40 bg-success/5' },
+  Ready:   { label: t('zone.ready'),   cssClass: 'border-info/40 bg-info/5' },
+  Playing: { label: t('zone.playing'), cssClass: 'border-accent/40 bg-accent/5' },
+  Listing: { label: t('zone.listing'), cssClass: 'border-secondary/40 bg-secondary/5' },
+  Break:   { label: t('zone.break'),   cssClass: 'border-error/30 bg-error/5' },
+  Finish:  { label: t('zone.finish'),  cssClass: 'border-base-content/20 bg-base-content/5' },
 }));
 
 const zoneBadgeClass = (zone) => {
@@ -485,7 +485,7 @@ const zoneBadgeClass = (zone) => {
             <template v-for="item in dropZones.Team1" :key="item.id">
               <div
                 class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
-                :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+                :class="{ 'ring-2 ring-primary bg-primary/10': hoveredItem?.id === item.id }"
                 :data-id="item.id"
                 @mousedown.prevent="handleDragStart($event, item, 'Team1')"
                 @touchstart.prevent="handleDragStart($event, item, 'Team1')"
@@ -537,7 +537,7 @@ const zoneBadgeClass = (zone) => {
             <template v-for="item in dropZones.Team2" :key="item.id">
               <div
                 class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
-                :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+                :class="{ 'ring-2 ring-primary bg-primary/10': hoveredItem?.id === item.id }"
                 :data-id="item.id"
                 @mousedown.prevent="handleDragStart($event, item, 'Team2')"
                 @touchstart.prevent="handleDragStart($event, item, 'Team2')"
@@ -581,10 +581,7 @@ const zoneBadgeClass = (zone) => {
       <div
         v-if="dropZones[zone].length > 0 || zone === 'Ready' || zone === 'Playing' || zone === 'Break'"
         class="rounded-2xl p-3 border-2 border-dashed transition-all"
-        :style="{
-          borderColor: dropZoneActive === zone ? '#67e8f9' : zoneConfig[zone].borderColor,
-          backgroundColor: dropZoneActive === zone ? '#cffafe' : zoneConfig[zone].bgColor,
-        }"
+        :class="dropZoneActive === zone ? 'border-info bg-info/10' : zoneConfig[zone].cssClass"
         :data-zone="zone"
       >
         <div class="flex items-center gap-2 mb-2">
@@ -597,7 +594,7 @@ const zoneBadgeClass = (zone) => {
             v-for="item in dropZones[zone]"
             :key="item.id"
             class="player-card relative bg-base-100 rounded-xl overflow-hidden shadow-xs border border-base-200 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md"
-            :class="{ 'ring-2 ring-amber-300 bg-amber-50': hoveredItem?.id === item.id }"
+            :class="{ 'ring-2 ring-primary bg-primary/10': hoveredItem?.id === item.id }"
             :data-id="item.id"
             @mousedown.prevent="handleDragStart($event, item, zone)"
             @touchstart.prevent="handleDragStart($event, item, zone)"
