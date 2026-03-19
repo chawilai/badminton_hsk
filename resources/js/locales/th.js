@@ -125,6 +125,25 @@ export default {
   'game.waitingTeam': 'รอจัดทีม',
   'game.saveScore': 'บันทึกผลการแข่งขัน',
 
+  // Confirm Dialogs
+  'confirm.deleteSet': 'ลบเซ็ตนี้?',
+  'confirm.listGame': 'ต้องการลีสเกมนี้หรือไม่?',
+  'confirm.listGameHeader': 'ลีสเกม',
+  'confirm.startGame': 'ต้องการเริ่มเกมนี้หรือไม่?',
+  'confirm.startGameHeader': 'เริ่มเกม',
+  'confirm.finishGame': 'ต้องการจบเกมนี้หรือไม่?',
+  'confirm.finishGameHeader': 'จบเกม',
+  'confirm.deleteGame': 'ต้องการลบเกมนี้หรือไม่?',
+  'confirm.deleteGameHeader': 'ลบเกม',
+  'confirm.addShuttlecock': 'ต้องการเพิ่มลูกแบด 1 ลูกหรือไม่?',
+  'confirm.addShuttlecockHeader': 'เพิ่มลูกแบด',
+  'confirm.returnShuttlecock': 'ต้องการคืนลูกแบด 1 ลูกหรือไม่?',
+  'confirm.returnShuttlecockHeader': 'คืนลูกแบด',
+  'confirm.saveScore': 'ยืนยันบันทึกผลการแข่งขัน?',
+  'confirm.saveScoreHeader': 'บันทึกผล',
+  'confirm.addFriend': 'ต้องการเพิ่มเป็นเพื่อนหรือไม่?',
+  'confirm.acceptFriend': 'ยอมรับคำขอเป็นเพื่อนหรือไม่?',
+
   // Game Filters
   'filter.all': 'ทั้งหมด',
   'filter.playing': 'กำลังเล่น',

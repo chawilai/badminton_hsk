@@ -125,6 +125,25 @@ export default {
   'game.waitingTeam': 'Waiting for team',
   'game.saveScore': 'Save Score',
 
+  // Confirm Dialogs
+  'confirm.deleteSet': 'Delete this set?',
+  'confirm.listGame': 'List this game?',
+  'confirm.listGameHeader': 'List Game',
+  'confirm.startGame': 'Start this game?',
+  'confirm.startGameHeader': 'Start Game',
+  'confirm.finishGame': 'Finish this game?',
+  'confirm.finishGameHeader': 'Finish Game',
+  'confirm.deleteGame': 'Delete this game?',
+  'confirm.deleteGameHeader': 'Delete Game',
+  'confirm.addShuttlecock': 'Add 1 shuttlecock?',
+  'confirm.addShuttlecockHeader': 'Add Shuttlecock',
+  'confirm.returnShuttlecock': 'Return 1 shuttlecock?',
+  'confirm.returnShuttlecockHeader': 'Return Shuttlecock',
+  'confirm.saveScore': 'Confirm save score?',
+  'confirm.saveScoreHeader': 'Save Score',
+  'confirm.addFriend': 'Send friend request?',
+  'confirm.acceptFriend': 'Accept friend request?',
+
   // Game Filters
   'filter.all': 'All',
   'filter.playing': 'Playing',

@@ -160,8 +160,8 @@ const addNewSet = (overrides = {}) => {
 
 const removeNewSet = () => {
   confirm({
-    message: "ลบเกมเซ็ต ?",
-    header: "ยืนยัน",
+    message: t('confirm.deleteSet'),
+    header: t('common.confirm'),
     accept: () => {
       if (sets.value.length > 1) {
         toast.add({ severity: "success", summary: "ลบเกมเซ็ต", detail: `ลบรายการลงผลเกม เซ็ตที่ ${sets.value.length} แล้ว`, life: 3000 });
@@ -251,8 +251,8 @@ const autoAddPlayers = (gameId) => {
 
 const listGame = (gameId) => {
   confirm({
-    message: "Are you sure you want to list the game?",
-    header: "List Game",
+    message: t('confirm.listGame'),
+    header: t('confirm.listGameHeader'),
     accept: () => {
       router.post(
         `/games/${gameId}/list`,
@@ -306,52 +306,55 @@ const createGame = () => {
   });
 };
 
-const startGame = (gameId) => {
-  // Check if court number is set
-  const game = games.value.find(g => g.id === gameId);
-  if (game && !game.court_number) {
-    toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
+const doStartGame = (gameId) => {
+  router.post(
+    `/games/${gameId}/start`,
+    { visibleGameId: data.initial_shuttlecock_game },
+    {
+      preserveScroll: true,
+      headers: { Accept: "application/json" },
+      onSuccess: (res) => {
+        // Check flash errors
+        const flashErr = res.props?.flash?.error;
+        if (flashErr) {
+          if (flashErr.notInListing) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "เริ่มเกมได้เฉพาะเกมที่มีสถานะลีสรายการ", life: 3000 });
+          if (flashErr.playerPlaying) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีผู้เล่นบางคนกำลังเล่นในเกมอื่นอยู่ โปรดจบเกมนั้นก่อน", life: 5000 });
+          if (flashErr.courtRequired) toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
+          games.value = res.props.games;
+          return;
+        }
+        game_data.game_id = gameId;
+        games.value = res.props.games;
+        fetchReadyPlayer(gameId);
+        thisGame.value = games.value.find((sc) => sc.id == gameId);
+        game_players.value = thisGame.value?.game_players;
+        toast.add({ severity: "success", summary: "สำเร็จ", detail: "เกมเริ่มต้นแล้ว", life: 3000 });
+      },
+      onError: (err) => {
+        if (err.notInListing) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "เริ่มเกมได้เฉพาะเกมที่มีสถานะลีสรายการ", life: 3000 });
+        if (err.playerPlaying) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีผู้เล่นบางคนกำลังเล่นในเกมอื่นอยู่ โปรดจบเกมนั้นก่อน", life: 3000 });
+        if (err.courtRequired) toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
+      },
+    }
+  );
+};
+
+const startGame = (gameId, skipConfirm = false) => {
+  if (skipConfirm) {
+    doStartGame(gameId);
     return;
   }
-
   confirm({
-    message: "Do you want to start the game ?",
-    header: "Start Game",
-    accept: () => {
-      router.post(
-        `/games/${gameId}/start`,
-        { visibleGameId: data.initial_shuttlecock_game },
-        {
-          preserveScroll: true,
-          headers: { Accept: "application/json" },
-          onSuccess: (res) => {
-            game_data.game_id = gameId;
-            games.value = res.props.games;
-            fetchReadyPlayer(gameId);
-            thisGame.value = games.value.find((sc) => sc.id == gameId);
-            game_players.value = thisGame.value.game_players;
-            if (res.props.flash.success?.length > 0) {
-              toast.add({ severity: "success", summary: "สำเร็จ", detail: `เกมเริ่มต้นแล้ว`, life: 3000 });
-            }
-          },
-          onError: (err) => {
-            if (err.notInListing) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "เริ่มเกมได้เฉพาะเกมที่มีสถานะลีสรายการ", life: 3000 });
-            if (err.playerPlaying) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีผู้เล่นบางคนกำลังเล่นในเกมอื่นอยู่ โปรดจบเกมนั้นก่อน", life: 3000 });
-            if (err.courtRequired) toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
-          },
-        }
-      );
-    },
-    reject: () => {
-      toast.add({ severity: "error", summary: "Rejected", detail: "You have rejected starting the game", life: 3000 });
-    },
+    message: t('confirm.startGame'),
+    header: t('confirm.startGameHeader'),
+    accept: () => doStartGame(gameId),
   });
 };
 
 const finishGame = (gameId) => {
   confirm({
-    message: "Are you sure that the game is finished ?",
-    header: "Finish Game",
+    message: t('confirm.finishGame'),
+    header: t('confirm.finishGameHeader'),
     accept: () => {
       router.post(
         `/games/${gameId}/finish`,
@@ -384,8 +387,8 @@ const finishGame = (gameId) => {
 
 const deleteGame = (gameId) => {
   confirm({
-    message: "Do you want to delete the game ?",
-    header: "Delete Game",
+    message: t('confirm.deleteGame'),
+    header: t('confirm.deleteGameHeader'),
     accept: () => {
       router.post(
         `/games/${gameId}/delete`,
@@ -414,8 +417,8 @@ const deleteGame = (gameId) => {
 
 const addShuttlecock = (gameId) => {
   confirm({
-    message: "Are you sure you want to add 1 shuttlecock ?",
-    header: "Add Shuttlecock",
+    message: t('confirm.addShuttlecock'),
+    header: t('confirm.addShuttlecockHeader'),
     accept: () => {
       router.post(
         `/games/${gameId}/add-shuttlecock`,
@@ -441,8 +444,8 @@ const addShuttlecock = (gameId) => {
 
 const returnShuttlecock = (gameId) => {
   confirm({
-    message: "Are you sure you want to return 1 shuttlecock ?",
-    header: "Return Shuttlecock",
+    message: t('confirm.returnShuttlecock'),
+    header: t('confirm.returnShuttlecockHeader'),
     accept: () => {
       router.post(
         `/games/${gameId}/return-shuttlecocks`,
@@ -468,8 +471,8 @@ const returnShuttlecock = (gameId) => {
 
 const enterScore = (gameId) => {
   confirm({
-    message: "ยืนยัน ?",
-    header: "บันทึกผลการแข่งขัน",
+    message: t('confirm.saveScore'),
+    header: t('confirm.saveScoreHeader'),
     accept: () => {
       sets.value.forEach((set) => {
         if (set.team1_score && set.team2_score) {
@@ -516,6 +519,7 @@ const partyReload = (payload) => {
         props.value = res.props;
         game_data.party_member_id = "";
         games.value = res.props.games;
+        activeTab.value = 'game';
       },
       onError: (err) => {
         console.log(err);
@@ -601,10 +605,12 @@ onUnmounted(() => {
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button v-if="party.creator_id === page.props.auth.user?.id" @click="sharePartyLink" class="h-8 px-3 flex items-center gap-1 rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer text-xs font-medium">
+          <button v-if="party.creator_id === page.props.auth.user?.id" @click="sharePartyLink" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer" title="ลิงก์เชิญ">
             <span class="text-sm">🔗</span>
-            <span>ลิงก์เชิญ</span>
           </button>
+          <a v-if="party.status !== 'Over'" :href="`/party/${party.id}/tv`" target="_blank" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer" title="TV Dashboard">
+            <span class="text-sm">📺</span>
+          </a>
           <button v-if="party.status === 'Over'" @click="showDuplicate = true" class="w-9 h-9 flex items-center justify-center rounded-lg border border-base-300 bg-base-100 text-base-content/60 hover:bg-base-200 transition-colors cursor-pointer" title="ตั้งตี้ใหม่">
             <span class="text-sm">🔄</span>
           </button>
@@ -803,7 +809,7 @@ onUnmounted(() => {
         :party="party"
         :readyPlayers="game_data.ready_คน"
         @listGame="listGame"
-        @startGame="startGame"
+        @startGame="(gameId, skipConfirm) => startGame(gameId, skipConfirm)"
         @finishGame="finishGame"
         @deleteGame="deleteGame"
         @autoAddPlayers="autoAddPlayers"

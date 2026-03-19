@@ -28,26 +28,107 @@ const openCourtDialog = (game) => {
 
 const saveCourtNumber = () => {
   if (!courtDialogNumber.value || courtDialogNumber.value < 1) return;
+  const courtNum = parseInt(courtDialogNumber.value);
+
+  // If starting game, check court not in use
+  if (pendingStartGameId.value && activePlayingCourts.value.includes(courtNum)) {
+    toast.add({
+      severity: "error",
+      summary: "คอร์ทไม่ว่าง",
+      detail: `คอร์ท ${courtNum} กำลังเล่นอยู่ กรุณาเลือกคอร์ทอื่น`,
+      life: 4000,
+    });
+    return;
+  }
+
   router.post(`/games/${courtDialogGameId.value}/update-court-number`, {
-    court_number: parseInt(courtDialogNumber.value),
+    court_number: courtNum,
   }, {
     preserveScroll: true,
     headers: { Accept: "application/json" },
     onSuccess: () => {
-      // Update locally so it shows immediately
       const game = props.games.find(g => g.id === courtDialogGameId.value);
-      if (game) game.court_number = parseInt(courtDialogNumber.value);
+      if (game) game.court_number = courtNum;
       courtDialogVisible.value = false;
-      toast.add({ severity: "success", summary: t('game.court'), detail: `${t('game.courtNumber')} ${courtDialogNumber.value}`, life: 2000 });
+      toast.add({ severity: "success", summary: t('game.court'), detail: `${t('game.courtNumber')} ${courtNum}`, life: 2000 });
+
+      // Auto-start if pending (skip confirm — user already clicked "เริ่ม")
+      if (pendingStartGameId.value === courtDialogGameId.value) {
+        const gameIdToStart = courtDialogGameId.value;
+        pendingStartGameId.value = null;
+        // Delay to let Inertia finish processing the court update response
+        setTimeout(() => emit('startGame', gameIdToStart, true), 100);
+      }
     },
   });
 };
 
 const canEditCourt = (game) => !(game.status === 'finished' && game.court_number);
 
+// Courts currently in use by playing games
+const activePlayingCourts = computed(() =>
+  props.games.filter(g => g.status === 'playing' && g.court_number).map(g => g.court_number)
+);
+
+// Pending start: after court is set, auto-start this game
+const pendingStartGameId = ref(null);
+
+const handleStartGame = (game) => {
+  // 1. Check if any player is currently in a playing game
+  const playerIds = (game.game_players || []).map(p => p.user_id);
+  const playingGames = props.games.filter(g => g.status === 'playing');
+  const busyPlayers = [];
+  for (const pg of playingGames) {
+    for (const gp of (pg.game_players || [])) {
+      if (playerIds.includes(gp.user_id)) {
+        const name = gp.display_name || gp.user?.name || 'ผู้เล่น';
+        busyPlayers.push(name);
+      }
+    }
+  }
+  if (busyPlayers.length > 0) {
+    toast.add({
+      severity: "warn",
+      summary: "มีผู้เล่นกำลังเล่นอยู่",
+      detail: `${busyPlayers.join(', ')} ยังเล่นอยู่ ต้องจบเกมก่อนถึงจะเริ่มได้`,
+      life: 5000,
+    });
+    return;
+  }
+
+  // 2. Check court number
+  if (!game.court_number) {
+    pendingStartGameId.value = game.id;
+    toast.add({ severity: "warn", summary: "ระบุคอร์ท", detail: "กรุณาระบุเลขคอร์ทก่อนเริ่มเกม", life: 3000 });
+    openCourtDialog(game);
+    return;
+  }
+
+  // 3. Check court not in use
+  if (activePlayingCourts.value.includes(game.court_number)) {
+    toast.add({
+      severity: "error",
+      summary: "คอร์ทไม่ว่าง",
+      detail: `คอร์ท ${game.court_number} กำลังเล่นอยู่ กรุณาเลือกคอร์ทอื่น`,
+      life: 4000,
+    });
+    pendingStartGameId.value = game.id;
+    openCourtDialog(game);
+    return;
+  }
+
+  // All checks passed → emit to parent
+  emit('startGame', game.id);
+};
+
 // Collect unique court numbers used in this party
 const usedCourtNumbers = computed(() => {
   const nums = new Set();
+  // From party court bookings
+  (props.party?.court_bookings || []).forEach(b => {
+    if (b.court_field_number) nums.add(b.court_field_number);
+  });
+  // From game history
   props.games.forEach(g => { if (g.court_number) nums.add(g.court_number); });
   return [...nums].sort((a, b) => a - b);
 });
@@ -91,7 +172,10 @@ const shuttlecocksTotal = (game) => {
   return game.shuttlecocks.reduce((total, sc) => total + sc.quantity, 0);
 };
 
+const isHost = props.party?.creator_id === page.props.auth.user.id;
+
 const isPlayerInGame = (game) => {
+  if (isHost) return true;
   if (!game || !game.game_players) return false;
   return game.game_players.some((player) => player.user_id === page.props.auth.user.id);
 };
@@ -161,7 +245,19 @@ const elapsedTime = (startDate) => {
 };
 
 const sortedGames = computed(() => {
-  return [...props.games].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
+  return [...props.games].sort((a, b) => {
+    const orderA = statusOrder[a.status] ?? 9;
+    const orderB = statusOrder[b.status] ?? 9;
+    if (orderA !== orderB) return orderA - orderB;
+    // Within finished: "รอลงผล" (no score) above "ลงผลแล้ว" (has score)
+    if (a.status === 'finished') {
+      const aScored = a.game_sets?.[0]?.winning_team ? 1 : 0;
+      const bScored = b.game_sets?.[0]?.winning_team ? 1 : 0;
+      if (aScored !== bScored) return aScored - bScored;
+    }
+    // Same group: newer first
+    return b.id - a.id;
+  });
 });
 
 const filteredGames = computed(() => {
@@ -351,7 +447,7 @@ const filters = computed(() => [
 
             <div class="flex items-center gap-1">
               <button v-show="game.status === 'setting'" @click="emit('listGame', game.id, $event)" class="btn btn-secondary btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.list') }}</button>
-              <button v-show="game.status === 'listing'" @click="emit('startGame', game.id)" class="btn btn-primary btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.start') }}</button>
+              <button v-show="game.status === 'listing'" @click="handleStartGame(game)" class="btn btn-primary btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.start') }}</button>
               <button v-show="['setting', 'listing'].includes(game.status)" @click="emit('deleteGame', game.id)" class="btn btn-error btn-outline btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('common.delete') }}</button>
               <button v-show="game.status === 'playing'" @click="emit('finishGame', game.id)" class="btn btn-info btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ t('game.finish') }}</button>
               <button v-if="game.status === 'finished' && isPlayerInGame(game)" @click="emit('openScore', game)" class="btn btn-success btn-xs btn-sm h-6 min-h-0 text-[10px]">{{ hasScore(game) ? t('game.editScore') : t('game.score') }}</button>
@@ -372,16 +468,26 @@ const filters = computed(() => [
           </button>
         </div>
         <div class="px-4 pb-4">
-          <!-- Quick select from used courts -->
+          <!-- Quick select from used courts (show busy status) -->
           <div v-if="usedCourtNumbers.length > 0" class="flex flex-wrap gap-1.5 mb-3">
             <button
               v-for="num in usedCourtNumbers"
               :key="num"
               @click="courtDialogNumber = num"
-              class="h-8 w-8 rounded-lg text-xs font-bold border-0 cursor-pointer transition-all active:scale-95"
-              :class="courtDialogNumber === num ? 'bg-primary text-white' : 'bg-base-200 text-base-content/70 hover:bg-base-300'"
-            >{{ num }}</button>
+              class="h-8 min-w-[2rem] px-2 rounded-lg text-xs font-bold border-0 cursor-pointer transition-all active:scale-95 relative"
+              :class="courtDialogNumber === num
+                ? 'bg-primary text-white'
+                : activePlayingCourts.includes(num)
+                  ? 'bg-error/10 text-error/50'
+                  : 'bg-base-200 text-base-content/70 hover:bg-base-300'"
+            >
+              {{ num }}
+              <span v-if="activePlayingCourts.includes(num)" class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-error"></span>
+            </button>
           </div>
+          <p v-if="activePlayingCourts.length" class="text-[9px] text-base-content/30 m-0 mb-2">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-error mr-1"></span>กำลังเล่นอยู่
+          </p>
           <input
             ref="courtInput"
             v-model.number="courtDialogNumber"

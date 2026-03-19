@@ -82,6 +82,28 @@ const form = ref({
   process: "playing",
 });
 
+// Courts currently in use by playing games
+const activeCourts = computed(() => {
+  const games = localData.value.games || [];
+  return games
+    .filter(g => g.status === 'playing' && g.court_number)
+    .map(g => g.court_number);
+});
+
+// Quick-pick court numbers from bookings + game history
+const quickCourtNumbers = computed(() => {
+  const nums = new Set();
+  // From party court bookings
+  (localData.value.party?.court_bookings || []).forEach(b => {
+    if (b.court_field_number) nums.add(b.court_field_number);
+  });
+  // From games in this party
+  (localData.value.games || []).forEach(g => {
+    if (g.court_number) nums.add(g.court_number);
+  });
+  return [...nums].sort((a, b) => a - b);
+});
+
 const sortOrder = ref("ASC");
 const showCourtDialog = ref(false);
 const courtInputRef = ref(null);
@@ -93,11 +115,34 @@ const openCourtDialog = () => {
   nextTick(() => courtInputRef.value?.focus());
 };
 
+const pendingStartAfterCourt = ref(false);
+
 const saveCourtFromDialog = () => {
   if (tempCourtNumber.value && tempCourtNumber.value >= 1) {
-    form.value.court_number = parseInt(tempCourtNumber.value);
+    const courtNum = parseInt(tempCourtNumber.value);
+
+    // If starting a game, check court not already in use
+    if (pendingStartAfterCourt.value && activeCourts.value.includes(courtNum)) {
+      toast.add({
+        severity: "error",
+        summary: "คอร์ทไม่ว่าง",
+        detail: `คอร์ท ${courtNum} กำลังเล่นอยู่ กรุณาเลือกคอร์ทอื่น`,
+        life: 4000,
+      });
+      return; // Keep dialog open
+    }
+
+    form.value.court_number = courtNum;
   }
   showCourtDialog.value = false;
+
+  // If we were waiting for court to start game, proceed now
+  if (pendingStartAfterCourt.value && form.value.court_number) {
+    pendingStartAfterCourt.value = false;
+    startNewGame();
+  } else {
+    pendingStartAfterCourt.value = false;
+  }
 };
 
 const sortedPlayerByGamePlayed = computed(() => {
@@ -322,12 +367,53 @@ const startNewGame = () => {
     return;
   }
 
+  // Check if any player is currently in a playing game
+  const activePlayers = players.filter(p => p.current_game);
+  if (activePlayers.length > 0) {
+    const names = activePlayers.map(p => p.name).join(', ');
+    toast.add({
+      severity: "warn",
+      summary: "มีผู้เล่นกำลังเล่นอยู่",
+      detail: `${names} กำลังเล่นอยู่ ไม่สามารถเริ่มเกมซ้อนได้ กรุณาใช้ "ลีส" แทนเพื่อจองคิวไว้ก่อน`,
+      life: 5000,
+    });
+    return;
+  }
+
+  // Require court number before starting
+  if (!form.value.court_number) {
+    pendingStartAfterCourt.value = true;
+    toast.add({ severity: "warn", summary: "ระบุคอร์ท", detail: "กรุณาระบุเลขคอร์ทก่อนเริ่มเกม", life: 3000 });
+    openCourtDialog();
+    return;
+  }
+
+  // Check if court is already in use by a playing game
+  if (activeCourts.value.includes(form.value.court_number)) {
+    toast.add({
+      severity: "error",
+      summary: "คอร์ทไม่ว่าง",
+      detail: `คอร์ท ${form.value.court_number} กำลังเล่นอยู่ กรุณาเลือกคอร์ทอื่น`,
+      life: 4000,
+    });
+    openCourtDialog();
+    return;
+  }
+
   form.value.players = players.map((player) => player.id);
   form.value.process = "playing";
   router.post(`/games/create-game`, form.value, {
     preserveScroll: true,
     headers: { Accept: "application/json" },
     onSuccess: (res) => {
+      // Check flash errors (backend returns errors via flash, not validation)
+      const flashErr = res.props?.flash?.error;
+      if (flashErr) {
+        if (flashErr.activePlayers) toast.add({ severity: "error", summary: "ล้มเหลว", detail: flashErr.activePlayers, life: 5000 });
+        if (flashErr.existSettingGame) toast.add({ severity: "error", summary: "ล้มเหลว", detail: flashErr.existSettingGame, life: 3000 });
+        if (flashErr.notMatchType) toast.add({ severity: "error", summary: "ล้มเหลว", detail: flashErr.notMatchType, life: 3000 });
+        return;
+      }
       dropZones.Playing = [...dropZones.Playing, ...players];
       clearTeamZones();
       form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
@@ -359,6 +445,14 @@ const listNewGame = () => {
     preserveScroll: true,
     headers: { Accept: "application/json" },
     onSuccess: (res) => {
+      // Check flash errors
+      const flashErr = res.props?.flash?.error;
+      if (flashErr) {
+        if (flashErr.activePlayers) toast.add({ severity: "warn", summary: "ลีสซ้ำ", detail: flashErr.activePlayers, life: 5000 });
+        if (flashErr.existSettingGame) toast.add({ severity: "error", summary: "ล้มเหลว", detail: flashErr.existSettingGame, life: 3000 });
+        if (flashErr.notMatchType) toast.add({ severity: "error", summary: "ล้มเหลว", detail: flashErr.notMatchType, life: 3000 });
+        return;
+      }
       dropZones.Listing = [...dropZones.Listing, ...players];
       clearTeamZones();
       form.value = { party_id: localData.value.party.id, game_type: "quadruple", players: [], team1_start_side: "north", initial_shuttlecock_game: 0, process: "playing" };
@@ -646,7 +740,28 @@ const zoneBadgeClass = (zone) => {
             <span class="text-base-content/60 text-sm">✕</span>
           </button>
         </div>
-        <div class="px-4 pb-4">
+        <div class="px-4 pb-4 space-y-3">
+          <!-- Quick-pick from bookings + history (show busy status) -->
+          <div v-if="quickCourtNumbers.length" class="flex flex-wrap gap-1.5">
+            <button
+              v-for="num in quickCourtNumbers"
+              :key="num"
+              type="button"
+              @click="tempCourtNumber = num"
+              class="h-9 min-w-[2.5rem] px-3 rounded-lg text-sm font-bold border-0 cursor-pointer transition-all active:scale-95 relative"
+              :class="tempCourtNumber === num
+                ? 'bg-primary text-white'
+                : activeCourts.includes(num)
+                  ? 'bg-error/10 text-error/50'
+                  : 'bg-base-200 text-base-content/70 hover:bg-base-300'"
+            >
+              {{ num }}
+              <span v-if="activeCourts.includes(num)" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-error"></span>
+            </button>
+          </div>
+          <p v-if="activeCourts.length" class="text-[9px] text-base-content/30 m-0">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-error mr-1"></span>กำลังเล่นอยู่
+          </p>
           <input
             ref="courtInputRef"
             v-model.number="tempCourtNumber"
@@ -659,7 +774,7 @@ const zoneBadgeClass = (zone) => {
           <button
             @click="saveCourtFromDialog"
             :disabled="!tempCourtNumber || tempCourtNumber < 1"
-            class="w-full mt-3 h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+            class="w-full h-10 rounded-xl text-sm font-semibold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
           >{{ t('common.save') }}</button>
         </div>
       </div>

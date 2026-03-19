@@ -104,10 +104,13 @@ class PartyController extends Controller
         $readyPlayers = $gameController->fetchReadyPlayersByPartyID($id);
         $playingPlayers = $gameController->fetchPlayingPlayersByPartyID($id);
 
-        // Break players: party members with game_status = 'break'
+        // Break players: party members with game_status = 'break' AND not in any active game
         $breakPlayers = PartyMember::with(['user.badmintonRank', 'user'])
             ->where('party_id', $id)
             ->where('game_status', 'break')
+            ->whereDoesntHave('user.gamePlayers.game', function ($q) use ($id) {
+                $q->where('party_id', $id)->whereIn('status', ['setting', 'listing', 'playing']);
+            })
             ->get()
             ->map(function ($player) {
                 return [
@@ -656,6 +659,92 @@ class PartyController extends Controller
                 );
             }
         }
+    }
+
+    // ===== TV Dashboard =====
+
+    public function tvDashboard(Request $request, $id)
+    {
+        $isMember = PartyMember::where('party_id', $id)
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        if (!$isMember) {
+            abort(403, 'คุณไม่ได้รับสิทธิในการเข้า Party นี้.');
+        }
+
+        $party = Party::with(['court', 'courtBookings', 'members.user'])
+            ->withCount('members')
+            ->findOrFail($id);
+
+        // Playing games with players and sets
+        $playingGames = Game::with(['gamePlayers.user', 'gameSets'])
+            ->where('party_id', $id)
+            ->where('status', 'playing')
+            ->get()
+            ->map(function ($game) use ($id) {
+                $game->game_number = Game::where('party_id', $id)->where('id', '<=', $game->id)->count();
+                // Attach display_name from party_members
+                $game->gamePlayers->each(function ($gp) use ($id) {
+                    $pm = PartyMember::where('party_id', $id)->where('user_id', $gp->user_id)->first();
+                    $gp->display_name = $pm?->display_name ?? $gp->user?->name;
+                });
+                return $game;
+            });
+
+        // Listing/setting games (assigned but not yet playing)
+        $listingGames = Game::with(['gamePlayers.user'])
+            ->where('party_id', $id)
+            ->whereIn('status', ['setting', 'listing'])
+            ->get()
+            ->map(function ($game) use ($id) {
+                $game->game_number = Game::where('party_id', $id)->where('id', '<=', $game->id)->count();
+                $game->gamePlayers->each(function ($gp) use ($id) {
+                    $pm = PartyMember::where('party_id', $id)->where('user_id', $gp->user_id)->first();
+                    $gp->display_name = $pm?->display_name ?? $gp->user?->name;
+                });
+                return $game;
+            });
+
+        // Ready players (waiting queue)
+        $gameController = new GameController();
+        $readyPlayers = $gameController->fetchReadyPlayersByPartyID($id);
+
+        // Break players (exclude those still in active games)
+        $breakPlayers = PartyMember::with('user')
+            ->where('party_id', $id)
+            ->where('game_status', 'break')
+            ->whereDoesntHave('user.gamePlayers.game', function ($q) use ($id) {
+                $q->where('party_id', $id)->whereIn('status', ['setting', 'listing', 'playing']);
+            })
+            ->get()
+            ->map(fn($p) => [
+                'user_id' => $p->user->id,
+                'name' => $p->user->name,
+                'display_name' => $p->display_name ?? $p->user->name,
+                'avatar' => $p->user->avatar,
+            ]);
+
+        // Average game duration from finished games
+        $finishedGames = Game::where('party_id', $id)
+            ->where('status', 'finished')
+            ->whereNotNull('game_start_date')
+            ->whereNotNull('game_end_date')
+            ->get();
+
+        $avgDuration = $finishedGames->count() > 0
+            ? round($finishedGames->avg(fn($g) => Carbon::parse($g->game_start_date)->diffInMinutes(Carbon::parse($g->game_end_date))))
+            : 15;
+
+        return Inertia::render('PartyTV', [
+            'party' => $party,
+            'playingGames' => $playingGames,
+            'listingGames' => $listingGames,
+            'readyPlayers' => $readyPlayers,
+            'breakPlayers' => $breakPlayers,
+            'avgGameDuration' => $avgDuration,
+            'ably_key' => env('ABLY_KEY'),
+        ]);
     }
 
     // ===== Invite System =====

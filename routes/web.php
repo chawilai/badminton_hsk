@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/party-lists', [PartyController::class, 'partyLists'])->name('parties.lists');
     Route::get('/my-parties', [PartyController::class, 'myParties'])->name('parties.my-parties');
     Route::get('/party/{id}', [PartyController::class, 'showParty'])->name('parties.show-party');
+    Route::get('/party/{id}/tv', [PartyController::class, 'tvDashboard'])->name('parties.tv');
     Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
     Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
     Route::post('/party/{party}/end', [PartyController::class, 'endParty'])->name('parties.end');
