@@ -79,20 +79,21 @@ const handleStartGame = (game) => {
   // 1. Check if any player is currently in a playing game
   const playerIds = (game.game_players || []).map(p => p.user_id);
   const playingGames = props.games.filter(g => g.status === 'playing');
-  const busyPlayers = [];
+  const busyDetails = [];
   for (const pg of playingGames) {
+    const pgNum = props.games.filter(g => g.id <= pg.id).length;
     for (const gp of (pg.game_players || [])) {
       if (playerIds.includes(gp.user_id)) {
         const name = gp.display_name || gp.user?.name || 'ผู้เล่น';
-        busyPlayers.push(name);
+        busyDetails.push(`(#${pgNum})${name}`);
       }
     }
   }
-  if (busyPlayers.length > 0) {
+  if (busyDetails.length > 0) {
     toast.add({
       severity: "warn",
       summary: "มีผู้เล่นกำลังเล่นอยู่",
-      detail: `${busyPlayers.join(', ')} ยังเล่นอยู่ ต้องจบเกมก่อนถึงจะเริ่มได้`,
+      detail: `${busyDetails.join(', ')} ยังเล่นอยู่ ต้องจบเกมก่อนถึงจะเริ่มได้`,
       life: 5000,
     });
     return;

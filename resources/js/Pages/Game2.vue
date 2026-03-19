@@ -1,6 +1,6 @@
 <script setup>
 import { useDragDrop } from "@/composables/useDragDrop";
-import { ref, watch, computed, onMounted, nextTick, defineProps, defineEmits } from "vue";
+import { ref, watch, computed, onMounted, onUnmounted, nextTick, defineProps, defineEmits } from "vue";
 import { Link, Head, usePage, router } from "@inertiajs/vue3";
 import UserAvatar from "@/Components/UserAvatar.vue";
 
@@ -183,6 +183,17 @@ const formattedPlayingPlayers = computed(() =>
     current_game_number: item.current_game_number,
   }))
 );
+
+// Elapsed time for playing games
+const nowTime = ref(Date.now());
+let elapsedTimer = null;
+onMounted(() => { elapsedTimer = setInterval(() => { nowTime.value = Date.now(); }, 10000); });
+onUnmounted(() => { if (elapsedTimer) clearInterval(elapsedTimer); });
+
+const elapsedMinutes = (gameStartDate) => {
+  if (!gameStartDate) return 0;
+  return Math.floor((nowTime.value - new Date(gameStartDate).getTime()) / 60000);
+};
 
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
@@ -370,11 +381,11 @@ const startNewGame = () => {
   // Check if any player is currently in a playing game
   const activePlayers = players.filter(p => p.current_game);
   if (activePlayers.length > 0) {
-    const names = activePlayers.map(p => p.name).join(', ');
+    const details = activePlayers.map(p => `(#${p.current_game?.game_number || '?'})${p.name}`).join(', ');
     toast.add({
       severity: "warn",
       summary: "มีผู้เล่นกำลังเล่นอยู่",
-      detail: `${names} กำลังเล่นอยู่ ไม่สามารถเริ่มเกมซ้อนได้ กรุณาใช้ "ลีส" แทนเพื่อจองคิวไว้ก่อน`,
+      detail: `${details} ยังเล่นอยู่ ไม่สามารถเริ่มเกมซ้อนได้ กรุณาใช้ "ลีส" แทน`,
       life: 5000,
     });
     return;
@@ -470,10 +481,10 @@ const listNewGame = () => {
 watch(
   () => props.data,
   (newData) => {
-    localData.value = newData;
+    localData.value = { ...newData };
     toggleSortOrder();
   },
-  { immediate: true }
+  { deep: true, immediate: true }
 );
 
 onMounted(() => {
@@ -599,7 +610,7 @@ const zoneBadgeClass = (zone) => {
                       <span class="text-[9px] px-1 py-px rounded font-semibold" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                       <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
                         :class="item.current_game ? gameNumClass(item.current_game_number) : 'bg-warning/15 text-warning'"
-                      >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
+                      >{{ item.current_game ? `#${item.current_game_number || '?'} · ${elapsedMinutes(item.current_game?.game_start_date)}น.` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
                 </div>
@@ -651,7 +662,7 @@ const zoneBadgeClass = (zone) => {
                       <span class="text-[9px] px-1 py-px rounded font-semibold" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                       <span class="text-[9px] px-1 py-px rounded font-semibold ml-auto"
                         :class="item.current_game ? gameNumClass(item.current_game_number) : 'bg-warning/15 text-warning'"
-                      >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
+                      >{{ item.current_game ? `#${item.current_game_number || '?'} · ${elapsedMinutes(item.current_game?.game_start_date)}น.` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                     </div>
                   </div>
                 </div>
@@ -708,7 +719,7 @@ const zoneBadgeClass = (zone) => {
                   <span class="text-[9px] px-1 py-px rounded font-medium" :class="gameCountClass(item.played)">{{ item.played }} เกม</span>
                   <span class="text-[9px] px-1 py-px rounded font-medium ml-auto"
                     :class="item.current_game ? 'bg-accent/15 text-accent' : 'bg-warning/15 text-warning'"
-                  >{{ item.current_game ? `กำลังเล่น #${item.current_game_number || '?'}` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
+                  >{{ item.current_game ? `#${item.current_game_number || '?'} · ${elapsedMinutes(item.current_game?.game_start_date)}น.` : `รอ ${convertWaitingTimeToMinutes(item.waiting_time)}น.` }}</span>
                 </div>
               </div>
             </div>

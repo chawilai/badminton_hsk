@@ -448,6 +448,7 @@ class GameController extends Controller
                 ->select(
                     'games.id',
                     'games.status',
+                    'games.game_start_date',
                     DB::raw('(SELECT COUNT(*) + 1 FROM games AS g WHERE g.party_id = games.party_id AND g.id < games.id) AS game_number')
                 )
                 ->first();

@@ -103,33 +103,25 @@ const gridStyle = computed(() => ({
 // Total cells for sizing calculations
 const totalCells = computed(() => gridCols.value * gridRows.value);
 
-// Font size scaling based on total courts
-const courtTextSize = computed(() => {
-  const count = bookedCourts.value.length;
-  if (count <= 2) return 'text-2xl';
-  if (count <= 4) return 'text-xl';
-  if (count <= 6) return 'text-lg';
-  if (count <= 8) return 'text-base';
-  return 'text-sm';
+// Dynamic scaling based on grid size → CSS custom properties
+const courtScale = computed(() => {
+  const g = gridSize.value;
+  // Scale factor: 1x1=1.0, 2x2=0.85, 3x3=0.65, 4x4=0.5, 5x5=0.4
+  const scales = { 1: 1.0, 2: 0.85, 3: 0.65, 4: 0.5, 5: 0.4 };
+  return scales[g] || 0.5;
 });
 
-const playerNameSize = computed(() => {
-  const count = bookedCourts.value.length;
-  if (count <= 2) return 'text-2xl';
-  if (count <= 4) return 'text-xl';
-  if (count <= 6) return 'text-lg';
-  if (count <= 8) return 'text-base';
-  return 'text-sm';
+const courtCssVars = computed(() => {
+  const s = courtScale.value;
+  return {
+    '--court-name': `clamp(0.55rem, ${s * 1.4}vw, 1.6rem)`,
+    '--court-vs': `clamp(0.6rem, ${s * 1.8}vw, 2rem)`,
+    '--court-header': `clamp(0.6rem, ${s * 1.3}vw, 1.4rem)`,
+    '--court-avatar': `clamp(1.5rem, ${s * 4}vw, 5rem)`,
+  };
 });
 
-const avatarSize = computed(() => {
-  const count = bookedCourts.value.length;
-  if (count <= 2) return '2xl';
-  if (count <= 4) return 'xl';
-  if (count <= 6) return 'lg';
-  if (count <= 8) return 'md';
-  return 'sm';
-});
+const avatarSize = computed(() => null); // Use CSS variable instead
 
 // Max name length before marquee kicks in
 const maxNameLen = computed(() => {
@@ -261,7 +253,7 @@ onUnmounted(() => {
   <div class="w-screen h-screen bg-neutral text-neutral-content overflow-hidden flex flex-col" data-theme="badminton-dark">
     <!-- Header Bar -->
     <header class="flex items-center justify-between px-6 py-3 bg-base-300/50 shrink-0">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <span class="text-2xl">🏸</span>
         <div>
           <div class="text-lg font-bold text-primary">{{ party.name || party.court?.name || 'Party' }}</div>
@@ -308,7 +300,7 @@ onUnmounted(() => {
       <!-- Playing Screen -->
       <transition name="tv-slide">
         <div v-if="currentScreen === 'playing'" key="playing" class="absolute inset-0 p-3 flex flex-col gap-2">
-          <div class="grid gap-3 flex-1 min-h-0" :style="gridStyle">
+          <div class="grid gap-3 flex-1 min-h-0" :style="{ ...gridStyle, ...courtCssVars }">
             <div
               v-for="courtNum in bookedCourts"
               :key="courtNum"
@@ -319,12 +311,12 @@ onUnmounted(() => {
               <div class="flex items-center justify-between px-4 py-2 bg-base-300/30">
                 <div class="flex items-center gap-2">
                   <span class="text-lg">🏟️</span>
-                  <span :class="courtTextSize" class="font-bold text-base-content">Court {{ courtNum }}</span>
+                  <span style="font-size: var(--court-header)" class="font-bold text-base-content">Court {{ courtNum }}</span>
                 </div>
                 <template v-if="getGameOnCourt(courtNum)">
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Game #{{ getGameOnCourt(courtNum).game_number }}</span>
-                    <div class="px-3 py-1 rounded-full bg-primary/20 text-primary font-mono font-bold tabular-nums" :class="courtTextSize">
+                    <div class="px-3 py-1 rounded-full bg-primary/20 text-primary font-mono font-bold tabular-nums" style="font-size: var(--court-header)">
                       {{ elapsedTime(getGameOnCourt(courtNum).game_start_date) }}
                     </div>
                   </div>
@@ -340,49 +332,39 @@ onUnmounted(() => {
                 <span v-else class="text-sm text-success font-semibold">ว่าง</span>
               </div>
 
-              <!-- Game content -->
-              <div v-if="getGameOnCourt(courtNum)" class="flex-1 flex items-center justify-center px-6 py-3 gap-4">
+              <!-- Game content: [Team1] [VS] [Team2] -->
+              <div v-if="getGameOnCourt(courtNum)" class="flex-1 court-match">
                 <!-- Team 1 -->
-                <div class="flex-1 flex flex-col items-center gap-3">
-                  <div v-for="p in teamPlayers(getGameOnCourt(courtNum), 'team1')" :key="p.user_id" class="flex items-center gap-3">
-                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" :size="avatarSize" rounded="full" class="border-2 border-info/30 shrink-0" />
-                    <div class="overflow-hidden" :style="{ maxWidth: maxNameLen * 1.2 + 'ch' }">
-                      <span :class="[playerNameSize, isLongName(p) ? 'tv-marquee' : '']" class="font-semibold text-base-content whitespace-nowrap inline-block">{{ displayName(p) }}</span>
-                    </div>
+                <div class="court-team">
+                  <div v-for="p in teamPlayers(getGameOnCourt(courtNum), 'team1')" :key="p.user_id" class="court-player court-player-left">
+                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="lg" rounded="full" class="border-2 border-info/30 court-avatar shrink-0" />
+                    <div class="court-name-wrap"><span :class="isLongName(p) ? 'tv-marquee' : ''" class="court-name-text">{{ displayName(p) }}</span></div>
                   </div>
                 </div>
-
                 <!-- VS -->
-                <div class="text-3xl font-bold text-base-content/20 shrink-0">VS</div>
-
+                <div class="court-vs"><span class="font-bold text-base-content/20" style="font-size: var(--court-vs)">VS</span></div>
                 <!-- Team 2 -->
-                <div class="flex-1 flex flex-col items-center gap-3">
-                  <div v-for="p in teamPlayers(getGameOnCourt(courtNum), 'team2')" :key="p.user_id" class="flex items-center gap-3">
-                    <div class="overflow-hidden" :style="{ maxWidth: maxNameLen * 1.2 + 'ch' }">
-                      <span :class="[playerNameSize, isLongName(p) ? 'tv-marquee' : '']" class="font-semibold text-base-content whitespace-nowrap inline-block text-right">{{ displayName(p) }}</span>
-                    </div>
-                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" :size="avatarSize" rounded="full" class="border-2 border-error/30 shrink-0" />
+                <div class="court-team">
+                  <div v-for="p in teamPlayers(getGameOnCourt(courtNum), 'team2')" :key="p.user_id" class="court-player court-player-right">
+                    <div class="court-name-wrap"><span :class="isLongName(p) ? 'tv-marquee' : ''" class="court-name-text text-right">{{ displayName(p) }}</span></div>
+                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="lg" rounded="full" class="border-2 border-error/30 court-avatar shrink-0" />
                   </div>
                 </div>
               </div>
 
               <!-- Listing game on court (waiting to start) -->
-              <div v-else-if="getListingGameOnCourt(courtNum)" class="flex-1 flex items-center justify-center px-6 py-3 gap-4">
-                <div class="flex-1 flex flex-col items-center gap-3">
-                  <div v-for="p in teamPlayers(getListingGameOnCourt(courtNum), 'team1')" :key="p.user_id" class="flex items-center gap-3 opacity-70">
-                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" :size="avatarSize" rounded="full" class="border-2 border-warning/30 shrink-0" />
-                    <div class="overflow-hidden" :style="{ maxWidth: maxNameLen * 1.2 + 'ch' }">
-                      <span :class="[playerNameSize, isLongName(p) ? 'tv-marquee' : '']" class="font-semibold text-base-content/70 whitespace-nowrap inline-block">{{ displayName(p) }}</span>
-                    </div>
+              <div v-else-if="getListingGameOnCourt(courtNum)" class="flex-1 court-match opacity-70">
+                <div class="court-team">
+                  <div v-for="p in teamPlayers(getListingGameOnCourt(courtNum), 'team1')" :key="p.user_id" class="court-player court-player-left">
+                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="lg" rounded="full" class="border-2 border-warning/30 court-avatar shrink-0" />
+                    <div class="court-name-wrap"><span :class="isLongName(p) ? 'tv-marquee' : ''" class="court-name-text">{{ displayName(p) }}</span></div>
                   </div>
                 </div>
-                <div class="text-3xl font-bold text-warning/30 shrink-0">VS</div>
-                <div class="flex-1 flex flex-col items-center gap-3">
-                  <div v-for="p in teamPlayers(getListingGameOnCourt(courtNum), 'team2')" :key="p.user_id" class="flex items-center gap-3 opacity-70">
-                    <div class="overflow-hidden" :style="{ maxWidth: maxNameLen * 1.2 + 'ch' }">
-                      <span :class="[playerNameSize, isLongName(p) ? 'tv-marquee' : '']" class="font-semibold text-base-content/70 whitespace-nowrap inline-block text-right">{{ displayName(p) }}</span>
-                    </div>
-                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" :size="avatarSize" rounded="full" class="border-2 border-warning/30 shrink-0" />
+                <div class="court-vs"><span class="font-bold text-warning/30" style="font-size: var(--court-vs)">VS</span></div>
+                <div class="court-team">
+                  <div v-for="p in teamPlayers(getListingGameOnCourt(courtNum), 'team2')" :key="p.user_id" class="court-player court-player-right">
+                    <div class="court-name-wrap"><span :class="isLongName(p) ? 'tv-marquee' : ''" class="court-name-text text-right">{{ displayName(p) }}</span></div>
+                    <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="lg" rounded="full" class="border-2 border-warning/30 court-avatar shrink-0" />
                   </div>
                 </div>
               </div>
@@ -428,7 +410,7 @@ onUnmounted(() => {
         <div v-if="currentScreen === 'waiting'" key="waiting" class="absolute inset-0 p-4 flex flex-col">
           <!-- Section title -->
           <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <span class="text-2xl">⏳</span>
               <span class="text-xl font-bold text-accent">สถานะผู้เล่น</span>
             </div>
@@ -537,6 +519,57 @@ onUnmounted(() => {
 @keyframes tv-scroll {
   0%, 25% { transform: translateX(0); }
   75%, 100% { transform: translateX(calc(-100% + 8ch)); }
+}
+
+/* Court match layout: [Team1] [VS] [Team2] */
+.court-match {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(0.5rem, 2vw, 2rem);
+  gap: clamp(0.25rem, 1vw, 1rem);
+}
+.court-team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.25rem, 1vh, 0.75rem);
+}
+.court-player {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.25rem, 0.6vw, 0.5rem);
+}
+.court-player-right {
+  justify-content: flex-end;
+}
+.court-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  shrink: 0;
+}
+.court-name-wrap {
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+}
+.court-name-text {
+  font-weight: 600;
+  color: var(--color-base-content, #fff);
+  white-space: nowrap;
+  display: inline-block;
+  font-size: var(--court-name);
+  width: 100%;
+}
+
+/* Court avatar scales with viewport */
+.court-avatar :deep(img),
+.court-avatar :deep(div) {
+  width: var(--court-avatar) !important;
+  height: var(--court-avatar) !important;
+  font-size: calc(var(--court-avatar) * 0.35) !important;
 }
 
 /* Court cards fill their grid cell fully */
