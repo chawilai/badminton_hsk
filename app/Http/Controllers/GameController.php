@@ -176,6 +176,12 @@ class GameController extends Controller
         // Fetch the party member
         $partyMember = PartyMember::where('id', $request->party_member_id)->firstOrFail();
 
+        // Check if the player is already in this game
+        $alreadyInGame = $game->gamePlayers()->where('user_id', $partyMember->user_id)->exists();
+        if ($alreadyInGame) {
+            return back()->with('error', ['duplicatePlayer' => 'ผู้เล่นคนนี้อยู่ในเกมนี้แล้ว']);
+        }
+
         // Add the player to the game
         $game->gamePlayers()->create([
             'game_id' => $game->id,
@@ -529,6 +535,13 @@ class GameController extends Controller
             return back()->with('error', ['notEnoughPlayers' => 'Cannot list the game: not enough players.']);
         }
 
+        // Check that teams are balanced
+        $team1Count = $game->gamePlayers->where('team', 'team1')->count();
+        $team2Count = $game->gamePlayers->where('team', 'team2')->count();
+        if ($team1Count !== $team2Count) {
+            return back()->with('error', ['unbalancedTeams' => "จำนวนผู้เล่นไม่เท่ากัน: ทีม 1 มี {$team1Count} คน, ทีม 2 มี {$team2Count} คน"]);
+        }
+
         // Check if the game is already in progress or has started
         if ($game->status !== 'setting') {
             return back()->with('error', ['notInSetting' => 'Game is not in a setting state to list']);
@@ -562,6 +575,11 @@ class GameController extends Controller
         // Validate the number of players matches the game type
         if (count($validatedData['players']) !== $requiredPlayers) {
             return back()->with('error', ['notMatchType' => 'The number of players does not match the game type requirements.']);
+        }
+
+        // Check for duplicate players in the request
+        if (count($validatedData['players']) !== count(array_unique($validatedData['players']))) {
+            return back()->with('error', ['duplicatePlayers' => 'ไม่สามารถเพิ่มผู้เล่นซ้ำในเกมเดียวกันได้']);
         }
 
         // Check if there's already a game in the 'setting' status for this party
@@ -666,6 +684,13 @@ class GameController extends Controller
         // Check if the game is already in progress or has started
         if ($game->status !== 'listing') {
             return back()->with('error', ['notInListing' => 'Game is not in a state listing to start']);
+        }
+
+        // Check that teams are balanced
+        $team1Count = $game->gamePlayers->where('team', 'team1')->count();
+        $team2Count = $game->gamePlayers->where('team', 'team2')->count();
+        if ($team1Count !== $team2Count) {
+            return back()->with('error', ['unbalancedTeams' => "จำนวนผู้เล่นไม่เท่ากัน: ทีม 1 มี {$team1Count} คน, ทีม 2 มี {$team2Count} คน"]);
         }
 
         // Update court number if provided

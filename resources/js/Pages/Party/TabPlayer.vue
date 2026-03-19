@@ -15,12 +15,43 @@ const currentUserId = page.props.auth.user.id;
 
 const props = defineProps({
   party: { type: Object, required: true },
+  games: { type: Array, default: () => [] },
   friendshipMap: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['updateDisplayName']);
 
 const isHost = props.party.creator_id === currentUserId;
+
+// Set of user_ids that have played in any game in this party
+const playedUserIds = new Set(
+  props.games.flatMap(g => (g.game_players || []).map(gp => gp.user_id))
+);
+
+const canKick = (member) => {
+  return isHost && !isCurrentUser(member) && !playedUserIds.has(member.user_id);
+};
+
+const kickMember = (member) => {
+  const name = member.display_name || member.user?.name || 'ผู้เล่น';
+  confirm({
+    message: `ต้องการลบ "${name}" ออกจากปาร์ตี้ใช่ไหม?`,
+    header: 'ยืนยันการลบ',
+    accept: () => {
+      router.delete(`/party-members/${member.id}/kick`, {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.add({
+            severity: 'success',
+            summary: 'ลบผู้เล่น',
+            detail: `ลบ ${name} ออกจากปาร์ตี้แล้ว`,
+            life: 3000,
+          });
+        },
+      });
+    },
+  });
+};
 
 const setOriginalDisplayName = (member) => {
   if (!member.original_display_name) {
@@ -113,6 +144,18 @@ const isCurrentUser = (member) => member.user_id === currentUserId;
             :friendshipId="friendshipMap[member.user_id]?.friendship_id || null"
             icon-only
           />
+
+          <!-- Kick button (host only, not played any game) -->
+          <button
+            v-if="canKick(member)"
+            @click="kickMember(member)"
+            class="w-7 h-7 rounded-lg bg-error/10 hover:bg-error/20 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95"
+            title="ลบออกจากปาร์ตี้"
+          >
+            <svg class="w-3.5 h-3.5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

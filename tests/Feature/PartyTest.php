@@ -155,7 +155,8 @@ test('user cannot join a party twice', function () {
     // Second join attempt
     $response = $this->actingAs($joiner)->post('/party-join', ['party_id' => $party->id]);
 
-    $response->assertStatus(400);
+    $response->assertRedirect("/party/{$party->id}");
+    $response->assertSessionHas('error');
 });
 
 test('join party requires valid party_id', function () {

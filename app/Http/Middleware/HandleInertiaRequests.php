@@ -74,6 +74,12 @@ class HandleInertiaRequests extends Middleware
             'pendingFriendCount' => fn () => $request->user()
                 ? \App\Models\Friendship::where('receiver_id', $request->user()->id)->where('status', 'pending')->count()
                 : 0,
+            'levelUpNotification' => fn () => $request->user()
+                ? \App\Models\LevelUpNotification::where('user_id', $request->user()->id)
+                    ->where('is_seen', false)
+                    ->latest()
+                    ->first()
+                : null,
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

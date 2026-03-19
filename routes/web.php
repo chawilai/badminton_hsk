@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SkillAssessmentController;
 use App\Http\Controllers\MmrController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,7 @@ Route::middleware('auth')->group(function () {
     // Party Members
     Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
     Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');
+    Route::delete('/party-members/{id}/kick', [PartyMemberController::class, 'kickMember'])->name('party-members.kick');
 
     // Games
     Route::post('/games', [GameController::class, 'store'])->name('games.store');
@@ -107,6 +109,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/courts', [CourtController::class, 'store']);
     Route::post('/courts/{court}/update', [CourtController::class, 'update']);
     Route::delete('/courts/{court}', [CourtController::class, 'destroy']);
+
+    // Level Up Notification
+    Route::post('/level-up-seen/{id}', function ($id) {
+        \App\Models\LevelUpNotification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->update(['is_seen' => true]);
+        return back();
+    });
+
+    // Skill Assessment
+    Route::get('/skill-assessment', [SkillAssessmentController::class, 'show']);
+    Route::post('/skill-assessment', [SkillAssessmentController::class, 'store']);
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

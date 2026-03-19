@@ -23,10 +23,6 @@ class SocialController extends Controller
         $authUser = $this->findOrCreateUser($socialUser, $provider);
         Auth::login($authUser, true);
 
-        if (!$authUser->mmr_quiz_completed) {
-            return redirect('/mmr-assessment');
-        }
-
         return redirect('/party-lists');
     }
 
@@ -149,10 +145,6 @@ class SocialController extends Controller
         $authUser = $this->checkLineLiff($request);
         Auth::login($authUser, true); // Login the user and "remember" them
 
-        if (!$authUser->mmr_quiz_completed) {
-            return redirect('/mmr-assessment');
-        }
-
-        return redirect('/party-lists'); // Redirect to the home route
+        return redirect('/party-lists');
     }
 }

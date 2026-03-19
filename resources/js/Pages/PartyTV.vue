@@ -114,10 +114,10 @@ const courtScale = computed(() => {
 const courtCssVars = computed(() => {
   const s = courtScale.value;
   return {
-    '--court-name': `clamp(0.55rem, ${s * 1.4}vw, 1.6rem)`,
-    '--court-vs': `clamp(0.6rem, ${s * 1.8}vw, 2rem)`,
+    '--court-name': `clamp(0.55rem, ${s * 1.6}vw, 1.8rem)`,
+    '--court-vs': `clamp(0.6rem, ${s * 2}vw, 2.5rem)`,
     '--court-header': `clamp(0.6rem, ${s * 1.3}vw, 1.4rem)`,
-    '--court-avatar': `clamp(1.5rem, ${s * 4}vw, 5rem)`,
+    '--court-avatar': `clamp(2rem, ${s * 5.5}vw, 6rem)`,
   };
 });
 
@@ -181,6 +181,21 @@ const estimatedWait = (index) => {
   const roundsToWait = Math.ceil((index + 1) / slotsPerRound);
   return Math.round(avgGameDuration.value * roundsToWait);
 };
+
+// Estimated minutes until the longest-playing game finishes
+const estimatedMinutesUntilCourtFree = computed(() => {
+  if (playingGames.value.length === 0) return 0;
+  // Find the game that has been playing the longest
+  let maxElapsedMin = 0;
+  for (const g of playingGames.value) {
+    if (g.game_start_date) {
+      const elapsed = Math.floor((now.value - new Date(g.game_start_date)) / 60000);
+      if (elapsed > maxElapsedMin) maxElapsedMin = elapsed;
+    }
+  }
+  const remaining = Math.max(0, Math.round(avgGameDuration.value - maxElapsedMin));
+  return remaining;
+});
 
 // Format waiting time
 const formatWaitTime = (seconds) => {
@@ -442,7 +457,13 @@ onUnmounted(() => {
                       Game #{{ player.game_number }} · {{ player.court_number ? `Court ${player.court_number}` : 'รอกำหนดสนาม' }}
                     </div>
                   </div>
-                  <div class="text-xs font-bold text-warning shrink-0">กำลังจะเล่น</div>
+                  <div class="text-right shrink-0">
+                    <div class="text-xs font-bold text-warning">กำลังจะเล่น</div>
+                    <div v-if="estimatedMinutesUntilCourtFree > 0" class="text-[10px] text-warning/60">
+                      ~{{ estimatedMinutesUntilCourtFree }} นาที
+                    </div>
+                    <div v-else class="text-[10px] text-success/60">พร้อมเล่น</div>
+                  </div>
                 </div>
               </div>
             </div>

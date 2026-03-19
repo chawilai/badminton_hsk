@@ -6,6 +6,7 @@ import BadmintonBottomNav from './BadmintonBottomNav.vue';
 import { useBadmintonLayout } from '@/layout/composables/badmintonLayout';
 import DaisyToast from '@/Components/DaisyToast.vue';
 import DaisyConfirmDialog from '@/Components/DaisyConfirmDialog.vue';
+import LevelUpDialog from '@/Components/LevelUpDialog.vue';
 
 const { initTheme } = useBadmintonLayout();
 const page = usePage();
@@ -31,5 +32,6 @@ onMounted(() => {
 
         <DaisyToast />
         <DaisyConfirmDialog />
+        <LevelUpDialog />
     </div>
 </template>

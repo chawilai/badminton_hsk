@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\SkillAssessment;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\Party;
@@ -107,12 +108,48 @@ class ProfileController extends Controller
                 'members_count' => $p->members_count,
             ]);
 
-        // Recent games (last 20)
-        $recentGames = Game::whereHas('gamePlayers', fn($q) => $q->where('user_id', $userId))
+        // Available months for game history filter
+        $availableMonths = Game::whereHas('gamePlayers', fn($q) => $q->where('user_id', $userId))
+            ->where('games.status', 'finished')
+            ->join('parties', 'games.party_id', '=', 'parties.id')
+            ->whereNotNull('parties.play_date')
+            ->selectRaw(DB::getDriverName() === 'sqlite'
+                ? "CAST(strftime('%Y', parties.play_date) AS INTEGER) as year, CAST(strftime('%m', parties.play_date) AS INTEGER) as month"
+                : 'YEAR(parties.play_date) as year, MONTH(parties.play_date) as month')
+            ->groupBy('year', 'month')
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->get()
+            ->map(fn($row) => ['year' => (int) $row->year, 'month' => (int) $row->month]);
+
+        // Filter games by year/month or show latest month
+        $filterYear = $request->input('year');
+        $filterMonth = $request->input('month');
+
+        $recentGamesQuery = Game::whereHas('gamePlayers', fn($q) => $q->where('user_id', $userId))
             ->where('status', 'finished')
-            ->with(['gamePlayers.user', 'gameSets', 'party.court'])
+            ->with(['gamePlayers.user', 'gameSets', 'party.court']);
+
+        if ($filterYear && $filterMonth) {
+            $recentGamesQuery->whereHas('party', function ($q) use ($filterYear, $filterMonth) {
+                $q->whereYear('play_date', $filterYear)
+                  ->whereMonth('play_date', $filterMonth);
+            });
+        } else {
+            // Default: show latest month if available
+            if ($availableMonths->isNotEmpty()) {
+                $latest = $availableMonths->first();
+                $filterYear = $latest['year'];
+                $filterMonth = $latest['month'];
+                $recentGamesQuery->whereHas('party', function ($q) use ($filterYear, $filterMonth) {
+                    $q->whereYear('play_date', $filterYear)
+                      ->whereMonth('play_date', $filterMonth);
+                });
+            }
+        }
+
+        $recentGames = $recentGamesQuery
             ->orderByDesc('game_end_date')
-            ->limit(20)
             ->get()
             ->map(function ($game) use ($userId) {
                 $myTeam = $game->gamePlayers->firstWhere('user_id', $userId)?->team;
@@ -156,6 +193,10 @@ class ProfileController extends Controller
             ],
             'recentParties' => $recentParties,
             'recentGames' => $recentGames,
+            'skillAssessment' => SkillAssessment::where('user_id', $userId)->latest()->first()?->skills,
+            'availableMonths' => $availableMonths,
+            'filterYear' => (int) $filterYear,
+            'filterMonth' => (int) $filterMonth,
         ]);
     }
 

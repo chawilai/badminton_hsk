@@ -6,6 +6,7 @@ import { ref, computed, onMounted } from "vue";
 import { useLocale } from "@/composables/useLocale";
 import { useToast } from "@/composables/useToast";
 import MmrBadge from "@/Components/MmrBadge.vue";
+import SkillRadarChart from "@/Components/SkillRadarChart.vue";
 
 const { t, locale } = useLocale();
 const toast = useToast();
@@ -21,7 +22,62 @@ const mmrLevel = computed(() => page.props.mmrLevel);
 const stats = computed(() => page.props.stats || {});
 const recentParties = computed(() => page.props.recentParties || []);
 const recentGames = computed(() => page.props.recentGames || []);
+const skillAssessment = computed(() => page.props.skillAssessment || null);
+
+const skillIcons = {
+  serve: '🏸', smash: '💥', clear: '🌈', net_play: '🕸️', defense: '🛡️',
+  backhand: '🔄', deception: '🎭', footwork: '👟', speed: '⚡', stamina: '❤️‍🔥',
+};
+const skillLabels = {
+  serve: 'เสิร์ฟ', smash: 'สแมช', clear: 'เคลียร์', net_play: 'หน้าเน็ต', defense: 'เกมรับ',
+  backhand: 'แบ็คแฮนด์', deception: 'ลูกหลอก', footwork: 'ฟุตเวิร์ค', speed: 'ความเร็ว', stamina: 'สตามิน่า',
+};
+const topStrengths = computed(() => {
+  if (!skillAssessment.value) return [];
+  return Object.entries(skillAssessment.value)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([key, value]) => ({ key, label: skillLabels[key], icon: skillIcons[key], value }));
+});
+const availableMonths = computed(() => page.props.availableMonths || []);
+const filterYear = ref(page.props.filterYear);
+const filterMonth = ref(page.props.filterMonth);
 const activeTab = ref('overview');
+
+const thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+const availableYears = computed(() => {
+  const years = [...new Set(availableMonths.value.map(m => m.year))];
+  return years.sort((a, b) => b - a);
+});
+
+const monthsForSelectedYear = computed(() => {
+  return availableMonths.value
+    .filter(m => m.year === filterYear.value)
+    .map(m => m.month)
+    .sort((a, b) => b - a);
+});
+
+const changeFilter = (year, month) => {
+  filterYear.value = year;
+  filterMonth.value = month;
+  router.get('/profile', { year, month }, {
+    preserveScroll: true,
+    preserveState: true,
+    only: ['recentGames', 'filterYear', 'filterMonth'],
+  });
+};
+
+const onYearChange = (e) => {
+  const year = parseInt(e.target.value);
+  const months = availableMonths.value.filter(m => m.year === year).map(m => m.month).sort((a, b) => b - a);
+  const month = months[0] || 1;
+  changeFilter(year, month);
+};
+
+const onMonthChange = (e) => {
+  changeFilter(filterYear.value, parseInt(e.target.value));
+};
 
 const formatPlayTime = (seconds) => {
   if (!seconds) return '0 น.';
@@ -130,6 +186,29 @@ const formatDate = (d) => {
         <span class="text-2xl">🤝</span>
       </div>
 
+      <!-- Skill Radar Chart -->
+      <div v-if="skillAssessment" class="bg-base-100 rounded-xl border border-base-300 p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold text-primary uppercase tracking-wider">🎯 ทักษะของคุณ</div>
+          <Link href="/skill-assessment" class="text-[10px] text-primary font-semibold no-underline hover:underline">ประเมินใหม่</Link>
+        </div>
+        <SkillRadarChart :skills="skillAssessment" :size="280" class="mx-auto" />
+        <div class="flex gap-2 mt-3 justify-center flex-wrap">
+          <span v-for="s in topStrengths" :key="s.key"
+            class="badge badge-primary badge-outline badge-sm gap-1 font-semibold">
+            {{ s.icon }} {{ s.label }} {{ s.value }}
+          </span>
+        </div>
+        <div class="text-center mt-2 text-[10px] text-base-content/40">
+          เฉียบคมด้าน: <span class="font-bold text-primary">{{ topStrengths.map(s => s.label).join(', ') }}</span>
+        </div>
+      </div>
+      <Link v-else href="/skill-assessment" class="bg-base-100 rounded-xl border border-base-300 border-dashed p-4 text-center no-underline hover:bg-base-200 transition-colors block">
+        <span class="text-3xl block mb-2">🎯</span>
+        <div class="text-sm font-bold text-base-content">ทำแบบประเมินทักษะ</div>
+        <div class="text-[10px] text-base-content/50 mt-0.5">ประเมินทักษะ 10 ด้าน แสดงผลเป็นกราฟเรดาร์</div>
+      </Link>
+
       <!-- Friends Link -->
       <Link href="/friends" class="bg-base-100 rounded-xl border border-base-300 p-3 flex items-center gap-3 no-underline hover:bg-base-200 transition-colors">
         <span class="text-2xl">👥</span>
@@ -172,9 +251,31 @@ const formatDate = (d) => {
 
       <!-- Tab: Recent Games -->
       <div v-show="activeTab === 'overview'">
+        <!-- Year/Month Filter -->
+        <div v-if="availableMonths.length > 0" class="flex items-center gap-2 mb-3">
+          <select
+            :value="filterYear"
+            @change="onYearChange"
+            class="select select-sm select-bordered bg-base-100 text-sm font-semibold min-h-0 h-8"
+          >
+            <option v-for="y in availableYears" :key="y" :value="y">{{ y + 543 }}</option>
+          </select>
+          <div class="flex gap-1 flex-1 overflow-x-auto scrollbar-hide">
+            <button
+              v-for="m in monthsForSelectedYear"
+              :key="m"
+              @click="changeFilter(filterYear, m)"
+              class="px-3 py-1 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all whitespace-nowrap"
+              :class="filterMonth === m
+                ? 'bg-primary text-primary-content'
+                : 'bg-base-200 text-base-content/60 hover:bg-base-300'"
+            >{{ thaiMonths[m] }}</button>
+          </div>
+        </div>
+
         <div v-if="recentGames.length === 0" class="text-center py-8 bg-base-100 rounded-xl border border-base-300">
           <span class="text-3xl">🏸</span>
-          <p class="text-xs text-base-content/50 mt-2 m-0">ยังไม่มีประวัติเกม</p>
+          <p class="text-xs text-base-content/50 mt-2 m-0">ไม่มีเกมในเดือนนี้</p>
         </div>
         <div class="space-y-2">
           <div v-for="game in recentGames" :key="game.id"

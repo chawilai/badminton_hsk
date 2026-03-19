@@ -74,6 +74,11 @@ class User extends Authenticatable
         return $this->belongsTo(BadmintonRank::class, 'badminton_rank_id');
     }
 
+    public function latestSkillAssessment()
+    {
+        return $this->hasOne(SkillAssessment::class)->latestOfMany();
+    }
+
     // Users have many GamePlayers
     public function gamePlayers()
     {

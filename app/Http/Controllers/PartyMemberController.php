@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GamePlayer;
 use App\Models\PartyMember;
 use Illuminate\Http\Request;
 use Ably\AblyRest;
@@ -53,5 +54,45 @@ class PartyMemberController extends Controller
         $this->broadcastPartyUpdate($partyMember->party_id, 'member.statusChanged', "เปลี่ยนสถานะเป็น {$statusLabel}");
 
         return back()->with('success', 'สถานะอัพเดทแล้ว');
+    }
+
+    public function kickMember(Request $request, $id)
+    {
+        $partyMember = PartyMember::with('party')->findOrFail($id);
+        $party = $partyMember->party;
+
+        // Only host can kick
+        if ($party->creator_id !== auth()->id()) {
+            return back()->with('error', ['notHost' => 'เฉพาะ Host เท่านั้นที่ลบผู้เล่นได้']);
+        }
+
+        // Can't kick yourself
+        if ($partyMember->user_id === auth()->id()) {
+            return back()->with('error', ['kickSelf' => 'ไม่สามารถลบตัวเองออกได้']);
+        }
+
+        // Check if player has played any game in this party
+        $hasPlayedGame = GamePlayer::where('user_id', $partyMember->user_id)
+            ->whereHas('game', function ($query) use ($party) {
+                $query->where('party_id', $party->id);
+            })
+            ->exists();
+
+        if ($hasPlayedGame) {
+            return back()->with('error', ['hasPlayed' => 'ไม่สามารถลบผู้เล่นที่เคยเล่นเกมในปาร์ตี้นี้แล้วได้']);
+        }
+
+        $memberName = $partyMember->display_name ?? $partyMember->user?->name ?? 'ผู้เล่น';
+        $partyMember->delete();
+
+        // Auto-update status
+        if ($party->status !== 'Over') {
+            $memberCount = $party->members()->count();
+            $party->update(['status' => $memberCount >= $party->max_players ? 'Full' : 'Open']);
+        }
+
+        $this->broadcastPartyUpdate($party->id, 'member.kicked');
+
+        return back()->with('success', "ลบ {$memberName} ออกจากปาร์ตี้แล้ว");
     }
 }

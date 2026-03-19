@@ -176,10 +176,22 @@ const removeNewSet = () => {
   });
 };
 
+const originalSets = ref(null);
+
 const openPosition = (pos, game) => {
   setScoreGame.value = game;
-  sets.value = game.game_sets;
+  originalSets.value = JSON.parse(JSON.stringify(game.game_sets));
+  sets.value = JSON.parse(JSON.stringify(game.game_sets));
   visible.value = true;
+};
+
+const closeScoreModal = () => {
+  if (setScoreGame.value?.game_sets && originalSets.value) {
+    setScoreGame.value.game_sets = originalSets.value;
+  }
+  visible.value = false;
+  setScoreGame.value = {};
+  originalSets.value = null;
 };
 
 const thisGame = ref(games.value.find((sc) => sc.id == visibleGameId.value)) ?? null;
@@ -666,7 +678,7 @@ onUnmounted(() => {
             </div>
             <h2 class="text-base font-bold text-base-content m-0">บันทึกผลการแข่งขัน</h2>
           </div>
-          <button @click="visible = false; setScoreGame = {}" class="w-8 h-8 rounded-lg bg-base-200 hover:bg-base-300 border-0 cursor-pointer flex items-center justify-center transition-colors">
+          <button @click="closeScoreModal" class="w-8 h-8 rounded-lg bg-base-200 hover:bg-base-300 border-0 cursor-pointer flex items-center justify-center transition-colors">
             <span class="text-base-content/60 text-sm">✕</span>
           </button>
         </div>
@@ -775,7 +787,7 @@ onUnmounted(() => {
         </div>
 
         <div class="flex gap-2 px-4 pb-4">
-          <button type="button" @click="visible = false; setScoreGame = {}"
+          <button type="button" @click="closeScoreModal"
             class="flex-1 h-10 rounded-xl text-sm font-medium bg-base-200 text-base-content/80 border-0 cursor-pointer hover:bg-base-300 transition-colors">
             {{ t('common.cancel') }}
           </button>
@@ -786,7 +798,7 @@ onUnmounted(() => {
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
-        <button @click="visible = false; setScoreGame = {}">close</button>
+        <button @click="closeScoreModal">close</button>
       </form>
     </dialog>
 
@@ -831,6 +843,7 @@ onUnmounted(() => {
     <div v-show="activeTab === 'player'">
       <TabPlayer
         :party="party"
+        :games="games"
         :friendshipMap="page.props.friendshipMap || {}"
         @updateDisplayName="updateDisplayName"
       />

@@ -86,3 +86,28 @@ Schedule::call(function () {
     });
 // })->daily();
 })->everyMinute();
+
+// Auto-close parties that ended more than 10 hours ago
+Schedule::call(function () {
+    $cutoff = now()->subHours(10);
+
+    \App\Models\Party::where('status', '!=', 'Over')
+        ->where(function ($query) use ($cutoff) {
+            // Check play_date + end_time
+            $query->whereRaw("CONCAT(play_date, ' ', COALESCE(end_time, '23:59:59')) <= ?", [$cutoff]);
+        })
+        ->each(function ($party) {
+            $party->update([
+                'status' => 'Over',
+                'party_end_date' => now(),
+            ]);
+
+            // Send party summary via LINE
+            try {
+                app(\App\Http\Controllers\PartyController::class)->sendPartySummary($party);
+            } catch (\Exception $e) {
+                // Log but don't fail
+                \Illuminate\Support\Facades\Log::warning("Failed to send party summary for party #{$party->id}: " . $e->getMessage());
+            }
+        });
+})->hourly();

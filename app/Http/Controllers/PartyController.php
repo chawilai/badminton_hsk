@@ -95,6 +95,7 @@ class PartyController extends Controller
             'members',
             'members.user',
             'court',
+            'courtBookings',
         ])
             ->withCount('members')
             ->findOrFail($id);
@@ -326,28 +327,70 @@ class PartyController extends Controller
             'max_players' => 'required|integer|min:1',
             'court_id' => 'required|integer',
             'is_private' => 'boolean',
+            'invite_passcode' => 'nullable|string|max:4',
             'cost_type' => 'nullable|in:free,per_person,split_equal',
             'cost_amount' => 'nullable|numeric|min:0',
             'shuttlecock_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
             'status' => 'nullable|in:Open,Full,Over',
+            'start_time' => 'nullable|string',
+            'end_time' => 'nullable|string',
+            'court_bookings' => 'nullable|array',
+            'court_bookings.*.court_field_number' => 'required|integer|min:1',
+            'court_bookings.*.start_time' => 'required',
+            'court_bookings.*.end_time' => 'required',
         ]);
 
         $oldStatus = $party->status;
 
-        $party->update([
+        // Calculate play_hours if start/end time provided
+        $updateData = [
             'name' => $validated['name'] ?? $party->name,
             'default_game_type' => $validated['default_game_type'] ?? $party->default_game_type,
             'play_date' => $validated['play_date'],
             'max_players' => $validated['max_players'],
             'court_id' => $validated['court_id'],
             'is_private' => $request->boolean('is_private'),
+            'invite_passcode' => $validated['invite_passcode'] ?? $party->invite_passcode,
             'cost_type' => $validated['cost_type'] ?? $party->cost_type,
             'cost_amount' => $validated['cost_amount'] ?? $party->cost_amount,
             'shuttlecock_cost' => $validated['shuttlecock_cost'] ?? $party->shuttlecock_cost,
             'notes' => $validated['notes'] ?? $party->notes,
-            'status' => $validated['status'] ?? $party->status,
-        ]);
+        ];
+
+        if (!empty($validated['start_time']) && !empty($validated['end_time'])) {
+            $updateData['start_time'] = $validated['start_time'];
+            $updateData['end_time'] = $validated['end_time'];
+            $start = strtotime($validated['start_time']);
+            $end = strtotime($validated['end_time']);
+            if ($end > $start) {
+                $updateData['play_hours'] = ($end - $start) / 3600;
+            }
+        }
+
+        $party->update($updateData);
+
+        // Update court bookings if provided
+        if (isset($validated['court_bookings'])) {
+            $party->courtBookings()->delete();
+            foreach ($validated['court_bookings'] as $booking) {
+                PartyCourtBooking::create([
+                    'party_id' => $party->id,
+                    'court_id' => $validated['court_id'],
+                    'court_field_number' => $booking['court_field_number'],
+                    'start_time' => $booking['start_time'],
+                    'end_time' => $booking['end_time'],
+                ]);
+            }
+        }
+
+        // Auto-update status based on member count (skip if already Over)
+        if ($party->status !== 'Over') {
+            $memberCount = $party->members()->count();
+            $party->update([
+                'status' => $memberCount >= $party->max_players ? 'Full' : 'Open',
+            ]);
+        }
 
         // Send party summary via LINE when party ends
         if ($oldStatus !== 'Over' && $party->status === 'Over') {
@@ -375,9 +418,7 @@ class PartyController extends Controller
             ->exists();
 
         if ($isAlreadyMember) {
-            return response()->json([
-                'message' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว',
-            ], 400);
+            return redirect("/party/{$partyId}")->with('error', ['alreadyMember' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว']);
         }
 
         // Check the last party hosted by the same host (creator_id) where the user joined
@@ -409,6 +450,12 @@ class PartyController extends Controller
                 'message' => 'เข้าร่วมปาร์ตี้',
             ]);
         } catch (\Exception $e) {}
+
+        // Auto-update status
+        if ($party->status !== 'Over') {
+            $memberCount = $party->members()->count();
+            $party->update(['status' => $memberCount >= $party->max_players ? 'Full' : 'Open']);
+        }
 
         return back()->with('success', 'Party joined successfully!');
     }
@@ -633,7 +680,7 @@ class PartyController extends Controller
     /**
      * Send party summary via LINE when party status changes to Over (from edit).
      */
-    private function sendPartySummary(Party $party): void
+    public function sendPartySummary(Party $party): void
     {
         $party->load(['members.user', 'games.shuttlecocks', 'games.gameSets', 'games.gamePlayers.user', 'court']);
 

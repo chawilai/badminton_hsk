@@ -260,17 +260,17 @@ function submitAssessment() {
                     v-for="(option, idx) in currentQuestion?.options"
                     :key="idx"
                     @click="selectAnswer(currentStep - 1, option.score)"
-                    class="w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer active:scale-[0.98]"
+                    class="w-full text-left p-5 rounded-xl border-2 transition-all duration-200 cursor-pointer active:scale-[0.98]"
                     :class="
                       answers[currentStep - 1] === option.score
                         ? 'border-primary bg-primary/10 shadow-md'
                         : 'border-base-300 bg-base-100/70 backdrop-blur-sm hover:border-primary/30 hover:bg-base-100'
                     "
                   >
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                       <!-- Radio indicator -->
                       <div
-                        class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200"
+                        class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200"
                         :class="
                           answers[currentStep - 1] === option.score
                             ? 'border-primary bg-primary'
@@ -279,12 +279,12 @@ function submitAssessment() {
                       >
                         <div
                           v-if="answers[currentStep - 1] === option.score"
-                          class="w-2 h-2 rounded-full bg-primary-content"
+                          class="w-2.5 h-2.5 rounded-full bg-primary-content"
                         ></div>
                       </div>
                       <!-- Label -->
                       <span
-                        class="text-sm font-medium transition-colors"
+                        class="text-base font-medium transition-colors"
                         :class="
                           answers[currentStep - 1] === option.score
                             ? 'text-primary font-semibold'

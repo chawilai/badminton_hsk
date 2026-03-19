@@ -21,7 +21,16 @@ const openCourtDialog = (game) => {
   // Don't allow editing finished games that already have court number
   if (game.status === 'finished' && game.court_number) return;
   courtDialogGameId.value = game.id;
-  courtDialogNumber.value = game.court_number || '';
+
+  // Default: pick first available court from bookings that isn't currently playing
+  if (!game.court_number) {
+    const bookingCourts = (props.party?.court_bookings || []).map(b => b.court_field_number).sort((a, b) => a - b);
+    const available = bookingCourts.find(c => !activePlayingCourts.value.includes(c));
+    courtDialogNumber.value = available || bookingCourts[0] || '';
+  } else {
+    courtDialogNumber.value = game.court_number;
+  }
+
   courtDialogVisible.value = true;
   nextTick(() => { courtInput.value?.focus(); });
 };
