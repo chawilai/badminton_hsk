@@ -488,8 +488,13 @@ onUnmounted(() => {
                     </div>
                   </div>
                   <div class="text-right shrink-0">
-                    <div class="text-xs text-base-content/30">คาดว่ารอ</div>
-                    <div class="text-sm font-bold text-accent">~{{ estimatedWait(index) }} นาที</div>
+                    <template v-if="player.current_game">
+                      <div class="text-xs text-warning/50">ลีสแล้ว</div>
+                      <div class="text-sm font-bold text-warning">Game #{{ player.current_game.game_number || '?' }}</div>
+                    </template>
+                    <template v-else>
+                      <div class="text-xs text-base-content/20">รอจัดเกม</div>
+                    </template>
                   </div>
                 </div>
               </div>
