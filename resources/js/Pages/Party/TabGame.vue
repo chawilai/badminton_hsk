@@ -41,6 +41,16 @@ const saveCourtNumber = () => {
     return;
   }
 
+  // If pending start → skip update-court, send court_number with start directly (1 request)
+  if (pendingStartGameId.value === courtDialogGameId.value) {
+    const gid = courtDialogGameId.value;
+    pendingStartGameId.value = null;
+    courtDialogVisible.value = false;
+    startGameWithCourt(gid, courtNum);
+    return;
+  }
+
+  // Normal court update (no pending start)
   router.post(`/games/${courtDialogGameId.value}/update-court-number`, {
     court_number: courtNum,
   }, {
@@ -51,14 +61,6 @@ const saveCourtNumber = () => {
       if (game) game.court_number = courtNum;
       courtDialogVisible.value = false;
       toast.add({ severity: "success", summary: t('game.court'), detail: `${t('game.courtNumber')} ${courtNum}`, life: 2000 });
-
-      // Auto-start if pending (skip confirm — user already clicked "เริ่ม")
-      if (pendingStartGameId.value === courtDialogGameId.value) {
-        const gameIdToStart = courtDialogGameId.value;
-        pendingStartGameId.value = null;
-        // Delay to let Inertia finish processing the court update response
-        setTimeout(() => emit('startGame', gameIdToStart, true), 100);
-      }
     },
   });
 };
@@ -96,7 +98,7 @@ const handleStartGame = (game) => {
     return;
   }
 
-  // 2. Check court number
+  // 2. Check court number — if missing, open dialog to get it
   if (!game.court_number) {
     pendingStartGameId.value = game.id;
     toast.add({ severity: "warn", summary: "ระบุคอร์ท", detail: "กรุณาระบุเลขคอร์ทก่อนเริ่มเกม", life: 3000 });
@@ -117,8 +119,26 @@ const handleStartGame = (game) => {
     return;
   }
 
-  // All checks passed → emit to parent
+  // All checks passed → emit to parent (court_number already set on game)
   emit('startGame', game.id);
+};
+
+// Start game with court in 1 request (called from saveCourtNumber when pending)
+const startGameWithCourt = (gameId, courtNum) => {
+  router.post(`/games/${gameId}/start`, { court_number: courtNum }, {
+    preserveScroll: true,
+    headers: { Accept: "application/json" },
+    onSuccess: (res) => {
+      const flashErr = res.props?.flash?.error;
+      if (flashErr) {
+        if (flashErr.playerPlaying) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "มีผู้เล่นบางคนกำลังเล่นอยู่ ต้องจบเกมก่อน", life: 5000 });
+        if (flashErr.courtRequired) toast.add({ severity: "error", summary: t('game.court'), detail: t('game.courtRequired'), life: 3000 });
+        if (flashErr.notInListing) toast.add({ severity: "error", summary: "ล้มเหลว", detail: "เกมไม่ได้อยู่ในสถานะรอเล่น", life: 3000 });
+      } else {
+        toast.add({ severity: "success", summary: "สำเร็จ", detail: "เกมเริ่มต้นแล้ว", life: 3000 });
+      }
+    },
+  });
 };
 
 // Collect unique court numbers used in this party

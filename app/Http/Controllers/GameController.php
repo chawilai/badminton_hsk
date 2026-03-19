@@ -655,7 +655,8 @@ class GameController extends Controller
             'team1_start_side' => [
                 'sometimes',
                 Rule::in(['north', 'south'])
-            ]
+            ],
+            'court_number' => 'nullable|integer|min:1',
         ]);
 
         // Find the game or fail with a 404 error
@@ -664,6 +665,11 @@ class GameController extends Controller
         // Check if the game is already in progress or has started
         if ($game->status !== 'listing') {
             return back()->with('error', ['notInListing' => 'Game is not in a state listing to start']);
+        }
+
+        // Update court number if provided
+        if (!empty($validatedData['court_number'])) {
+            $game->update(['court_number' => $validatedData['court_number']]);
         }
 
         // Require court number to start

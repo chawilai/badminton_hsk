@@ -80,25 +80,20 @@ const resetRotateTimer = () => {
   if (!isLocked.value) startRotateTimer();
 };
 
-// Grid layout: 1 court = full screen, 2-4 = 2x2, then scale up
-const gridCols = computed(() => {
+// Grid layout: NxN square grid
+// 1=1x1, 2-4=2x2, 5-9=3x3, 10-16=4x4, 17-25=5x5
+const gridSize = computed(() => {
   const count = bookedCourts.value.length;
   if (count <= 1) return 1;
   if (count <= 4) return 2;
-  if (count <= 6) return 3;
-  if (count <= 8) return 4;
-  if (count <= 12) return 4;
+  if (count <= 9) return 3;
+  if (count <= 16) return 4;
   return 5;
 });
 
-const gridRows = computed(() => {
-  const count = bookedCourts.value.length;
-  if (count <= 1) return 1;
-  // 2-4 courts: always 2 rows for good aspect ratio
-  if (count <= 4) return 2;
-  if (count <= 8) return 2;
-  return 3;
-});
+const gridCols = computed(() => gridSize.value);
+
+const gridRows = computed(() => gridSize.value);
 
 const gridStyle = computed(() => ({
   gridTemplateColumns: `repeat(${gridCols.value}, 1fr)`,
@@ -146,6 +141,13 @@ const maxNameLen = computed(() => {
 });
 
 const displayName = (player) => player.display_name || player.user?.name || '';
+
+// Listing games that can't show on a court card
+// (no court, OR court is occupied by a playing game)
+const queuedListingGames = computed(() => {
+  const playingCourtSet = new Set(playingGames.value.map(g => g.court_number).filter(Boolean));
+  return listingGames.value.filter(g => !g.court_number || playingCourtSet.has(g.court_number));
+});
 
 const isLongName = (player) => displayName(player).length > maxNameLen.value;
 
@@ -305,8 +307,8 @@ onUnmounted(() => {
     <main class="flex-1 relative overflow-hidden">
       <!-- Playing Screen -->
       <transition name="tv-slide">
-        <div v-if="currentScreen === 'playing'" key="playing" class="absolute inset-0 p-3">
-          <div class="grid gap-3 w-full h-full" :style="gridStyle">
+        <div v-if="currentScreen === 'playing'" key="playing" class="absolute inset-0 p-3 flex flex-col gap-2">
+          <div class="grid gap-3 flex-1 min-h-0" :style="gridStyle">
             <div
               v-for="courtNum in bookedCourts"
               :key="courtNum"
@@ -391,6 +393,30 @@ onUnmounted(() => {
                   <div class="text-4xl mb-2 opacity-20">🏸</div>
                   <div class="text-base-content/30 text-sm">พร้อมใช้งาน</div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Listing queue (games waiting to start, no court assigned) -->
+          <div v-if="queuedListingGames.length > 0" class="shrink-0 flex items-center gap-3 px-3 py-2 bg-warning/10 rounded-xl border border-warning/20 overflow-x-auto">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-sm">📋</span>
+              <span class="text-xs font-bold text-warning">รอเล่น</span>
+            </div>
+            <div v-for="game in queuedListingGames" :key="game.id"
+              class="flex items-center gap-2 px-3 py-1.5 bg-warning/10 rounded-lg border border-warning/15 shrink-0">
+              <span class="text-[10px] font-bold text-warning/60">#{{ game.game_number }}</span>
+              <span v-if="game.court_number" class="text-[9px] font-bold text-warning/40 bg-warning/10 px-1 rounded">🏟️{{ game.court_number }}</span>
+              <div class="flex items-center gap-1">
+                <template v-for="p in teamPlayers(game, 'team1')" :key="'t1-'+p.user_id">
+                  <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="sm" rounded="full" />
+                </template>
+              </div>
+              <span class="text-xs text-warning/40 font-bold">vs</span>
+              <div class="flex items-center gap-1">
+                <template v-for="p in teamPlayers(game, 'team2')" :key="'t2-'+p.user_id">
+                  <UserAvatar :src="p.user?.avatar" :name="displayName(p)" size="sm" rounded="full" />
+                </template>
               </div>
             </div>
           </div>

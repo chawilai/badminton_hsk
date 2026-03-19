@@ -547,11 +547,10 @@ let ablyInstance = null;
 let partyChannel = null;
 
 const handlePartyEvent = (message) => {
-  // Skip events triggered by the current user
-  if (message.data?.user_id === page.props.auth.user.id) return;
+  const isOwnEvent = message.data?.user_id === page.props.auth.user.id;
 
-  // Show notification toast
-  if (message.data?.message && message.data?.user_name) {
+  // Show notification toast (only for other users' events)
+  if (!isOwnEvent && message.data?.message && message.data?.user_name) {
     toast.add({
       severity: 'info',
       summary: message.data.user_name,
@@ -560,8 +559,14 @@ const handlePartyEvent = (message) => {
     });
   }
 
-  // Reload page data silently
-  router.reload({ preserveScroll: true, only: ['games', 'party', 'readyPlayers', 'playingPlayers', 'breakPlayers'] });
+  // Always reload page data (including own events to keep game list in sync)
+  router.reload({
+    preserveScroll: true,
+    only: ['games', 'party', 'readyPlayers', 'playingPlayers', 'breakPlayers'],
+    onSuccess: (res) => {
+      games.value = res.props.games;
+    },
+  });
 };
 
 onMounted(() => {
