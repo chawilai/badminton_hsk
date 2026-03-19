@@ -8,6 +8,7 @@ class LineMessagingController extends Controller
 {
     public function webhook(Request $request)
     {
-        dd($request);
+        // LINE Platform expects 200 OK response
+        return response('OK', 200);
     }
 }
