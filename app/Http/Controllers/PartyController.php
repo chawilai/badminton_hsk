@@ -173,6 +173,8 @@ class PartyController extends Controller
             'shuttlecock_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
             'invite_passcode' => 'nullable|string|regex:/^\d{4}$/',
+            'member_ids' => 'nullable|array',
+            'member_ids.*' => 'integer|exists:users,id',
         ];
 
         if ($hasBooking) {
@@ -227,6 +229,21 @@ class PartyController extends Controller
                     'end_time' => $booking['end_time'],
                 ]);
             }
+        }
+
+        // Add selected members from template (host already added by booted())
+        $memberIds = $validated['member_ids'] ?? [];
+        foreach ($memberIds as $userId) {
+            if ($userId == auth()->id()) continue; // Skip host
+
+            PartyMember::create([
+                'party_id' => $party->id,
+                'user_id' => $userId,
+                'role' => 'Member',
+                'status' => 'Confirmed',
+                'game_status' => 'ready',
+                'confirm_date' => now(),
+            ]);
         }
 
         return back()->with('success', 'Party created successfully!');

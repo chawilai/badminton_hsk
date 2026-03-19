@@ -273,13 +273,215 @@
               </div>
             </div>
 
-            <!-- Section 3: Notes -->
-            <div class="border-t border-base-200 pt-3">
-              <label class="text-xs font-semibold text-base-content/60 mb-1 block">{{ t('createParty.notes') }}</label>
-              <textarea v-model="form.notes" rows="2" class="textarea textarea-bordered textarea-sm w-full text-xs" :placeholder="t('createParty.notesPlaceholder')"></textarea>
+            <!-- Section 3: Notes with Template System -->
+            <div class="border-t border-base-200 pt-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-base-content/60">📝 หมายเหตุ / กติกา</label>
+                <!-- Template dropdown button -->
+                <div class="relative">
+                  <button type="button" @click="showNoteTemplateMenu = !showNoteTemplateMenu; confirmingDeleteIdx = null"
+                    class="text-[10px] font-medium text-primary border border-primary/30 bg-primary/5 rounded-lg px-2 py-1 cursor-pointer hover:bg-primary/10 transition-colors flex items-center gap-1">
+                    📋 Template
+                    <span v-if="noteTemplates.length" class="bg-primary text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center font-bold">{{ noteTemplates.length }}</span>
+                    <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': showNoteTemplateMenu }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+
+                  <!-- Dropdown backdrop -->
+                  <div v-if="showNoteTemplateMenu" class="fixed inset-0 z-10" @click="showNoteTemplateMenu = false; confirmingDeleteIdx = null"></div>
+
+                  <!-- Dropdown menu -->
+                  <div v-if="showNoteTemplateMenu" class="absolute right-0 top-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg z-20 w-64 py-1 max-h-60 overflow-y-auto">
+                    <!-- Empty state -->
+                    <div v-if="noteTemplates.length === 0" class="px-3 py-4 text-center">
+                      <div class="text-lg mb-1">📋</div>
+                      <div class="text-[10px] text-base-content/30">ยังไม่มี template</div>
+                      <div class="text-[9px] text-base-content/20 mt-0.5">พิมพ์หมายเหตุแล้วกด 💾 ด้านล่าง</div>
+                    </div>
+
+                    <!-- Saved templates list -->
+                    <template v-if="noteTemplates.length > 0">
+                      <div class="px-3 py-1.5 text-[9px] font-bold text-base-content/40 uppercase tracking-wider">เลือก Template</div>
+                      <div
+                        v-for="(tmpl, i) in noteTemplates"
+                        :key="i"
+                        class="px-3 py-2 hover:bg-base-200 transition-colors"
+                      >
+                        <!-- Normal state -->
+                        <div v-if="confirmingDeleteIdx !== i" class="flex items-center gap-2">
+                          <div @click="applyNoteTemplate(tmpl)" class="flex-1 min-w-0 cursor-pointer">
+                            <div class="text-xs font-medium text-base-content truncate">{{ tmpl.name }}</div>
+                            <div class="text-[9px] text-base-content/40 truncate leading-tight mt-0.5">{{ tmpl.content.substring(0, 50) }}{{ tmpl.content.length > 50 ? '...' : '' }}</div>
+                          </div>
+                          <button type="button" @click.stop="deleteNoteTemplate(i)"
+                            class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[10px] text-base-content/30 hover:text-error hover:bg-error/10 border-0 bg-transparent cursor-pointer transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                          </button>
+                        </div>
+                        <!-- Confirm delete state -->
+                        <div v-else class="flex items-center gap-2">
+                          <div class="flex-1 text-[10px] text-error font-medium">ลบ "{{ tmpl.name }}" ?</div>
+                          <button type="button" @click.stop="confirmingDeleteIdx = null"
+                            class="px-2 py-1 text-[10px] rounded-md bg-base-200 text-base-content/60 border-0 cursor-pointer hover:bg-base-300 transition-colors">ยกเลิก</button>
+                          <button type="button" @click.stop="deleteNoteTemplate(i)"
+                            class="px-2 py-1 text-[10px] rounded-md bg-error text-white border-0 cursor-pointer hover:bg-error/80 transition-colors font-bold">ลบ</button>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Formatting toolbar -->
+              <div class="flex items-center gap-0.5 w-full bg-base-200/50 rounded-lg p-1">
+                <!-- Group 1: Content insertion -->
+                <div class="flex items-center gap-0.5 flex-1">
+                  <!-- Emoji picker -->
+                  <div class="relative">
+                    <button type="button" @click="toggleToolbarPopup('emoji')"
+                      class="h-7 w-8 rounded-md border-0 cursor-pointer text-sm flex items-center justify-center transition-colors active:scale-95"
+                      :class="showEmojiPicker ? 'bg-primary/15 text-primary' : 'hover:bg-base-300 bg-base-100/80'">
+                      😀
+                    </button>
+                    <div v-if="showEmojiPicker" class="fixed inset-0 z-10" @click="showEmojiPicker = false"></div>
+                    <div v-if="showEmojiPicker" class="absolute left-0 top-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg z-20 w-64 max-h-52 overflow-y-auto p-2 space-y-2">
+                      <div v-for="cat in emojiCategories" :key="cat.label">
+                        <div class="text-[9px] font-bold text-base-content/40 uppercase mb-1">{{ cat.label }}</div>
+                        <div class="flex flex-wrap gap-0.5">
+                          <button type="button" v-for="e in cat.emojis" :key="e"
+                            @click="insertAtCursor(e + ' '); showEmojiPicker = false"
+                            class="w-8 h-8 rounded-lg hover:bg-base-200 border-0 bg-transparent cursor-pointer text-base flex items-center justify-center transition-colors active:scale-90">
+                            {{ e }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Bullet picker -->
+                  <div class="relative">
+                    <button type="button" @click="toggleToolbarPopup('bullet')"
+                      class="h-7 px-2 rounded-md border-0 cursor-pointer text-[10px] font-bold flex items-center gap-0.5 transition-colors active:scale-95"
+                      :class="showBulletPicker ? 'bg-primary/15 text-primary' : 'hover:bg-base-300 bg-base-100/80 text-base-content/60'">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/><circle cx="2" cy="6" r="1" fill="currentColor"/><circle cx="2" cy="12" r="1" fill="currentColor"/><circle cx="2" cy="18" r="1" fill="currentColor"/></svg>
+                      <svg class="w-2 h-2 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div v-if="showBulletPicker" class="fixed inset-0 z-10" @click="showBulletPicker = false"></div>
+                    <div v-if="showBulletPicker" class="absolute left-0 top-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg z-20 w-40 py-1">
+                      <button type="button" v-for="b in bulletStyles" :key="b.label"
+                        @click="insertBulletStyle(b)"
+                        class="w-full text-left px-3 py-1.5 text-xs hover:bg-base-200 border-0 bg-transparent cursor-pointer flex items-center gap-2 transition-colors">
+                        <span class="w-5 text-center font-bold text-base-content font-mono">{{ b.preview }}</span>
+                        <span class="text-base-content/70">{{ b.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Line/divider picker -->
+                  <div class="relative">
+                    <button type="button" @click="toggleToolbarPopup('line')"
+                      class="h-7 px-2 rounded-md border-0 cursor-pointer text-[10px] font-bold flex items-center gap-0.5 transition-colors active:scale-95"
+                      :class="showLinePicker ? 'bg-primary/15 text-primary' : 'hover:bg-base-300 bg-base-100/80 text-base-content/60'">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 12h18"/></svg>
+                      <svg class="w-2 h-2 text-base-content/30" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div v-if="showLinePicker" class="fixed inset-0 z-10" @click="showLinePicker = false"></div>
+                    <div v-if="showLinePicker" class="absolute left-0 top-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg z-20 w-52 py-1">
+                      <button type="button" v-for="l in lineStyles" :key="l.label"
+                        @click="insertLineStyle(l)"
+                        class="w-full text-left px-3 py-1.5 text-xs hover:bg-base-200 border-0 bg-transparent cursor-pointer flex items-center gap-2 transition-colors">
+                        <span class="text-[10px] text-base-content/50 font-mono truncate w-20">{{ l.preview }}</span>
+                        <span class="text-base-content/70">{{ l.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="w-px h-5 bg-base-300"></div>
+
+                <!-- Group 2: Indent -->
+                <div class="flex items-center gap-0.5">
+                  <button type="button" @click="outdentLines" title="ลดย่อหน้า"
+                    class="w-7 h-7 rounded-md hover:bg-base-300 bg-base-100/80 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-base-content/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M3 8h18M9 12h12M9 16h12M3 12l4 2-4 2V12z" transform="scale(-1,1) translate(-24,0)"/></svg>
+                  </button>
+                  <button type="button" @click="indentLines" title="เพิ่มย่อหน้า"
+                    class="w-7 h-7 rounded-md hover:bg-base-300 bg-base-100/80 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-base-content/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M3 8h18M9 12h12M9 16h12M3 12l4 2-4 2V12z"/></svg>
+                  </button>
+                </div>
+
+                <div class="w-px h-5 bg-base-300"></div>
+
+                <!-- Group 3: Text alignment -->
+                <div class="flex items-center gap-0.5">
+                  <button type="button" @click="alignLines('left')" title="ชิดซ้าย"
+                    class="w-7 h-7 rounded-md hover:bg-base-300 bg-base-100/80 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-base-content/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 10h12M3 14h18M3 18h12"/></svg>
+                  </button>
+                  <button type="button" @click="alignLines('center')" title="กึ่งกลาง"
+                    class="w-7 h-7 rounded-md hover:bg-base-300 bg-base-100/80 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-base-content/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M6 10h12M3 14h18M6 18h12"/></svg>
+                  </button>
+                  <button type="button" @click="alignLines('right')" title="ชิดขวา"
+                    class="w-7 h-7 rounded-md hover:bg-base-300 bg-base-100/80 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95">
+                    <svg class="w-3.5 h-3.5 text-base-content/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M9 10h12M3 14h18M9 18h12"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Textarea (monospace for proper alignment) -->
+              <textarea ref="notesTextarea" v-model="form.notes" rows="5"
+                class="textarea textarea-bordered textarea-sm w-full text-xs leading-relaxed font-mono"
+                placeholder="เช่น&#10;🏸 ลูกใช้ RSL เบอร์ 5&#10;👟 ห้ามใส่รองเท้าตีนตุ๊กแก&#10;⏰ มาก่อนเวลา 15 นาที&#10;💰 จ่ายก่อนเล่น"></textarea>
+
+              <!-- Save as template (bottom-right) -->
+              <div class="flex justify-end">
+                <template v-if="!showSaveNoteTemplate">
+                  <button type="button" @click="showSaveNoteTemplate = true"
+                    :disabled="!form.notes?.trim()"
+                    class="text-[10px] font-medium text-primary/70 hover:text-primary border-0 bg-transparent cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition-colors">
+                    💾 บันทึกเป็น Template
+                  </button>
+                </template>
+                <div v-else class="flex items-center gap-1.5 w-full sm:w-auto">
+                  <input type="text" v-model="noteTemplateName" placeholder="ตั้งชื่อ template..."
+                    class="input input-bordered input-xs text-xs flex-1 sm:w-40" @keyup.enter="saveCurrentAsNoteTemplate" />
+                  <button type="button" @click="showSaveNoteTemplate = false; noteTemplateName = ''"
+                    class="text-[10px] px-2 py-1 rounded-lg bg-base-200 text-base-content/60 border-0 cursor-pointer hover:bg-base-300 transition-colors">ยกเลิก</button>
+                  <button type="button" @click="saveCurrentAsNoteTemplate" :disabled="!noteTemplateName.trim()"
+                    class="text-[10px] px-2 py-1 rounded-lg bg-primary text-white border-0 cursor-pointer disabled:opacity-30 hover:bg-primary/80 transition-colors font-bold">💾 บันทึก</button>
+                </div>
+              </div>
             </div>
 
-            <!-- Section 4: Court Booking -->
+            <!-- Section 4: Template Members Selection -->
+            <div v-if="templateMembers.length > 0" class="border-t border-base-200 pt-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-base-content/60">👥 เลือกผู้เล่นประจำ ({{ templateSelectedCount }}/{{ templateMembers.length }})</label>
+                <button type="button" @click="toggleAllTemplateMembers" class="text-[10px] text-primary font-semibold border-0 bg-transparent cursor-pointer">
+                  {{ templateMembers.every(m => m.selected) ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด' }}
+                </button>
+              </div>
+              <div class="space-y-1">
+                <div
+                  v-for="m in templateMembers"
+                  :key="m.user_id"
+                  @click="m.selected = !m.selected"
+                  class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all"
+                  :class="m.selected ? 'border-primary/40 bg-primary/5' : 'border-base-300 bg-base-100 opacity-50'"
+                >
+                  <input type="checkbox" :checked="m.selected" class="checkbox checkbox-primary checkbox-xs" @click.stop="m.selected = !m.selected" />
+                  <UserAvatar :src="m.avatar" :name="m.name" size="xs" rounded="full" />
+                  <div class="flex-1 min-w-0">
+                    <span class="text-xs font-medium text-base-content truncate">{{ m.name }}</span>
+                    <span v-if="m.role === 'Host'" class="ml-1 text-[9px] text-primary font-bold">HOST</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-[10px] text-base-content/40 m-0">* ผู้เล่นที่เลือกจะถูกเพิ่มเข้าก๊วนอัตโนมัติ</p>
+            </div>
+
+            <!-- Section 5: Court Booking -->
             <div class="border-t border-base-200 pt-3 space-y-3">
               <!-- Booking toggle -->
               <div class="flex gap-1.5">
@@ -391,7 +593,7 @@
 <script setup>
 import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { Head, usePage, router } from "@inertiajs/vue3";
 import { useToast } from "@/composables/useToast";
 import { useLocale } from "@/composables/useLocale";
@@ -411,6 +613,7 @@ const openCreateDialog = () => {
     notes: "", has_booking: true, start_time: "", end_time: "",
     court_bookings: [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
   };
+  templateMembers.value = [];
   formErrors.value = {};
   showDialog.value = true;
 };
@@ -475,6 +678,16 @@ const loadFromTemplate = (party) => {
       ? party.court_bookings.map(b => ({ court_id: b.court_id, court_field_number: b.court_field_number, start_time: b.start_time, end_time: b.end_time }))
       : [{ court_id: null, court_field_number: null, start_time: '', end_time: '' }],
   };
+
+  // Load members from template party for selection
+  const partyMembers = party.members || [];
+  templateMembers.value = partyMembers.map(m => ({
+    user_id: m.user_id,
+    name: m.display_name || m.user?.name || 'Unknown',
+    avatar: m.user?.avatar,
+    role: m.role,
+    selected: true,
+  }));
 };
 const currentPage = ref(1);
 const perPage = 10;
@@ -495,6 +708,225 @@ const form = ref({
   end_time: "",
   court_bookings: [{ court_id: null, court_field_number: null, start_time: "", end_time: "" }],
 });
+
+// Template members from old party for selection
+const templateMembers = ref([]);
+const templateSelectedCount = computed(() => templateMembers.value.filter(m => m.selected).length);
+const toggleAllTemplateMembers = () => {
+  const allSelected = templateMembers.value.every(m => m.selected);
+  templateMembers.value.forEach(m => m.selected = !allSelected);
+};
+
+// Note templates (localStorage)
+const NOTE_TEMPLATES_KEY = 'badminton_note_templates';
+const noteTemplates = ref([]);
+const showNoteTemplateMenu = ref(false);
+const showSaveNoteTemplate = ref(false);
+const noteTemplateName = ref('');
+const notesTextarea = ref(null);
+
+// Load templates from localStorage
+try {
+  const stored = localStorage.getItem(NOTE_TEMPLATES_KEY);
+  noteTemplates.value = stored ? JSON.parse(stored) : [];
+} catch { noteTemplates.value = []; }
+
+const saveNoteTemplates = () => {
+  localStorage.setItem(NOTE_TEMPLATES_KEY, JSON.stringify(noteTemplates.value));
+};
+
+const saveCurrentAsNoteTemplate = () => {
+  const name = noteTemplateName.value.trim();
+  if (!name || !form.value.notes?.trim()) return;
+  noteTemplates.value.push({ name, content: form.value.notes });
+  saveNoteTemplates();
+  noteTemplateName.value = '';
+  showSaveNoteTemplate.value = false;
+};
+
+const applyNoteTemplate = (tmpl) => {
+  form.value.notes = tmpl.content;
+  showNoteTemplateMenu.value = false;
+};
+
+const confirmingDeleteIdx = ref(null);
+
+const deleteNoteTemplate = (index) => {
+  if (confirmingDeleteIdx.value === index) {
+    noteTemplates.value.splice(index, 1);
+    saveNoteTemplates();
+    confirmingDeleteIdx.value = null;
+  } else {
+    confirmingDeleteIdx.value = index;
+  }
+};
+
+// WYSIWYG helpers
+const insertAtCursor = (text) => {
+  const ta = notesTextarea.value;
+  if (!ta) { form.value.notes = (form.value.notes || '') + text; return; }
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = form.value.notes || '';
+  form.value.notes = val.substring(0, start) + text + val.substring(end);
+  nextTick(() => {
+    ta.selectionStart = ta.selectionEnd = start + text.length;
+    ta.focus();
+  });
+};
+
+// Toolbar popup states
+const showEmojiPicker = ref(false);
+const showBulletPicker = ref(false);
+const showLinePicker = ref(false);
+
+const closeAllToolbarPopups = () => {
+  showEmojiPicker.value = false;
+  showBulletPicker.value = false;
+  showLinePicker.value = false;
+};
+
+const toggleToolbarPopup = (which) => {
+  const map = { emoji: showEmojiPicker, bullet: showBulletPicker, line: showLinePicker };
+  const wasOpen = map[which].value;
+  closeAllToolbarPopups();
+  if (!wasOpen) map[which].value = true;
+};
+
+// Emoji categories (badminton-focused)
+const emojiCategories = [
+  { label: '🏸 แบดมินตัน', emojis: ['🏸', '🧑‍🤝‍🧑', '🏆', '🥇', '🥈', '🥉', '🎯', '💪', '🔥', '⭐', '🤝', '👏'] },
+  { label: '🏟️ สถานที่/เวลา', emojis: ['🏟️', '📅', '⏰', '🕐', '📍', '🅿️', '🚗', '🏠', '🚿', '🗓️'] },
+  { label: '💰 เงิน/ค่าใช้จ่าย', emojis: ['💰', '💵', '💳', '🧾', '📊', '💲', '🏦', '🔢'] },
+  { label: '⚠️ กฎ/เตือน', emojis: ['⚠️', '📌', '🚫', '❌', '✅', '⭕', '❗', '📢', '🔒', '🙅', '👉', '📣'] },
+  { label: '👟 อุปกรณ์', emojis: ['👟', '👕', '🎽', '🧴', '💧', '🧊', '🎒', '🩳', '🧤', '😷'] },
+  { label: '😊 อื่นๆ', emojis: ['📝', '📋', '👋', '🙏', '😊', '🎉', '🔄', '➡️', '⬇️', '☎️', '📱', '🔗'] },
+];
+
+// Bullet styles
+const bulletStyles = [
+  { label: 'จุดทึบ', preview: '•', char: '• ' },
+  { label: 'ขีด', preview: '-', char: '- ' },
+  { label: 'ลูกศร', preview: '▸', char: '▸ ' },
+  { label: 'ถูก', preview: '✓', char: '✓ ' },
+  { label: 'ดาว', preview: '★', char: '★ ' },
+  { label: 'วงกลม', preview: '○', char: '○ ' },
+  { label: 'สี่เหลี่ยม', preview: '▪', char: '▪ ' },
+  { label: 'หมายเลข', preview: '1.', char: null, numbered: true },
+];
+
+// Line/divider styles
+const lineStyles = [
+  { label: 'เส้นตรง', preview: '─────', char: '───────────────' },
+  { label: 'เส้นหนา', preview: '━━━━━', char: '━━━━━━━━━━━━━━━' },
+  { label: 'จุดประ', preview: '· · · · ·', char: '· · · · · · · · · · ·' },
+  { label: 'ขีดประ', preview: '- - - - -', char: '- - - - - - - - - - -' },
+  { label: 'ดาว', preview: '★ ★ ★', char: '★ ★ ★ ★ ★' },
+  { label: 'คลื่น', preview: '～～～', char: '～～～～～～～～～～～～' },
+  { label: 'เพชร', preview: '◆ ◇ ◆', char: '◆ ◇ ◆ ◇ ◆ ◇ ◆' },
+];
+
+// Insert bullet at cursor
+const insertBulletStyle = (style) => {
+  const val = form.value.notes || '';
+  const ta = notesTextarea.value;
+  const pos = ta ? ta.selectionStart : val.length;
+  const needNewline = pos > 0 && val[pos - 1] !== '\n';
+
+  if (style.numbered) {
+    const textBefore = val.substring(0, pos);
+    const lines = textBefore.split('\n').reverse();
+    const lastNum = lines.find(l => /^\s*\d+\./.test(l));
+    const num = lastNum ? parseInt(lastNum.trim()) + 1 : 1;
+    insertAtCursor((needNewline ? '\n' : '') + `${num}. `);
+  } else {
+    insertAtCursor((needNewline ? '\n' : '') + style.char);
+  }
+  showBulletPicker.value = false;
+};
+
+// Insert line/divider
+const insertLineStyle = (style) => {
+  const val = form.value.notes || '';
+  const ta = notesTextarea.value;
+  const pos = ta ? ta.selectionStart : val.length;
+  const needBefore = pos > 0 && val[pos - 1] !== '\n';
+  const needAfter = pos < val.length && val[pos] !== '\n';
+  insertAtCursor((needBefore ? '\n' : '') + style.char + (needAfter ? '\n' : ''));
+  showLinePicker.value = false;
+};
+
+// Indent / Outdent selected lines
+const getSelectedLines = () => {
+  const ta = notesTextarea.value;
+  if (!ta) return null;
+  const val = form.value.notes || '';
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIdx = val.indexOf('\n', end);
+  const lineEnd = lineEndIdx === -1 ? val.length : lineEndIdx;
+  return { val, lineStart, lineEnd, text: val.substring(lineStart, lineEnd) };
+};
+
+const replaceLines = (sel, newText) => {
+  form.value.notes = sel.val.substring(0, sel.lineStart) + newText + sel.val.substring(sel.lineEnd);
+  nextTick(() => {
+    const ta = notesTextarea.value;
+    if (ta) { ta.selectionStart = sel.lineStart; ta.selectionEnd = sel.lineStart + newText.length; ta.focus(); }
+  });
+};
+
+const indentLines = () => {
+  const sel = getSelectedLines();
+  if (!sel) return;
+  replaceLines(sel, sel.text.split('\n').map(l => '    ' + l).join('\n'));
+};
+
+const outdentLines = () => {
+  const sel = getSelectedLines();
+  if (!sel) return;
+  replaceLines(sel, sel.text.split('\n').map(l => {
+    if (l.startsWith('    ')) return l.substring(4);
+    if (l.startsWith('\t')) return l.substring(1);
+    if (l.startsWith('  ')) return l.substring(2);
+    return l;
+  }).join('\n'));
+};
+
+// Text alignment (monospace — calculate column width from textarea)
+const getTextareaColumns = () => {
+  const ta = notesTextarea.value;
+  if (!ta) return 40;
+  // Measure approximate chars that fit by creating a hidden span
+  const style = window.getComputedStyle(ta);
+  const fontSize = parseFloat(style.fontSize);
+  const paddingLeft = parseFloat(style.paddingLeft) || 0;
+  const paddingRight = parseFloat(style.paddingRight) || 0;
+  const availableWidth = ta.clientWidth - paddingLeft - paddingRight;
+  // Monospace char width ≈ 0.6 × font-size
+  const charWidth = fontSize * 0.6;
+  return Math.floor(availableWidth / charWidth);
+};
+
+const alignLines = (align) => {
+  const sel = getSelectedLines();
+  if (!sel) return;
+  const cols = getTextareaColumns();
+  replaceLines(sel, sel.text.split('\n').map(l => {
+    const trimmed = l.trim();
+    if (align === 'left') return trimmed;
+    if (align === 'center') {
+      const pad = Math.max(0, Math.floor((cols - trimmed.length) / 2));
+      return ' '.repeat(pad) + trimmed;
+    }
+    if (align === 'right') {
+      const pad = Math.max(0, cols - trimmed.length);
+      return ' '.repeat(pad) + trimmed;
+    }
+    return l;
+  }).join('\n'));
+};
 
 const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -703,7 +1135,13 @@ const createParty = () => {
 
   const url = isEditing.value ? `/party/${editingPartyId.value}/update` : "/party-create";
 
-  router.post(url, form.value, {
+  // Include selected template members when creating
+  const formData = { ...form.value };
+  if (!isEditing.value && templateMembers.value.length > 0) {
+    formData.member_ids = templateMembers.value.filter(m => m.selected).map(m => m.user_id);
+  }
+
+  router.post(url, formData, {
     preserveScroll: true,
     onSuccess: (page) => {
       parties.value = page.props.parties;
