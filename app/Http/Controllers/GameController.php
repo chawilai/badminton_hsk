@@ -31,7 +31,7 @@ class GameController extends Controller
     {
         try {
             $user = auth()->user();
-            $ably = new AblyRest(env('ABLY_KEY'));
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
             $channel = $ably->channels->get("party.{$partyId}");
             $channel->publish($event, [
                 'party_id' => $partyId,

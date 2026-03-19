@@ -155,7 +155,7 @@ class PartyController extends Controller
             'readyPlayers' => $readyPlayers,
             'playingPlayers' => $playingPlayers,
             'breakPlayers' => $breakPlayers,
-            'ably_key' => env('ABLY_KEY'),
+            'ably_key' => config('broadcasting.connections.ably.key'),
             'friendshipMap' => $friendshipMap,
             'costSummary' => $costSummary,
         ]);
@@ -400,7 +400,7 @@ class PartyController extends Controller
 
         // Broadcast join notification
         try {
-            $ably = new \Ably\AblyRest(env('ABLY_KEY'));
+            $ably = new \Ably\AblyRest(config('broadcasting.connections.ably.key'));
             $channel = $ably->channels->get("party.{$partyId}");
             $channel->publish('member.joined', [
                 'party_id' => $partyId,
@@ -743,7 +743,7 @@ class PartyController extends Controller
             'readyPlayers' => $readyPlayers,
             'breakPlayers' => $breakPlayers,
             'avgGameDuration' => $avgDuration,
-            'ably_key' => env('ABLY_KEY'),
+            'ably_key' => config('broadcasting.connections.ably.key'),
         ]);
     }
 

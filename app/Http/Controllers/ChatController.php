@@ -65,7 +65,7 @@ class ChatController extends Controller
         return Inertia::render('Chat', [
             'chats' => $chats,
             'selected_chat_id' => $chatId ? (int) $chatId : null,
-            'ably_key' => env('ABLY_KEY'),
+            'ably_key' => config('broadcasting.connections.ably.key'),
             'users' => $users,
         ]);
     }
@@ -135,7 +135,7 @@ class ChatController extends Controller
         $message->load('sender');
 
         // Publish to Ably
-        $ably = new AblyRest(env('ABLY_KEY'));
+        $ably = new AblyRest(config('broadcasting.connections.ably.key'));
         $channel = $ably->channels->get("chat.{$chat_id}");
         $channel->publish('message', $message->toArray());
 

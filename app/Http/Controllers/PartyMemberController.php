@@ -11,7 +11,7 @@ class PartyMemberController extends Controller
     private function broadcastPartyUpdate($partyId, $event = 'member.updated')
     {
         try {
-            $ably = new AblyRest(env('ABLY_KEY'));
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
             $channel = $ably->channels->get("party.{$partyId}");
             $channel->publish($event, [
                 'party_id' => $partyId,

@@ -45,7 +45,7 @@ class FriendController extends Controller
             'friends' => $friends,
             'receivedRequests' => $receivedPending,
             'sentRequests' => $sentPending,
-            'ably_key' => env('ABLY_KEY'),
+            'ably_key' => config('broadcasting.connections.ably.key'),
         ]);
     }
 
@@ -85,7 +85,7 @@ class FriendController extends Controller
 
         // Broadcast via Ably to the receiver
         try {
-            $ably = new AblyRest(env('ABLY_KEY'));
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
             $channel = $ably->channels->get("friends.{$receiverId}");
             $channel->publish('friend-request', [
                 'friendship_id' => $friendship->id,
@@ -113,7 +113,7 @@ class FriendController extends Controller
 
         // Broadcast via Ably to the sender
         try {
-            $ably = new AblyRest(env('ABLY_KEY'));
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
             $channel = $ably->channels->get("friends.{$friendship->sender_id}");
             $channel->publish('friend-accepted', [
                 'friendship_id' => $friendship->id,
