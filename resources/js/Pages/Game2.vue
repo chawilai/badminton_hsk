@@ -198,16 +198,11 @@ const elapsedMinutes = (gameStartDate) => {
 const toggleSortOrder = () => {
   sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
   dropZones.Ready = [...sortedPlayerByGamePlayed.value];
-  // Populate Playing zone with currently playing players (avoid duplicates), sorted by game number asc
-  const existingIds = new Set(dropZones.Playing.map(p => p.id));
-  const newPlaying = formattedPlayingPlayers.value.filter(p => !existingIds.has(p.id));
-  dropZones.Playing.push(...newPlaying);
-  dropZones.Playing.sort((a, b) => (a.current_game_number || 999) - (b.current_game_number || 999));
-  // Populate Break zone
-  const breakIds = new Set(dropZones.Break.map(p => p.id));
-  formattedBreakPlayers.value.forEach(p => {
-    if (!breakIds.has(p.id)) dropZones.Break.push(p);
-  });
+  // Replace Playing zone entirely (avoid duplicates on repeated calls)
+  dropZones.Playing = [...formattedPlayingPlayers.value]
+    .sort((a, b) => (a.current_game_number || 999) - (b.current_game_number || 999));
+  // Replace Break zone entirely
+  dropZones.Break = [...formattedBreakPlayers.value];
 };
 
 // Pastel colors for game count badges (0-10+)
