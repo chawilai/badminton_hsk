@@ -23,8 +23,9 @@ use Inertia\Inertia;
 Route::get('/', fn() => Inertia::render('Home'))->name('home');
 Route::get('/home', fn() => Inertia::render('Home'));
 
-// LINE webhook
-Route::post('/webhook', [LineMessagingController::class, 'webhook']);
+// LINE webhook (exclude CSRF — external POST from LINE Platform)
+Route::post('/webhook', [LineMessagingController::class, 'webhook'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // LINE LIFF
 Route::post('/register-line', [RegisteredUserController::class, 'storeLine']);
