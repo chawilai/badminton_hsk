@@ -401,7 +401,7 @@ const U = { install(t3, e2) {
   parseInt(t3.version) > 2 ? (t3.config.globalProperties.route = o2, t3.provide("route", o2)) : t3.mixin({ methods: { route: o2 } });
 } };
 const appName = "Badminton Party";
-const ssrPort = "13715";
+const ssrPort = 13716;
 createServer(
   (page) => createInertiaApp({
     page,
