@@ -36,6 +36,10 @@ Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])-
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
 Route::post('login/lineliff', [SocialController::class, 'handleLineLiffLogin']);
 
+// PDPA Consent
+Route::get('/pdpa-consent', [UserController::class, 'showPdpaConsent'])->name('pdpa.consent');
+Route::post('/pdpa-consent', [UserController::class, 'acceptPdpaConsent'])->name('pdpa.accept');
+
 // User setup
 Route::get('/setup', [UserController::class, 'showSetupForm'])->name('user.setup');
 Route::post('/setup', [UserController::class, 'updateSetup'])->name('user.setup.update');
@@ -126,6 +130,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Verification (phone OTP + email code)
+    Route::post('/verify/phone/send', [\App\Http\Controllers\VerificationController::class, 'sendPhoneOtp'])->name('verify.phone.send');
+    Route::post('/verify/phone/check', [\App\Http\Controllers\VerificationController::class, 'verifyPhone'])->name('verify.phone.check');
+    Route::post('/verify/email/send', [\App\Http\Controllers\VerificationController::class, 'sendEmailCode'])->name('verify.email.send');
+    Route::post('/verify/email/check', [\App\Http\Controllers\VerificationController::class, 'verifyEmail'])->name('verify.email.check');
+
+    // Thai address autocomplete
+    Route::get('/api/thai-address', function (\Illuminate\Http\Request $request) {
+        $q = $request->input('q', '');
+        if (mb_strlen($q) < 2) return response()->json([]);
+        return \Illuminate\Support\Facades\DB::table('thai_address')
+            ->where('district', 'LIKE', "%{$q}%")
+            ->orWhere('amphoe', 'LIKE', "%{$q}%")
+            ->orWhere('province', 'LIKE', "%{$q}%")
+            ->limit(20)
+            ->get(['district', 'amphoe', 'province', 'zipcode']);
+    })->name('thai-address.search');
 
     // Feedback
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');

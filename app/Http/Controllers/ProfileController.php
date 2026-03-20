@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\SkillAssessment;
 use App\Models\Game;
 use App\Models\GamePlayer;
+use App\Models\MmrHistory;
 use App\Models\Party;
 use App\Models\PartyMember;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -122,6 +123,55 @@ class ProfileController extends Controller
             ->get()
             ->map(fn($row) => ['year' => (int) $row->year, 'month' => (int) $row->month]);
 
+        // Stats period filter: 'week', 'month', 'all' (default: month)
+        $statsPeriod = $request->input('period', 'month');
+        $now = now()->timezone('Asia/Bangkok');
+        $periodStart = null;
+        if ($statsPeriod === 'week') {
+            $periodStart = $now->copy()->startOfWeek();
+        } elseif ($statsPeriod === 'month') {
+            $periodStart = $now->copy()->startOfMonth();
+        }
+
+        // Filtered stats by period
+        $filteredGamesQuery = GamePlayer::where('user_id', $userId)
+            ->join('games', 'game_players.game_id', '=', 'games.id')
+            ->join('parties', 'games.party_id', '=', 'parties.id')
+            ->where('games.status', 'finished');
+
+        if ($periodStart) {
+            $filteredGamesQuery->where('parties.play_date', '>=', $periodStart->toDateString());
+        }
+
+        $filteredGames = (clone $filteredGamesQuery)
+            ->select('game_players.*', 'games.game_start_date', 'games.game_end_date', 'games.id as gid')
+            ->get();
+
+        $filteredTotalGames = $filteredGames->count();
+        $filteredPlaySeconds = 0;
+        foreach ($filteredGames as $fg) {
+            $s = strtotime($fg->game_start_date);
+            $e = strtotime($fg->game_end_date);
+            if ($s && $e && $e > $s) {
+                $filteredPlaySeconds += ($e - $s);
+            }
+        }
+
+        // Filtered wins count
+        $filteredGamesWon = 0;
+        if ($filteredTotalGames > 0) {
+            $filteredGameIds = $filteredGames->pluck('gid')->unique();
+            $gamesWithSets = Game::whereIn('id', $filteredGameIds)->with('gameSets')->get()->keyBy('id');
+            foreach ($filteredGames as $fg) {
+                $game = $gamesWithSets[$fg->gid] ?? null;
+                if (!$game) continue;
+                $t1 = $game->gameSets->where('winning_team', 'team1')->count();
+                $t2 = $game->gameSets->where('winning_team', 'team2')->count();
+                $winner = $t1 > $t2 ? 'team1' : ($t2 > $t1 ? 'team2' : null);
+                if ($winner === $fg->team) $filteredGamesWon++;
+            }
+        }
+
         // Filter games by year/month or show latest month
         $filterYear = $request->input('year');
         $filterMonth = $request->input('month');
@@ -148,10 +198,17 @@ class ProfileController extends Controller
             }
         }
 
-        $recentGames = $recentGamesQuery
+        $recentGamesCollection = $recentGamesQuery
             ->orderByDesc('game_end_date')
-            ->get()
-            ->map(function ($game) use ($userId) {
+            ->get();
+
+        // Preload MMR changes for these games
+        $mmrChanges = MmrHistory::where('user_id', $userId)
+            ->whereIn('game_id', $recentGamesCollection->pluck('id'))
+            ->pluck('mmr_change', 'game_id');
+
+        $recentGames = $recentGamesCollection
+            ->map(function ($game) use ($userId, $mmrChanges) {
                 $myTeam = $game->gamePlayers->firstWhere('user_id', $userId)?->team;
                 $t1Wins = $game->gameSets->where('winning_team', 'team1')->count();
                 $t2Wins = $game->gameSets->where('winning_team', 'team2')->count();
@@ -172,6 +229,7 @@ class ProfileController extends Controller
                     'duration_seconds' => $game->game_start_date && $game->game_end_date
                         ? max(0, strtotime($game->game_end_date) - strtotime($game->game_start_date))
                         : 0,
+                    'mmr_change' => $mmrChanges[$game->id] ?? null,
                 ];
             });
 
@@ -191,6 +249,13 @@ class ProfileController extends Controller
                 'totalPlaySeconds' => (int) $totalPlaySeconds,
                 'mostPlayedWith' => $mostPlayedWith,
             ],
+            'filteredStats' => [
+                'totalGames' => $filteredTotalGames,
+                'gamesWon' => $filteredGamesWon,
+                'winRate' => $filteredTotalGames > 0 ? round(($filteredGamesWon / $filteredTotalGames) * 100) : 0,
+                'totalPlaySeconds' => (int) $filteredPlaySeconds,
+            ],
+            'statsPeriod' => $statsPeriod,
             'recentParties' => $recentParties,
             'recentGames' => $recentGames,
             'skillAssessment' => SkillAssessment::where('user_id', $userId)->latest()->first()?->skills,
@@ -202,20 +267,27 @@ class ProfileController extends Controller
 
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
+            'profileData' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+                'phone' => $user->phone,
+                'phone_verified_at' => $user->phone_verified_at,
+                'gender' => $user->gender,
+                'date_of_birth' => $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->format('Y-m-d') : null,
+                'subdistrict' => $user->subdistrict,
+                'district' => $user->district,
+                'province' => $user->province,
+            ],
         ]);
     }
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
         $request->user()->save();
 
         return Redirect::route('profile.index')->with('success', 'บันทึกโปรไฟล์เรียบร้อย');

@@ -7,6 +7,7 @@ import { useLocale } from "@/composables/useLocale";
 import { useToast } from "@/composables/useToast";
 import MmrBadge from "@/Components/MmrBadge.vue";
 import SkillRadarChart from "@/Components/SkillRadarChart.vue";
+import { getSkillLevelLabel } from "@/data/skillLevelDescriptions";
 
 const { t, locale } = useLocale();
 const toast = useToast();
@@ -37,12 +38,35 @@ const topStrengths = computed(() => {
   return Object.entries(skillAssessment.value)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([key, value]) => ({ key, label: skillLabels[key], icon: skillIcons[key], value }));
+    .map(([key, value]) => ({
+      key,
+      label: skillLabels[key],
+      icon: skillIcons[key],
+      value,
+      levelLabel: getSkillLevelLabel(key, value, locale.value),
+    }));
 });
+const filteredStats = computed(() => page.props.filteredStats || {});
+const statsPeriod = ref(page.props.statsPeriod || 'month');
 const availableMonths = computed(() => page.props.availableMonths || []);
 const filterYear = ref(page.props.filterYear);
 const filterMonth = ref(page.props.filterMonth);
 const activeTab = ref('overview');
+
+const changePeriod = (period) => {
+  statsPeriod.value = period;
+  router.get('/profile', { period, year: filterYear.value, month: filterMonth.value }, {
+    preserveScroll: true,
+    preserveState: true,
+    only: ['filteredStats', 'statsPeriod'],
+  });
+};
+
+const periodLabel = computed(() => {
+  if (statsPeriod.value === 'week') return 'อาทิตย์นี้';
+  if (statsPeriod.value === 'month') return 'เดือนนี้';
+  return 'ทั้งหมด';
+});
 
 const thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
@@ -132,47 +156,61 @@ const formatDate = (d) => {
         </div>
       </div>
 
+      <!-- Period Filter -->
+      <div class="flex gap-1 p-1 bg-base-200 rounded-xl">
+        <button v-for="p in [{ key: 'week', label: 'อาทิตย์นี้' }, { key: 'month', label: 'เดือนนี้' }, { key: 'all', label: 'ทั้งหมด' }]" :key="p.key"
+          class="flex-1 py-2 px-3 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all"
+          :class="statsPeriod === p.key ? 'bg-primary text-primary-content' : 'bg-transparent text-base-content/50 hover:text-base-content'"
+          @click="changePeriod(p.key)"
+        >{{ p.label }}</button>
+      </div>
+
       <!-- Stats Grid -->
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-4 gap-2">
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
-          <div class="text-xl font-black text-primary">{{ stats.totalGames || 0 }}</div>
-          <div class="text-[10px] text-base-content/50">เกมทั้งหมด</div>
+          <div class="text-xl font-black text-primary">{{ statsPeriod === 'all' ? stats.totalGames : filteredStats.totalGames || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">เกม</div>
         </div>
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
-          <div class="text-xl font-black text-success">{{ stats.gamesWon || 0 }}</div>
+          <div class="text-xl font-black text-success">{{ statsPeriod === 'all' ? stats.gamesWon : filteredStats.gamesWon || 0 }}</div>
           <div class="text-[10px] text-base-content/50">ชนะ</div>
         </div>
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
-          <div class="text-xl font-black text-warning">{{ stats.winRate || 0 }}%</div>
+          <div class="text-xl font-black text-warning">{{ statsPeriod === 'all' ? stats.winRate : filteredStats.winRate || 0 }}%</div>
           <div class="text-[10px] text-base-content/50">Win Rate</div>
+        </div>
+        <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
+          <div class="text-lg font-black text-accent">{{ formatPlayTime(statsPeriod === 'all' ? stats.totalPlaySeconds : filteredStats.totalPlaySeconds) }}</div>
+          <div class="text-[10px] text-base-content/50">เวลาเล่น</div>
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-2">
+      <!-- Overall stats row (only when filtered) -->
+      <div v-if="statsPeriod !== 'all'" class="grid grid-cols-3 gap-2">
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
           <div class="text-xl font-black text-info">{{ stats.partiesJoined || 0 }}</div>
-          <div class="text-[10px] text-base-content/50">ปาร์ตี้</div>
+          <div class="text-[10px] text-base-content/50">ปาร์ตี้รวม</div>
         </div>
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
           <div class="text-xl font-black text-secondary">{{ stats.courtsVisited || 0 }}</div>
           <div class="text-[10px] text-base-content/50">สนาม</div>
         </div>
         <div class="bg-base-100 rounded-xl border border-base-300 p-3 text-center">
-          <div class="text-lg font-black text-accent">{{ formatPlayTime(stats.totalPlaySeconds) }}</div>
-          <div class="text-[10px] text-base-content/50">เวลาเล่นรวม</div>
+          <div class="text-xl font-black text-primary">{{ stats.totalGames || 0 }}</div>
+          <div class="text-[10px] text-base-content/50">เกมรวม</div>
         </div>
       </div>
 
       <!-- Calories -->
-      <div v-if="stats.totalPlaySeconds > 0" class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10 rounded-xl border border-orange-200/50 p-3 flex items-center justify-between">
+      <div v-if="(statsPeriod === 'all' ? stats.totalPlaySeconds : filteredStats.totalPlaySeconds) > 0" class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10 rounded-xl border border-orange-200/50 p-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-2xl">🔥</span>
           <div>
             <div class="text-xs font-bold text-orange-600">แคลอรี่ที่เผาผลาญ</div>
-            <div class="text-[10px] text-base-content/50">ประมาณ ~7 kcal/นาที</div>
+            <div class="text-[10px] text-base-content/50">{{ periodLabel }} · ประมาณ ~7 kcal/นาที</div>
           </div>
         </div>
-        <div class="text-xl font-black text-orange-600">{{ estimateCalories(stats.totalPlaySeconds).toLocaleString() }} kcal</div>
+        <div class="text-xl font-black text-orange-600">{{ estimateCalories(statsPeriod === 'all' ? stats.totalPlaySeconds : filteredStats.totalPlaySeconds).toLocaleString() }} kcal</div>
       </div>
 
       <!-- Most Played With -->
@@ -196,7 +234,7 @@ const formatDate = (d) => {
         <div class="flex gap-2 mt-3 justify-center flex-wrap">
           <span v-for="s in topStrengths" :key="s.key"
             class="badge badge-primary badge-outline badge-sm gap-1 font-semibold">
-            {{ s.icon }} {{ s.label }} {{ s.value }}
+            {{ s.icon }} {{ s.label }} {{ s.value }} — {{ s.levelLabel }}
           </span>
         </div>
         <div class="text-center mt-2 text-[10px] text-base-content/40">
@@ -305,8 +343,11 @@ const formatDate = (d) => {
               </div>
             </div>
 
-            <!-- Duration -->
+            <!-- MMR + Duration -->
             <div class="text-right shrink-0">
+              <div v-if="game.mmr_change != null" class="text-xs font-bold"
+                :class="game.mmr_change > 0 ? 'text-success' : game.mmr_change < 0 ? 'text-error' : 'text-base-content/40'"
+              >{{ game.mmr_change > 0 ? '+' : '' }}{{ game.mmr_change }} MMR</div>
               <div class="text-[10px] text-base-content/40">{{ formatDate(game.play_date) }}</div>
               <div v-if="game.duration_seconds" class="text-[10px] text-base-content/50">{{ formatPlayTime(game.duration_seconds) }}</div>
             </div>

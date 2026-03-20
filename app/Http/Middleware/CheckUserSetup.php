@@ -17,11 +17,16 @@ class CheckUserSetup
     {
         $user = $request->user();
 
-        // Check if the user is logged in and has missing personal data
-        // if ($user && (!$user->badminton_rank_id || !$user->gender || !$user->date_of_birth)) {
-        if ($user && (!$user->badminton_rank_id)) {
-            // Redirect to the first setup page
-            return redirect()->route('user.setup');
+        if ($user) {
+            // Check PDPA consent first
+            if (!$user->pdpa_consented_at) {
+                return redirect()->route('pdpa.consent');
+            }
+
+            // Then check setup
+            if (!$user->badminton_rank_id) {
+                return redirect()->route('user.setup');
+            }
         }
 
         return $next($request);

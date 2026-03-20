@@ -7,6 +7,23 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    public function showPdpaConsent()
+    {
+        return Inertia::render('PdpaConsent');
+    }
+
+    public function acceptPdpaConsent(Request $request)
+    {
+        $request->user()->update(['pdpa_consented_at' => now()]);
+
+        // If user still needs setup, go to setup, otherwise go to party-lists
+        if (!$request->user()->badminton_rank_id) {
+            return redirect()->route('user.setup');
+        }
+
+        return redirect('/party-lists');
+    }
+
     public function showSetupForm()
     {
         return Inertia::render('Empty', []);

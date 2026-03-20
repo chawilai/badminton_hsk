@@ -33,28 +33,6 @@
 <body class="font-sans antialiased">
     @inertia
 
-    {{-- Mobile debug overlay - remove after fixing --}}
-    <div id="mobile-debug" style="display:none;position:fixed;bottom:70px;left:8px;right:8px;max-height:200px;overflow:auto;background:rgba(0,0,0,0.85);color:#f87171;font-size:11px;padding:8px 12px;border-radius:8px;z-index:99999;font-family:monospace;word-break:break-all;"></div>
-    <script>
-        (function(){
-            var dbg = document.getElementById('mobile-debug');
-            var logs = [];
-            function show(type, args) {
-                logs.push('[' + type + '] ' + Array.from(args).map(function(a){
-                    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
-                    catch(e) { return String(a); }
-                }).join(' '));
-                if (logs.length > 20) logs.shift();
-                dbg.style.display = 'block';
-                dbg.innerHTML = logs.join('<br>');
-                dbg.scrollTop = dbg.scrollHeight;
-            }
-            var origError = console.error;
-            console.error = function() { origError.apply(console, arguments); show('ERR', arguments); };
-            window.addEventListener('error', function(e) { show('ERR', [e.message, e.filename + ':' + e.lineno]); });
-            window.addEventListener('unhandledrejection', function(e) { show('REJ', [e.reason]); });
-        })();
-    </script>
 </body>
 
 </html>

@@ -125,7 +125,7 @@
     "/build/assets/badminton_party_no_bg-DQ1tFmpS.png"
   ],
   "resources/assets/images/crown.png": [
-    "/build/assets/Party-stt3EYAy.js",
+    "/build/assets/Party-CKLr3Lzj.js",
     "/build/assets/Party-IJ2vW6kc.css",
     "/build/assets/crown-Mvpo2eNi.png"
   ],
@@ -161,12 +161,12 @@
     "/build/assets/Dashboard-B7Y2OzNX.js"
   ],
   "resources/js/Components/DuplicatePartyDialog.vue": [
-    "/build/assets/Party-stt3EYAy.js",
+    "/build/assets/Party-CKLr3Lzj.js",
     "/build/assets/Party-IJ2vW6kc.css",
     "/build/assets/crown-Mvpo2eNi.png"
   ],
   "resources/js/Components/EndPartyDialog.vue": [
-    "/build/assets/Party-stt3EYAy.js",
+    "/build/assets/Party-CKLr3Lzj.js",
     "/build/assets/Party-IJ2vW6kc.css",
     "/build/assets/crown-Mvpo2eNi.png"
   ],
@@ -206,7 +206,7 @@
     "/build/assets/DeleteUserForm-CclychH2.js"
   ],
   "resources/js/Components/SkillRadarChart.vue": [
-    "/build/assets/SkillRadarChart-BAv9lBbY.js"
+    "/build/assets/skillLevelDescriptions-BhqdlqaI.js"
   ],
   "resources/js/Components/TextInput.vue": [
     "/build/assets/TextInput-Bh64hDo5.js"
@@ -259,7 +259,7 @@
     "/build/assets/Button-Dn_430Pl.js"
   ],
   "resources/js/Pages/Chat.vue": [
-    "/build/assets/Chat-DxqNIlmp.js"
+    "/build/assets/Chat-DFLyuG3e.js"
   ],
   "resources/js/Pages/Courts.vue": [
     "/build/assets/Courts-BmIfZPmG.js"
@@ -360,12 +360,12 @@
     "/build/assets/NotificationSettings-CZSYKR6Y.js"
   ],
   "resources/js/Pages/Party.vue": [
-    "/build/assets/Party-stt3EYAy.js",
+    "/build/assets/Party-CKLr3Lzj.js",
     "/build/assets/Party-IJ2vW6kc.css",
     "/build/assets/crown-Mvpo2eNi.png"
   ],
   "resources/js/Pages/Party.vue?vue&type=style&index=0&scoped=7b55405d&lang.css": [
-    "/build/assets/Party-stt3EYAy.js",
+    "/build/assets/Party-CKLr3Lzj.js",
     "/build/assets/Party-IJ2vW6kc.css",
     "/build/assets/crown-Mvpo2eNi.png"
   ],
@@ -379,7 +379,7 @@
     "/build/assets/TabPlayer-DT_PmIF8.js"
   ],
   "resources/js/Pages/Party/TabStatistic.vue": [
-    "/build/assets/TabStatistic-eBG9Qerf.js"
+    "/build/assets/TabStatistic-BekfSGvw.js"
   ],
   "resources/js/Pages/PartyHome.vue": [
     "/build/assets/PartyHome-fFfGADlI.js"
@@ -421,10 +421,10 @@
     "/build/assets/Crud-DC2I5AEO.js"
   ],
   "resources/js/Pages/Profile.vue": [
-    "/build/assets/Profile-SEVzVGOV.js"
+    "/build/assets/Profile-B61qB3v5.js"
   ],
   "resources/js/Pages/Profile/Edit.vue": [
-    "/build/assets/Edit-ft9-ba8_.js"
+    "/build/assets/Edit-Dq9e9ITO.js"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.vue": [
     "/build/assets/DeleteUserForm-CclychH2.js"
@@ -447,7 +447,7 @@
     "/build/assets/Pagination-D_uwKCbp.js"
   ],
   "resources/js/Pages/SkillAssessment.vue": [
-    "/build/assets/SkillAssessment-Cij_peGr.js"
+    "/build/assets/SkillAssessment-B5HmKry-.js"
   ],
   "resources/js/Pages/Test2.vue": [
     "/build/assets/Test2-DHStJk-X.js",
@@ -533,6 +533,9 @@
   ],
   "resources/js/composables/useToast.js": [
     "/build/assets/useToast-DyaFeJ92.js"
+  ],
+  "resources/js/data/skillLevelDescriptions.js": [
+    "/build/assets/skillLevelDescriptions-BhqdlqaI.js"
   ],
   "resources/js/layout/AppConfig.vue": [
     "/build/assets/Landing-B58TtMRG.js",

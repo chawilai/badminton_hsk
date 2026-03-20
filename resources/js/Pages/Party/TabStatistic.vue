@@ -118,12 +118,14 @@ const estimateCalories = (seconds) => {
   return Math.round((seconds / 60) * 7);
 };
 
+// MVP: most wins → if tied, highest win rate → min 2 games
 const mvp = computed(() => {
-  const eligible = playerStats.value.filter(p => p.sets >= 3);
+  const eligible = playerStats.value.filter(p => p.games >= 2);
   if (!eligible.length) return null;
   return eligible.reduce((best, p) => {
-    const rate = p.sets > 0 ? p.wins / p.sets : 0;
-    const bestRate = best.sets > 0 ? best.wins / best.sets : 0;
+    if (p.wins !== best.wins) return p.wins > best.wins ? p : best;
+    const rate = p.games > 0 ? p.wins / p.games : 0;
+    const bestRate = best.games > 0 ? best.wins / best.games : 0;
     return rate > bestRate ? p : best;
   });
 });

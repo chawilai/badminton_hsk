@@ -51,7 +51,12 @@ return [
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID'),
         'client_secret' => env('APPLE_CLIENT_SECRET'),
-        'redirect' => env('APPLE_REDIRECT_URI')
+        'redirect' => env('APPLE_REDIRECT_URI'),
+    ],
+
+    'thsms' => [
+        'api_token' => env('THSMS_API_KEY'),
+        'sender' => env('THSMS_SENDER', 'BADMINTON'),
     ],
 
 ];

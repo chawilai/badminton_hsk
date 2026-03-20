@@ -115,7 +115,16 @@ class ChatController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return response()->json($messages);
+        // Get other participants' last_read_at for read receipts
+        $userId = auth()->id();
+        $readReceipts = ChatParticipant::where('chat_id', $request->chat_id)
+            ->where('user_id', '!=', $userId)
+            ->pluck('last_read_at', 'user_id');
+
+        return response()->json([
+            'messages' => $messages,
+            'read_receipts' => $readReceipts,
+        ]);
     }
 
     public function sendMessage(Request $request, $chat_id)
@@ -144,9 +153,22 @@ class ChatController extends Controller
 
     public function markAsRead($chat_id)
     {
+        $now = now();
         ChatParticipant::where('chat_id', $chat_id)
             ->where('user_id', auth()->id())
-            ->update(['last_read_at' => now()]);
+            ->update(['last_read_at' => $now]);
+
+        // Broadcast read receipt to other participants
+        try {
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
+            $channel = $ably->channels->get("chat.{$chat_id}");
+            $channel->publish('read', [
+                'user_id' => auth()->id(),
+                'read_at' => $now->toISOString(),
+            ]);
+        } catch (\Exception $e) {
+            // Silently fail - read receipts are not critical
+        }
 
         return response()->json(['ok' => true]);
     }

@@ -36,6 +36,15 @@ const selectedChat = computed(() => chatList.value.find(c => c.id === selectedCh
 
 const isMyMessage = (msg) => msg.sender_id === currentUserId;
 
+const isReadByOther = (msg) => {
+  if (!isMyMessage(msg) || !msg.created_at) return false;
+  const msgTime = new Date(msg.created_at).getTime();
+  return Object.values(readReceipts.value).some(readAt => {
+    if (!readAt) return false;
+    return new Date(readAt).getTime() >= msgTime;
+  });
+};
+
 const showSenderName = (index) => {
   if (index === 0) return true;
   return messages.value[index - 1].sender_id !== messages.value[index].sender_id;
@@ -65,12 +74,21 @@ const scrollToBottom = () => {
   });
 };
 
+const readReceipts = ref({});
+
 const fetchMessages = async (chatId) => {
   if (!chatId) return;
   loadingMessages.value = true;
   try {
     const response = await axios.post(`/chat/messages`, { chat_id: chatId });
-    messages.value = response.data;
+    const data = response.data;
+    // Support both old format (array) and new format (object with messages + read_receipts)
+    if (Array.isArray(data)) {
+      messages.value = data;
+    } else {
+      messages.value = data.messages || [];
+      readReceipts.value = data.read_receipts || {};
+    }
     scrollToBottom();
   } finally {
     loadingMessages.value = false;
@@ -90,6 +108,10 @@ const subscribeToChat = (chatId) => {
     messages.value.push(message.data);
     scrollToBottom();
     updateChatListLastMessage(chatId, message.data);
+  });
+  currentChannel.subscribe("read", (event) => {
+    if (event.data.user_id === currentUserId) return;
+    readReceipts.value[event.data.user_id] = event.data.read_at;
   });
 };
 
@@ -332,9 +354,15 @@ onUnmounted(() => {
                     : 'bg-base-100 text-base-content border border-base-300 rounded-2xl rounded-bl-md'"
                 >{{ msg.content }}</div>
                 <p
-                  class="text-[10px] text-base-content/40 m-0 mt-0.5"
-                  :class="isMyMessage(msg) ? 'text-right mr-1' : 'ml-1'"
-                >{{ formatTime(msg.created_at) }}</p>
+                  class="text-[10px] text-base-content/40 m-0 mt-0.5 flex items-center gap-1"
+                  :class="isMyMessage(msg) ? 'justify-end mr-1' : 'ml-1'"
+                >
+                  <span>{{ formatTime(msg.created_at) }}</span>
+                  <template v-if="isMyMessage(msg)">
+                    <svg v-if="isReadByOther(msg)" class="w-4 h-4 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12l5 5L17 6M7 12l5 5L23 6"/></svg>
+                    <svg v-else class="w-3.5 h-3.5 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 7"/></svg>
+                  </template>
+                </p>
               </div>
             </div>
           </div>

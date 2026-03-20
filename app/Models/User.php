@@ -29,11 +29,18 @@ class User extends Authenticatable
         'provider_name',
         'gender',
         'date_of_birth',
+        'phone',
+        'phone_verified_at',
+        'subdistrict',
+        'district',
+        'province',
         'badminton_rank_id',
         'mmr',
         'mmr_games_played',
         'mmr_calibrated',
         'mmr_quiz_completed',
+        'email_verified_at',
+        'pdpa_consented_at',
     ];
 
     /**
@@ -63,6 +70,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'pdpa_consented_at' => 'datetime',
             'password' => 'hashed',
             'mmr_calibrated' => 'boolean',
             'mmr_quiz_completed' => 'boolean',
