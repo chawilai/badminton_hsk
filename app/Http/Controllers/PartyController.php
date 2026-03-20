@@ -17,6 +17,19 @@ use Inertia\Inertia;
 
 class PartyController extends Controller
 {
+    private function broadcastPartyUpdate($partyId, $event = 'party.updated')
+    {
+        try {
+            $ably = new \Ably\AblyRest(config('broadcasting.connections.ably.key'));
+            $channel = $ably->channels->get("party.{$partyId}");
+            $channel->publish($event, [
+                'party_id' => $partyId,
+                'timestamp' => now()->toISOString(),
+                'user_id' => auth()->id(),
+            ]);
+        } catch (\Exception $e) {}
+    }
+
     public function index(Request $request)
     {
 
@@ -65,9 +78,8 @@ class PartyController extends Controller
             ->where('user_id', auth()->id())
             ->exists();
 
-        // If the user is not a member, redirect them to the home page or show a 403 error
         if (!$isMember) {
-            abort(403, 'คุณไม่ได้รับสิทธิในการเข้า Party นี้.');
+            return redirect('/party-lists')->with('info', 'คุณไม่ได้อยู่ในปาร์ตี้นี้');
         }
 
         // Fetch games for the party
@@ -397,6 +409,9 @@ class PartyController extends Controller
             $this->sendPartySummary($party);
         }
 
+        // Broadcast update to all members
+        $this->broadcastPartyUpdate($party->id, 'party.updated');
+
         return back()->with('success', 'Party updated successfully!');
     }
 
@@ -419,6 +434,14 @@ class PartyController extends Controller
 
         if ($isAlreadyMember) {
             return redirect("/party/{$partyId}")->with('error', ['alreadyMember' => 'คุณเป็นสมาชิกของปาร์ตี้นี้อยู่แล้ว']);
+        }
+
+        // Private party requires passcode
+        if ($party->is_private) {
+            $passcode = $request->input('passcode');
+            if (!$passcode || $passcode !== $party->invite_passcode) {
+                return back()->with('error', ['privateParty' => 'ปาร์ตี้นี้เป็นปาร์ตี้ส่วนตัว กรุณาใส่รหัสเข้าร่วมให้ถูกต้อง']);
+            }
         }
 
         // Check the last party hosted by the same host (creator_id) where the user joined
@@ -457,7 +480,7 @@ class PartyController extends Controller
             $party->update(['status' => $memberCount >= $party->max_players ? 'Full' : 'Open']);
         }
 
-        return back()->with('success', 'Party joined successfully!');
+        return redirect("/party/{$partyId}")->with('success', 'เข้าร่วมปาร์ตี้เรียบร้อย!');
     }
 
     public function partyLists(Request $request)
@@ -573,6 +596,8 @@ class PartyController extends Controller
         $party->default_initial_shuttlecocks = $request->initial_shuttlecocks;
         $party->save();
 
+        $this->broadcastPartyUpdate($party->id, 'party.shuttlecockSet');
+
         return back()->with('success', 'Initial shuttlecocks set successfully.');
     }
 
@@ -674,6 +699,8 @@ class PartyController extends Controller
             );
         }
 
+        $this->broadcastPartyUpdate($party->id, 'party.ended');
+
         return back()->with('success', 'จบปาร์ตี้เรียบร้อย! ส่งสรุปเข้า LINE แล้ว');
     }
 
@@ -717,7 +744,7 @@ class PartyController extends Controller
             ->exists();
 
         if (!$isMember) {
-            abort(403, 'คุณไม่ได้รับสิทธิในการเข้า Party นี้.');
+            return redirect('/party-lists')->with('info', 'คุณไม่ได้อยู่ในปาร์ตี้นี้');
         }
 
         $party = Party::with(['court', 'courtBookings', 'members.user'])
@@ -820,6 +847,8 @@ class PartyController extends Controller
 
         $party->update(['invite_passcode' => $request->passcode]);
 
+        $this->broadcastPartyUpdate($party->id, 'party.passcodeSet');
+
         return back()->with('success', 'ตั้งรหัสเข้าร่วมเรียบร้อย');
     }
 
@@ -845,11 +874,11 @@ class PartyController extends Controller
         // Validate access: either valid token or passcode-verified session
         if ($token) {
             if (!$party->invite_token || $party->invite_token !== $token) {
-                abort(404, 'ลิงก์เชิญไม่ถูกต้อง');
+                return redirect('/party-lists')->with('error', 'ลิงก์เชิญไม่ถูกต้องหรือหมดอายุ');
             }
         } else {
             if (!session()->has("invite_verified_{$id}")) {
-                abort(403, 'กรุณายืนยันรหัสเข้าร่วมก่อน');
+                return redirect('/party-lists')->with('error', 'กรุณายืนยันรหัสเข้าร่วมก่อน');
             }
         }
 
@@ -863,6 +892,99 @@ class PartyController extends Controller
             'party' => $party,
             'members' => $party->members,
             'isFull' => $party->members_count >= $party->max_players,
+        ]);
+    }
+
+    public function getInvitableUsers(Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $currentMemberIds = PartyMember::where('party_id', $party->id)->pluck('user_id');
+
+        // Get users who have been in the same parties as the current user (past co-players)
+        $hostPartyIds = PartyMember::where('user_id', auth()->id())->pluck('party_id');
+
+        $users = \App\Models\User::whereIn('id', function ($q) use ($hostPartyIds) {
+                $q->select('user_id')
+                  ->from('party_members')
+                  ->whereIn('party_id', $hostPartyIds);
+            })
+            ->whereNotIn('id', $currentMemberIds)
+            ->where('id', '!=', auth()->id())
+            ->where('provider', 'line')
+            ->select('id', 'name', 'avatar', 'provider')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($users);
+    }
+
+    public function sendLineInvitations(Request $request, Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'user_ids' => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id',
+            'message' => 'nullable|string|max:500',
+        ]);
+
+        // Generate invite token if not exists
+        $token = $party->generateInviteToken();
+        $inviteUrl = config('app.url') . "/party/{$party->id}/invite/{$token}";
+
+        $partyName = $party->name ?: ($party->court?->name ?: 'ปาร์ตี้แบดมินตัน');
+        $hostName = auth()->user()->name;
+
+        $linePush = new LinePushService();
+        $sent = 0;
+        $skipped = 0;
+
+        foreach ($request->user_ids as $userId) {
+            $user = \App\Models\User::find($userId);
+            if (!$user) continue;
+
+            // Build message content
+            $msgLines = "ปาร์ตี้: {$partyName}\n";
+            $msgLines .= "วันเล่น: {$party->play_date}\n";
+            if ($party->start_time && $party->end_time) {
+                $msgLines .= "เวลา: " . substr($party->start_time, 0, 5) . '-' . substr($party->end_time, 0, 5) . "\n";
+            }
+            if ($party->court) {
+                $msgLines .= "สนาม: {$party->court->name}\n";
+            }
+            $msgLines .= "เชิญโดย: {$hostName}";
+            if ($request->message) {
+                $msgLines .= "\n\nข้อความ: {$request->message}";
+            }
+
+            $success = $linePush->sendPush(
+                $user,
+                'party_invite',
+                '🎉 คุณได้รับเทียบเชิญเข้าปาร์ตี้!',
+                $msgLines,
+                [
+                    'party_id' => $party->id,
+                    'action_url' => $inviteUrl,
+                    'action_label' => 'ดูรายละเอียด & เข้าร่วม',
+                ]
+            );
+
+            if ($success) {
+                $sent++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        return response()->json([
+            'sent' => $sent,
+            'skipped' => $skipped,
+            'total' => count($request->user_ids),
         ]);
     }
 
@@ -890,6 +1012,37 @@ class PartyController extends Controller
             'confirm_date' => now(),
         ]);
 
+        $this->broadcastPartyUpdate($party->id, 'member.joined');
+
         return redirect("/party/{$party->id}")->with('success', 'เข้าร่วมปาร์ตี้เรียบร้อย!');
+    }
+
+    public function deleteParty(Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Cannot delete if games have been played
+        $hasGames = Game::where('party_id', $party->id)
+            ->whereIn('status', ['playing', 'finished'])
+            ->exists();
+        if ($hasGames) {
+            return back()->with('error', 'ไม่สามารถลบปาร์ตี้ที่มีเกมเล่นไปแล้วได้');
+        }
+
+        // Must kick all other members first
+        $otherMembers = $party->members()->where('user_id', '!=', auth()->id())->count();
+        if ($otherMembers > 0) {
+            return back()->with('error', 'กรุณาลบสมาชิกทั้งหมดออกก่อนจึงจะลบปาร์ตี้ได้');
+        }
+
+        // Delete related data
+        Game::where('party_id', $party->id)->delete();
+        $party->members()->delete();
+        $party->courtBookings()->delete();
+        $party->delete();
+
+        return redirect('/party-lists')->with('success', 'ลบปาร์ตี้เรียบร้อยแล้ว');
     }
 }

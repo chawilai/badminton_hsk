@@ -125,6 +125,7 @@ test('user can join an existing party', function () {
     $party = Party::factory()->create([
         'creator_id' => $this->user->id,
         'court_id' => $this->court->id,
+        'is_private' => false,
     ]);
 
     $joiner = User::factory()->create();
@@ -133,7 +134,7 @@ test('user can join an existing party', function () {
         'party_id' => $party->id,
     ]);
 
-    $response->assertRedirect();
+    $response->assertRedirect("/party/{$party->id}");
     $this->assertDatabaseHas('party_members', [
         'party_id' => $party->id,
         'user_id' => $joiner->id,
@@ -141,10 +142,52 @@ test('user can join an existing party', function () {
     ]);
 });
 
+test('user cannot join private party without passcode', function () {
+    $party = Party::factory()->create([
+        'creator_id' => $this->user->id,
+        'court_id' => $this->court->id,
+        'is_private' => true,
+        'invite_passcode' => '1234',
+    ]);
+
+    $joiner = User::factory()->create();
+
+    $this->actingAs($joiner)->post('/party-join', [
+        'party_id' => $party->id,
+    ])->assertRedirect();
+
+    $this->assertDatabaseMissing('party_members', [
+        'party_id' => $party->id,
+        'user_id' => $joiner->id,
+    ]);
+});
+
+test('user can join private party with correct passcode', function () {
+    $party = Party::factory()->create([
+        'creator_id' => $this->user->id,
+        'court_id' => $this->court->id,
+        'is_private' => true,
+        'invite_passcode' => '5678',
+    ]);
+
+    $joiner = User::factory()->create();
+
+    $this->actingAs($joiner)->post('/party-join', [
+        'party_id' => $party->id,
+        'passcode' => '5678',
+    ])->assertRedirect("/party/{$party->id}");
+
+    $this->assertDatabaseHas('party_members', [
+        'party_id' => $party->id,
+        'user_id' => $joiner->id,
+    ]);
+});
+
 test('user cannot join a party twice', function () {
     $party = Party::factory()->create([
         'creator_id' => $this->user->id,
         'court_id' => $this->court->id,
+        'is_private' => false,
     ]);
 
     $joiner = User::factory()->create();
@@ -178,7 +221,7 @@ test('party member can view party detail', function () {
         ->assertOk();
 });
 
-test('non-member cannot view party detail', function () {
+test('non-member is redirected from party detail to party lists', function () {
     $party = Party::factory()->create([
         'creator_id' => $this->user->id,
         'court_id' => $this->court->id,
@@ -188,7 +231,7 @@ test('non-member cannot view party detail', function () {
 
     $this->actingAs($stranger)
         ->get("/party/{$party->id}")
-        ->assertForbidden();
+        ->assertRedirect('/party-lists');
 });
 
 // ==================== My Parties ====================

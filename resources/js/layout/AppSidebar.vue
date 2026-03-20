@@ -4,7 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { useLayout } from "@/layout/composables/layout";
 // import { useRouter } from 'vue-router';
 
-import badminton_logo from "@/../assets/images/badminton_party_no_bg.png" // new URL(`/resources/assets/images/badminton_party_no_bg.png`, import.meta.url).href
+const badminton_logo = '/icons/logo-80.png';
 // const router = useRouter();
 
 const navigateToDashboard = () => {

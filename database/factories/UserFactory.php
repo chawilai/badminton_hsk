@@ -52,6 +52,7 @@ class UserFactory extends Factory
             'date_of_birth' => fake()->dateTimeBetween($earliestDob, $latestDob)->format('Y-m-d'),
             'player_motto' => '',
             'badminton_rank_id' => $rangeId,
+            'pdpa_consented_at' => now(),
         ];
     }
 

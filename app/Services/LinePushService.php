@@ -19,6 +19,34 @@ class LinePushService
     }
 
     /**
+     * Get LINE message quota and usage.
+     * Returns: ['quota' => 300, 'used' => 282, 'remaining' => 18]
+     */
+    public function getQuota(): array
+    {
+        try {
+            $headers = ['Authorization' => 'Bearer ' . $this->channelAccessToken];
+
+            $quotaRes = Http::withHeaders($headers)
+                ->get('https://api.line.me/v2/bot/message/quota');
+            $usageRes = Http::withHeaders($headers)
+                ->get('https://api.line.me/v2/bot/message/quota/consumption');
+
+            $quota = $quotaRes->json('value', 0);
+            $used = $usageRes->json('totalUsage', 0);
+
+            return [
+                'quota' => (int) $quota,
+                'used' => (int) $used,
+                'remaining' => max(0, (int) $quota - (int) $used),
+            ];
+        } catch (\Exception $e) {
+            Log::error('LINE quota check failed', ['error' => $e->getMessage()]);
+            return ['quota' => 0, 'used' => 0, 'remaining' => 0];
+        }
+    }
+
+    /**
      * Send a push message to a user via LINE OA.
      */
     public function sendPush(User $user, string $type, string $title, string $message, array $metadata = []): bool

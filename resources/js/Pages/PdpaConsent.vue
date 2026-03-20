@@ -158,8 +158,8 @@ const submit = () => {
       <!-- About -->
       <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
         <div class="px-4 py-3 border-b border-base-200 flex items-center gap-2">
-          <span class="text-lg">🏸</span>
-          <h2 class="text-sm font-bold text-base-content m-0">{{ content.aboutTitle }}</h2>
+          <span class="text-base">🏸</span>
+          <div class="text-sm font-bold text-base-content m-0">{{ content.aboutTitle }}</div>
         </div>
         <div class="p-4">
           <p class="text-sm text-base-content/70 m-0 leading-relaxed">{{ content.aboutDesc }}</p>
@@ -170,16 +170,16 @@ const submit = () => {
       <div v-for="(section, si) in content.sections" :key="si"
         class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
         <div class="px-4 py-3 border-b border-base-200 flex items-center gap-2">
-          <span class="text-lg">{{ section.icon }}</span>
-          <h2 class="text-sm font-bold text-base-content m-0">{{ section.title }}</h2>
+          <span class="text-base">{{ section.icon }}</span>
+          <div class="text-sm font-bold text-base-content m-0">{{ section.title }}</div>
         </div>
         <div class="p-4 space-y-3">
           <div v-for="(item, ii) in section.items" :key="ii"
             class="flex gap-3">
             <div class="w-1.5 rounded-full bg-primary/30 shrink-0 mt-1"></div>
             <div>
-              <div class="text-xs font-bold text-base-content">{{ item.label }}</div>
-              <div class="text-xs text-base-content/60 mt-0.5 leading-relaxed">{{ item.desc }}</div>
+              <div class="text-sm font-bold text-base-content">{{ item.label }}</div>
+              <div class="text-sm text-base-content/60 mt-0.5 leading-relaxed">{{ item.desc }}</div>
             </div>
           </div>
         </div>
@@ -187,10 +187,10 @@ const submit = () => {
 
       <!-- Contact -->
       <div class="bg-base-100 rounded-2xl border border-base-300 p-4 flex items-start gap-3">
-        <span class="text-lg">📧</span>
+        <span class="text-base">📧</span>
         <div>
-          <div class="text-xs font-bold text-base-content">{{ content.contactTitle }}</div>
-          <div class="text-xs text-base-content/60 mt-0.5 leading-relaxed">{{ content.contactDesc }}</div>
+          <div class="text-sm font-bold text-base-content">{{ content.contactTitle }}</div>
+          <div class="text-sm text-base-content/60 mt-0.5 leading-relaxed">{{ content.contactDesc }}</div>
         </div>
       </div>
 
@@ -199,7 +199,7 @@ const submit = () => {
         <label class="flex items-start gap-3 cursor-pointer">
           <input v-model="agreed" type="checkbox"
             class="checkbox checkbox-primary mt-0.5 shrink-0" />
-          <span class="text-xs text-base-content leading-relaxed font-medium">{{ content.checkboxLabel }}</span>
+          <span class="text-sm text-base-content leading-relaxed font-medium">{{ content.checkboxLabel }}</span>
         </label>
 
         <button @click="submit" :disabled="!agreed || isSubmitting"

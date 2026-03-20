@@ -87,6 +87,25 @@ const toggleGameStatus = (member) => {
 };
 
 const isCurrentUser = (member) => member.user_id === currentUserId;
+
+// Leave party
+const canLeave = (member) => {
+  return isCurrentUser(member) && !isHost && !playedUserIds.has(member.user_id);
+};
+
+const leaveParty = (member) => {
+  confirm({
+    message: 'คุณต้องการออกจากปาร์ตี้นี้หรือไม่?',
+    header: 'ออกจากปาร์ตี้',
+    accept: () => {
+      router.post(`/party-members/${member.id}/leave`, {}, {
+        onError: (errors) => {
+          toast.add({ severity: 'error', summary: Object.values(errors).flat().join(', ') || 'ไม่สามารถออกได้', life: 3000 });
+        },
+      });
+    },
+  });
+};
 </script>
 
 <template>
@@ -144,6 +163,18 @@ const isCurrentUser = (member) => member.user_id === currentUserId;
             :friendshipId="friendshipMap[member.user_id]?.friendship_id || null"
             icon-only
           />
+
+          <!-- Leave button (self, not host, not played) -->
+          <button
+            v-if="canLeave(member)"
+            @click="leaveParty(member)"
+            class="w-7 h-7 rounded-lg bg-error/10 hover:bg-error/20 border-0 cursor-pointer flex items-center justify-center transition-colors active:scale-95"
+            title="ออกจากปาร์ตี้"
+          >
+            <svg class="w-3.5 h-3.5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
 
           <!-- Kick button (host only, not played any game) -->
           <button

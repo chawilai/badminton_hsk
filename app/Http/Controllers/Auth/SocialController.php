@@ -23,7 +23,7 @@ class SocialController extends Controller
         $authUser = $this->findOrCreateUser($socialUser, $provider);
         Auth::login($authUser, true);
 
-        return redirect('/party-lists');
+        return redirect()->intended('/party-lists');
     }
 
     public function findOrCreateUser($socialUser, $provider)
@@ -145,6 +145,6 @@ class SocialController extends Controller
         $authUser = $this->checkLineLiff($request);
         Auth::login($authUser, true); // Login the user and "remember" them
 
-        return redirect('/party-lists');
+        return redirect()->intended('/party-lists');
     }
 }

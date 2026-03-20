@@ -1,7 +1,7 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
 import LocaleSwitcher from "@/Components/LocaleSwitcher.vue";
-import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
+const badminton_party = '/icons/icon-192x192.png';
 </script>
 
 <template>

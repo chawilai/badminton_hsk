@@ -348,7 +348,7 @@ const changeEmail = () => {
           <template v-else-if="phoneStep === 'otp'">
             <p class="text-xs text-base-content/60 m-0">ส่งรหัส OTP ไปที่ <strong>{{ phoneNumber }}</strong></p>
             <div class="flex gap-2">
-              <input v-model="phoneOtp" type="text" placeholder="กรอกรหัส 6 หลัก" maxlength="6"
+              <input v-model="phoneOtp" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="กรอกรหัส 6 หลัก" maxlength="6"
                 class="input input-bordered flex-1 text-center text-lg font-mono otp-input" />
               <button @click="verifyPhoneOtp" :disabled="phoneVerifying || phoneOtp.length !== 6"
                 class="btn btn-primary btn-sm px-4" type="button">
@@ -356,12 +356,18 @@ const changeEmail = () => {
                 <span v-else>ยืนยัน</span>
               </button>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mt-1">
               <button @click="phoneStep = 'input'" type="button"
-                class="text-xs text-base-content/50 border-0 bg-transparent cursor-pointer hover:text-primary">เปลี่ยนเบอร์</button>
+                class="btn btn-outline btn-xs">เปลี่ยนเบอร์</button>
               <button @click="sendPhoneOtp" :disabled="phoneCooldown > 0 || phoneSending" type="button"
-                class="text-xs text-primary font-semibold border-0 bg-transparent cursor-pointer hover:underline disabled:text-base-content/30 disabled:no-underline">
-                {{ phoneCooldown > 0 ? `ส่งใหม่ใน ${phoneCooldown}s` : 'ส่งรหัสอีกครั้ง' }}
+                class="btn btn-sm"
+                :class="phoneCooldown > 0 ? 'btn-disabled bg-base-200 text-base-content/40' : 'btn-outline btn-primary'">
+                <span v-if="phoneSending" class="loading loading-spinner loading-xs"></span>
+                <template v-else-if="phoneCooldown > 0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  ส่งอีกครั้งใน {{ phoneCooldown }}s
+                </template>
+                <template v-else>ส่งรหัสอีกครั้ง</template>
               </button>
             </div>
           </template>
@@ -410,7 +416,7 @@ const changeEmail = () => {
           <template v-else-if="emailStep === 'code'">
             <p class="text-xs text-base-content/60 m-0">ส่งรหัสยืนยันไปที่ <strong>{{ emailAddress }}</strong></p>
             <div class="flex gap-2">
-              <input v-model="emailCode" type="text" placeholder="กรอกรหัส 6 หลัก" maxlength="6"
+              <input v-model="emailCode" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="กรอกรหัส 6 หลัก" maxlength="6"
                 class="input input-bordered flex-1 text-center text-lg font-mono otp-input" />
               <button @click="verifyEmailCode" :disabled="emailVerifying || emailCode.length !== 6"
                 class="btn btn-primary btn-sm px-4" type="button">
@@ -418,12 +424,18 @@ const changeEmail = () => {
                 <span v-else>ยืนยัน</span>
               </button>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mt-1">
               <button @click="emailStep = 'input'" type="button"
-                class="text-xs text-base-content/50 border-0 bg-transparent cursor-pointer hover:text-primary">เปลี่ยนอีเมล</button>
+                class="btn btn-outline btn-xs">เปลี่ยนอีเมล</button>
               <button @click="sendEmailCode" :disabled="emailCooldown > 0 || emailSending" type="button"
-                class="text-xs text-primary font-semibold border-0 bg-transparent cursor-pointer hover:underline disabled:text-base-content/30 disabled:no-underline">
-                {{ emailCooldown > 0 ? `ส่งใหม่ใน ${emailCooldown}s` : 'ส่งรหัสอีกครั้ง' }}
+                class="btn btn-sm"
+                :class="emailCooldown > 0 ? 'btn-disabled bg-base-200 text-base-content/40' : 'btn-outline btn-primary'">
+                <span v-if="emailSending" class="loading loading-spinner loading-xs"></span>
+                <template v-else-if="emailCooldown > 0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  ส่งอีกครั้งใน {{ emailCooldown }}s
+                </template>
+                <template v-else>ส่งรหัสอีกครั้ง</template>
               </button>
             </div>
           </template>

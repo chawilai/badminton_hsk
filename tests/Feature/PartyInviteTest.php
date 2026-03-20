@@ -67,10 +67,10 @@ test('user can view invite preview with valid token', function () {
         ->assertOk();
 });
 
-test('user gets 404 with invalid token', function () {
+test('user gets redirected with invalid token', function () {
     $this->actingAs($this->user)
         ->get("/party/{$this->party->id}/invite/invalid-token")
-        ->assertNotFound();
+        ->assertRedirect('/party-lists');
 });
 
 test('user can verify correct passcode', function () {

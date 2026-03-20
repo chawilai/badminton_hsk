@@ -6,7 +6,7 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { Link } from "@inertiajs/vue3";
-import badminton_party from "@/../assets/images/badminton_party_no_bg.png";
+const badminton_party = '/icons/icon-192x192.png';
 
 const showingNavigationDropdown = ref(false);
 </script>

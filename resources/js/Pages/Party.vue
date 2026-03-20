@@ -574,9 +574,10 @@ const handlePartyEvent = (message) => {
   // Always reload page data (including own events to keep game list in sync)
   router.reload({
     preserveScroll: true,
-    only: ['games', 'party', 'readyPlayers', 'playingPlayers', 'breakPlayers'],
+    only: ['games', 'party', 'readyPlayers', 'playingPlayers', 'breakPlayers', 'costSummary'],
     onSuccess: (res) => {
       games.value = res.props.games;
+      party.value = res.props.party;
     },
   });
 };
@@ -837,7 +838,7 @@ onUnmounted(() => {
     </div>
 
     <div v-show="activeTab === 'info'">
-      <TabInfo :party="party" :costSummary="costSummary" />
+      <TabInfo :party="party" :costSummary="costSummary" :games="games" />
     </div>
 
     <div v-show="activeTab === 'player'">

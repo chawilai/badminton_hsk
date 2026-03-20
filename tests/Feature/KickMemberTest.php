@@ -81,6 +81,111 @@ test('host cannot kick themselves', function () {
     $this->assertDatabaseHas('party_members', ['id' => $hostMember->id]);
 });
 
+test('kicked member is redirected from party detail', function () {
+    $member = User::factory()->create();
+    $pm = PartyMember::create([
+        'party_id' => $this->party->id,
+        'user_id' => $member->id,
+        'role' => 'Member',
+        'status' => 'Confirmed',
+    ]);
+
+    // Kick the member
+    $this->actingAs($this->host)
+        ->delete("/party-members/{$pm->id}/kick");
+
+    // Kicked member tries to access party
+    $this->actingAs($member)
+        ->get("/party/{$this->party->id}")
+        ->assertRedirect('/party-lists');
+});
+
+test('kicked member is redirected from TV dashboard', function () {
+    $member = User::factory()->create();
+    $pm = PartyMember::create([
+        'party_id' => $this->party->id,
+        'user_id' => $member->id,
+        'role' => 'Member',
+        'status' => 'Confirmed',
+    ]);
+
+    // Kick the member
+    $this->actingAs($this->host)
+        ->delete("/party-members/{$pm->id}/kick");
+
+    // Kicked member tries to access TV dashboard
+    $this->actingAs($member)
+        ->get("/party/{$this->party->id}/tv")
+        ->assertRedirect('/party-lists');
+});
+
+// ==================== Leave Party ====================
+
+test('member can leave party if no games played', function () {
+    $member = User::factory()->create();
+    $pm = PartyMember::create([
+        'party_id' => $this->party->id,
+        'user_id' => $member->id,
+        'role' => 'Member',
+        'status' => 'Confirmed',
+    ]);
+
+    $this->actingAs($member)
+        ->post("/party-members/{$pm->id}/leave")
+        ->assertRedirect('/party-lists');
+
+    $this->assertDatabaseMissing('party_members', ['id' => $pm->id]);
+});
+
+test('member cannot leave party if has played a game', function () {
+    $member = User::factory()->create();
+    $pm = PartyMember::create([
+        'party_id' => $this->party->id,
+        'user_id' => $member->id,
+        'role' => 'Member',
+        'status' => 'Confirmed',
+    ]);
+
+    $game = Game::factory()->create(['party_id' => $this->party->id]);
+    GamePlayer::create(['game_id' => $game->id, 'user_id' => $member->id, 'team' => 'team1']);
+
+    $this->actingAs($member)
+        ->post("/party-members/{$pm->id}/leave")
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('party_members', ['id' => $pm->id]);
+});
+
+test('host cannot leave party', function () {
+    $hostMember = PartyMember::where('party_id', $this->party->id)
+        ->where('user_id', $this->host->id)
+        ->first();
+
+    $this->actingAs($this->host)
+        ->post("/party-members/{$hostMember->id}/leave")
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('party_members', ['id' => $hostMember->id]);
+});
+
+test('cannot leave someone elses membership', function () {
+    $member = User::factory()->create();
+    $pm = PartyMember::create([
+        'party_id' => $this->party->id,
+        'user_id' => $member->id,
+        'role' => 'Member',
+        'status' => 'Confirmed',
+    ]);
+
+    $other = User::factory()->create();
+
+    $this->actingAs($other)
+        ->post("/party-members/{$pm->id}/leave")
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('party_members', ['id' => $pm->id]);
+});
+
 test('kicking member auto-updates party status', function () {
     $this->party->update(['max_players' => 2]);
 

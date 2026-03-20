@@ -13,9 +13,23 @@ class CheckUserSetup
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+    protected $except = [
+        'pdpa-consent',
+        'setup',
+        'login',
+        'login/*',
+        'logout',
+        'register',
+    ];
+
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
+
+        // Skip for excluded paths
+        if ($this->shouldSkip($request)) {
+            return $next($request);
+        }
 
         if ($user) {
             // Check PDPA consent first
@@ -30,5 +44,16 @@ class CheckUserSetup
         }
 
         return $next($request);
+    }
+
+    protected function shouldSkip(Request $request): bool
+    {
+        foreach ($this->except as $pattern) {
+            if ($request->is($pattern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

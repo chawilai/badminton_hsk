@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
     Route::post('/party/{party}/end', [PartyController::class, 'endParty'])->name('parties.end');
     Route::post('/party/{party}/duplicate', [PartyController::class, 'duplicate'])->name('parties.duplicate');
+    Route::delete('/party/{party}/delete', [PartyController::class, 'deleteParty'])->name('parties.delete');
     Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
 
     // Party Invite System
@@ -69,6 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/party/{id}/invite/{token}', [PartyController::class, 'showInvitePreview'])->name('parties.invite-token');
     Route::get('/party/{id}/invite-preview', [PartyController::class, 'showInvitePreview'])->name('parties.invite-preview');
     Route::post('/party/{party}/confirm-join', [PartyController::class, 'confirmJoinFromInvite'])->name('parties.confirm-join');
+    Route::get('/party/{party}/invitable-users', [PartyController::class, 'getInvitableUsers'])->name('parties.invitable-users');
+    Route::post('/party/{party}/send-line-invitations', [PartyController::class, 'sendLineInvitations'])->name('parties.send-line-invitations');
     Route::post('/parties/{party}/set-party-initial-shuttlecocks', [PartyController::class, 'setInitialShuttlecocks'])->name('parties.set-party-initial-shuttlecocks');
     Route::post('/fetch-party-data', [PartyController::class, 'fetchPartyData'])->name('fetch-party-data');
 
@@ -76,6 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/party-members/{id}/update-name', [PartyMemberController::class, 'updateName'])->name('party-members.update-name');
     Route::post('/party-members/{id}/update-game-status', [PartyMemberController::class, 'updateGameStatus'])->name('party-members.update-game-status');
     Route::delete('/party-members/{id}/kick', [PartyMemberController::class, 'kickMember'])->name('party-members.kick');
+    Route::post('/party-members/{id}/leave', [PartyMemberController::class, 'leaveParty'])->name('party-members.leave');
 
     // Games
     Route::post('/games', [GameController::class, 'store'])->name('games.store');
@@ -157,6 +161,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/settings', [NotificationController::class, 'settings'])->name('notifications.settings');
     Route::patch('/notifications/settings', [NotificationController::class, 'updateSettings'])->name('notifications.settings.update');
     Route::post('/notifications/test', [NotificationController::class, 'sendTest'])->name('notifications.test');
+    Route::get('/api/line-quota', function () {
+        return response()->json((new \App\Services\LinePushService())->getQuota());
+    })->name('line.quota');
 
     // Admin
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');

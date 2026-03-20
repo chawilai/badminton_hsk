@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- facebook --}}
-    <meta property="og:image" content="{{ Vite::asset('resources/assets/images/badminton_party_no_bg.png') }}" />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
     {{-- <meta property="og:image:width" content="1200" /> <!-- Optional: Width of image in pixels --> --}}
     {{-- <meta property="og:image:height" content="630" /> <!-- Optional: Height of image in pixels --> --}}
     <meta property="og:url" content="https://badmintonparty.com/party" />
@@ -16,7 +16,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- facebook --}}
 
-    <link rel="icon" type="image/svg+xml" href="{{ Vite::asset('resources/assets/images/badminton_party_no_bg.png') }}">
+    <link rel="icon" type="image/png" href="/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#1a4731">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Badminton Party">
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
@@ -32,7 +38,11 @@
 
 <body class="font-sans antialiased">
     @inertia
-
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    </script>
 </body>
 
 </html>

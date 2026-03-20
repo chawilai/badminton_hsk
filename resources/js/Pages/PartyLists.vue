@@ -587,6 +587,44 @@
         </form>
       </dialog>
     </div>
+
+    <!-- Passcode Dialog for Private Party -->
+    <dialog class="modal" :class="{ 'modal-open': showPasscodeDialog }">
+      <div class="modal-box max-w-xs p-0">
+        <div class="px-5 pt-5 pb-3 text-center">
+          <div class="text-3xl mb-2">🔒</div>
+          <h3 class="text-base font-bold text-base-content m-0">ปาร์ตี้ส่วนตัว</h3>
+          <p class="text-sm text-base-content/60 mt-1 m-0">กรุณาใส่รหัส 4 หลักเพื่อเข้าร่วม</p>
+        </div>
+        <div class="px-5 pb-5 space-y-4">
+          <input
+            type="tel"
+            v-model="joinPasscode"
+            maxlength="4"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="0000"
+            class="input input-bordered w-full text-center text-2xl tracking-[0.5em] font-bold"
+            @input="joinPasscode = joinPasscode.replace(/[^0-9]/g, '')"
+            @keyup.enter="confirmPasscodeJoin"
+          />
+          <div class="flex gap-2">
+            <button @click="showPasscodeDialog = false"
+              class="flex-1 h-10 rounded-xl text-sm font-medium bg-base-200 text-base-content/80 border-0 cursor-pointer hover:bg-base-300 transition-colors">
+              ยกเลิก
+            </button>
+            <button @click="confirmPasscodeJoin"
+              :disabled="joinPasscode.length < 4"
+              class="flex-1 h-10 rounded-xl text-sm font-semibold bg-primary text-primary-content border-0 cursor-pointer hover:bg-primary/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              เข้าร่วม
+            </button>
+          </div>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="showPasscodeDialog = false">close</button>
+      </form>
+    </dialog>
   </AppLayout>
 </template>
 
@@ -1007,17 +1045,39 @@ const isUserInParty = (members) => {
   return members?.some((member) => member.user_id === authUser.id) ?? false;
 };
 
+// Private party passcode dialog
+const showPasscodeDialog = ref(false);
+const passcodePartyId = ref(null);
+const joinPasscode = ref('');
+
 const joinParty = (partyId) => {
-  router.post(`/party-join`, { party_id: partyId }, {
-    onSuccess: (res) => {
-      parties.value = res.props.parties;
-      courts.value = res.props.courts;
-      toast.add({ severity: "success", summary: "สำเร็จ", detail: "เข้าร่วมปาร์ตี้สำเร็จแล้ว!", life: 3000 });
-    },
+  const party = parties.value.find(p => p.id === partyId);
+  if (party?.is_private) {
+    passcodePartyId.value = partyId;
+    joinPasscode.value = '';
+    showPasscodeDialog.value = true;
+    return;
+  }
+  submitJoin(partyId);
+};
+
+const submitJoin = (partyId, passcode = null) => {
+  const payload = { party_id: partyId };
+  if (passcode) payload.passcode = passcode;
+
+  router.post(`/party-join`, payload, {
     onError: (error) => {
-      toast.add({ severity: "error", summary: "ผิดพลาด", detail: error?.message || "เกิดข้อผิดพลาด", life: 3000 });
+      toast.add({ severity: "error", summary: "ผิดพลาด", detail: error?.privateParty || error?.message || "เกิดข้อผิดพลาด", life: 3000 });
     },
   });
+};
+
+const confirmPasscodeJoin = () => {
+  if (!joinPasscode.value || joinPasscode.value.length < 4) {
+    toast.add({ severity: "warn", summary: "กรุณาใส่รหัส 4 หลัก", life: 2000 });
+    return;
+  }
+  submitJoin(passcodePartyId.value, joinPasscode.value);
 };
 
 const enterParty = (partyId) => {

@@ -33,6 +33,8 @@ class PartyMemberController extends Controller
             'display_name' => $request->input('display_name') === '' ? null : $request->input('display_name'),
         ]);
 
+        $this->broadcastPartyUpdate($partyMember->party_id, 'member.nameUpdated');
+
         return back()->with('response', [
             'message' => 'Display name updated successfully.',
             'party_member' => $partyMember,
@@ -91,8 +93,70 @@ class PartyMemberController extends Controller
             $party->update(['status' => $memberCount >= $party->max_players ? 'Full' : 'Open']);
         }
 
-        $this->broadcastPartyUpdate($party->id, 'member.kicked');
+        // Broadcast with name + message for popup
+        try {
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
+            $channel = $ably->channels->get("party.{$party->id}");
+            $channel->publish('member.kicked', [
+                'party_id' => $party->id,
+                'timestamp' => now()->toISOString(),
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name,
+                'message' => "ลบ {$memberName} ออกจากปาร์ตี้",
+            ]);
+        } catch (\Exception $e) {}
 
         return back()->with('success', "ลบ {$memberName} ออกจากปาร์ตี้แล้ว");
+    }
+
+    public function leaveParty(Request $request, $id)
+    {
+        $partyMember = PartyMember::with('party')->findOrFail($id);
+        $party = $partyMember->party;
+
+        // Must be own membership
+        if ($partyMember->user_id !== auth()->id()) {
+            return back()->with('error', 'ไม่สามารถดำเนินการได้');
+        }
+
+        // Host cannot leave
+        if ($party->creator_id === auth()->id()) {
+            return back()->with('error', 'Host ไม่สามารถออกจากปาร์ตี้ได้');
+        }
+
+        // Check if player has played any game
+        $hasPlayedGame = GamePlayer::where('user_id', auth()->id())
+            ->whereHas('game', function ($query) use ($party) {
+                $query->where('party_id', $party->id);
+            })
+            ->exists();
+
+        if ($hasPlayedGame) {
+            return back()->with('error', 'ไม่สามารถออกได้เพราะคุณเคยเล่นเกมในปาร์ตี้นี้แล้ว');
+        }
+
+        $memberName = $partyMember->display_name ?? auth()->user()->name ?? 'ผู้เล่น';
+        $partyMember->delete();
+
+        // Auto-update status
+        if ($party->status !== 'Over') {
+            $memberCount = $party->members()->count();
+            $party->update(['status' => $memberCount >= $party->max_players ? 'Full' : 'Open']);
+        }
+
+        // Broadcast with name + message for popup
+        try {
+            $ably = new AblyRest(config('broadcasting.connections.ably.key'));
+            $channel = $ably->channels->get("party.{$party->id}");
+            $channel->publish('member.left', [
+                'party_id' => $party->id,
+                'timestamp' => now()->toISOString(),
+                'user_id' => auth()->id(),
+                'user_name' => $memberName,
+                'message' => 'ออกจากปาร์ตี้',
+            ]);
+        } catch (\Exception $e) {}
+
+        return redirect('/party-lists')->with('success', 'ออกจากปาร์ตี้แล้ว');
     }
 }
