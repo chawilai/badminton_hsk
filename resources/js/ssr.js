@@ -7,6 +7,8 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+const ssrPort = import.meta.env.VITE_SSR_PORT || 13714;
+
 createServer((page) =>
     createInertiaApp({
         page,
@@ -21,5 +23,6 @@ createServer((page) =>
                     location: new URL(page.props.ziggy.location),
                 });
         },
-    })
+    }),
+    ssrPort,
 );
