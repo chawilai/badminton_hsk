@@ -51,20 +51,20 @@ class LinePushService
      */
     public function sendPush(User $user, string $type, string $title, string $message, array $metadata = []): bool
     {
-        $lineUserId = $user->provider === 'line' ? $user->provider_id : null;
-
-        if (!$lineUserId) {
-            $this->logNotification($user, $type, $title, $message, 'skipped', $metadata, 'User has no LINE account');
-            return false;
-        }
-
-        // Check notification settings
-        if (!$this->shouldSend($user, $type)) {
-            $this->logNotification($user, $type, $title, $message, 'skipped', $metadata, 'Notification disabled by user');
-            return false;
-        }
-
         try {
+            $lineUserId = $user->provider === 'line' ? $user->provider_id : null;
+
+            if (!$lineUserId) {
+                $this->logNotification($user, $type, $title, $message, 'skipped', $metadata, 'User has no LINE account');
+                return false;
+            }
+
+            // Check notification settings
+            if (!$this->shouldSend($user, $type)) {
+                $this->logNotification($user, $type, $title, $message, 'skipped', $metadata, 'Notification disabled by user');
+                return false;
+            }
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->channelAccessToken,
                 'Content-Type' => 'application/json',
@@ -87,7 +87,6 @@ class LinePushService
 
         } catch (\Exception $e) {
             Log::error('LINE push exception', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            $this->logNotification($user, $type, $title, $message, 'failed', $metadata, $e->getMessage());
             return false;
         }
     }

@@ -631,77 +631,86 @@ class PartyController extends Controller
         ]);
 
         // Send personalized LINE push to each member
-        $party->load(['members.user', 'games.gameSets', 'games.gamePlayers.user', 'court']);
-        $partyName = $party->name ?: $party->court?->name ?: 'Party';
-        $appUrl = config('app.url', '');
-        $service = new LinePushService();
+        $lineSent = 0;
+        try {
+            $party->load(['members.user', 'games.gameSets', 'games.gamePlayers.user', 'court']);
+            $partyName = $party->name ?: $party->court?->name ?: 'Party';
+            $appUrl = config('app.url', '');
+            $service = new LinePushService();
 
-        $finishedGames = $party->games->where('status', 'finished');
-        $settlementMap = collect($validated['settlements'])->keyBy('user_id');
+            $finishedGames = $party->games->where('status', 'finished');
+            $settlementMap = collect($validated['settlements'])->keyBy('user_id');
 
-        foreach ($party->members as $member) {
-            if (!$member->user) continue;
+            foreach ($party->members as $member) {
+                if (!$member->user) continue;
 
-            $userId = $member->user_id;
-            $settlement = $settlementMap[$userId] ?? null;
-            $amount = $settlement ? ceil($settlement['amount']) : 0;
+                $userId = $member->user_id;
+                $settlement = $settlementMap[$userId] ?? null;
+                $amount = $settlement ? ceil($settlement['amount']) : 0;
 
-            // Player stats: sets, time, calories
-            $setsWon = 0;
-            $setsLost = 0;
-            $gamesPlayed = 0;
-            $totalPlaySeconds = 0;
-            foreach ($finishedGames as $game) {
-                $gp = $game->gamePlayers->firstWhere('user_id', $userId);
-                if (!$gp) continue;
-                $gamesPlayed++;
+                // Player stats: sets, time, calories
+                $setsWon = 0;
+                $setsLost = 0;
+                $gamesPlayed = 0;
+                $totalPlaySeconds = 0;
+                foreach ($finishedGames as $game) {
+                    $gp = $game->gamePlayers->firstWhere('user_id', $userId);
+                    if (!$gp) continue;
+                    $gamesPlayed++;
 
-                // Count per set
-                foreach ($game->gameSets as $set) {
-                    if (!$set->winning_team) continue;
-                    if ($set->winning_team === $gp->team) $setsWon++;
-                    else $setsLost++;
+                    // Count per set
+                    foreach ($game->gameSets as $set) {
+                        if (!$set->winning_team) continue;
+                        if ($set->winning_team === $gp->team) $setsWon++;
+                        else $setsLost++;
+                    }
+
+                    // Play duration
+                    if ($game->game_start_date && $game->game_end_date) {
+                        $dur = max(0, strtotime($game->game_end_date) - strtotime($game->game_start_date));
+                        $totalPlaySeconds += $dur;
+                    }
                 }
 
-                // Play duration
-                if ($game->game_start_date && $game->game_end_date) {
-                    $dur = max(0, strtotime($game->game_end_date) - strtotime($game->game_start_date));
-                    $totalPlaySeconds += $dur;
-                }
-            }
+                $totalSets = $setsWon + $setsLost;
+                $playMinutes = round($totalPlaySeconds / 60);
+                $calories = round(($totalPlaySeconds / 60) * 7); // ~7 kcal/min badminton
 
-            $totalSets = $setsWon + $setsLost;
-            $playMinutes = round($totalPlaySeconds / 60);
-            $calories = round(($totalPlaySeconds / 60) * 7); // ~7 kcal/min badminton
-
-            $lines = [];
-            $lines[] = "สนาม: {$party->court?->name}";
-            $lines[] = "เล่น: {$validated['play_hours']} ชม. · {$party->members->count()} คน";
-            $lines[] = "";
-            $lines[] = "🏸 {$gamesPlayed} เกม · {$totalSets} เซ็ต ({$setsWon}W/{$setsLost}L)";
-            $lines[] = "⏱️ เวลาเล่นจริง: {$playMinutes} นาที";
-            $lines[] = "🔥 เผาผลาญ: ~{$calories} kcal";
-            if ($amount > 0) {
+                $lines = [];
+                $lines[] = "สนาม: {$party->court?->name}";
+                $lines[] = "เล่น: {$validated['play_hours']} ชม. · {$party->members->count()} คน";
                 $lines[] = "";
-                $lines[] = "💰 ค่าใช้จ่ายของคุณ: ฿" . number_format($amount);
-            }
+                $lines[] = "🏸 {$gamesPlayed} เกม · {$totalSets} เซ็ต ({$setsWon}W/{$setsLost}L)";
+                $lines[] = "⏱️ เวลาเล่นจริง: {$playMinutes} นาที";
+                $lines[] = "🔥 เผาผลาญ: ~{$calories} kcal";
+                if ($amount > 0) {
+                    $lines[] = "";
+                    $lines[] = "💰 ค่าใช้จ่ายของคุณ: ฿" . number_format($amount);
+                }
 
-            $service->sendPush(
-                $member->user,
-                'game_result',
-                "📊 สรุป {$partyName}",
-                implode("\n", $lines),
-                [
-                    'party_id' => $party->id,
-                    'action_url' => $appUrl . '/party/' . $party->id,
-                    'action_label' => 'ดูรายละเอียดปาร์ตี้',
-                ]
-            );
+                if ($service->sendPush(
+                    $member->user,
+                    'game_result',
+                    "📊 สรุป {$partyName}",
+                    implode("\n", $lines),
+                    [
+                        'party_id' => $party->id,
+                        'action_url' => $appUrl . '/party/' . $party->id,
+                        'action_label' => 'ดูรายละเอียดปาร์ตี้',
+                    ]
+                )) {
+                    $lineSent++;
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('endParty LINE push error', ['party_id' => $party->id, 'error' => $e->getMessage()]);
         }
 
         $this->broadcastPartyUpdate($party->id, 'party.ended');
 
-        return back()->with('success', 'จบปาร์ตี้เรียบร้อย! ส่งสรุปเข้า LINE แล้ว');
+        $msg = 'จบปาร์ตี้เรียบร้อย!';
+        $msg .= $lineSent > 0 ? " ส่งสรุปเข้า LINE แล้ว ({$lineSent} คน)" : ' (ส่ง LINE ไม่สำเร็จ)';
+        return back()->with('success', $msg);
     }
 
     /**
@@ -709,29 +718,33 @@ class PartyController extends Controller
      */
     public function sendPartySummary(Party $party): void
     {
-        $party->load(['members.user', 'games.shuttlecocks', 'games.gameSets', 'games.gamePlayers.user', 'court']);
+        try {
+            $party->load(['members.user', 'games.shuttlecocks', 'games.gameSets', 'games.gamePlayers.user', 'court']);
 
-        $summary = PartyCostService::calculate($party);
-        $message = PartyCostService::buildSummaryMessage($party, $summary);
-        $partyName = $party->name ?: $party->court?->name ?: 'Party';
-        $appUrl = config('app.url', '');
+            $summary = PartyCostService::calculate($party);
+            $message = PartyCostService::buildSummaryMessage($party, $summary);
+            $partyName = $party->name ?: $party->court?->name ?: 'Party';
+            $appUrl = config('app.url', '');
 
-        $service = new LinePushService();
+            $service = new LinePushService();
 
-        foreach ($party->members as $member) {
-            if ($member->user) {
-                $service->sendPush(
-                    $member->user,
-                    'game_result',
-                    "📊 สรุป {$partyName}",
-                    $message,
-                    [
-                        'party_id' => $party->id,
-                        'action_url' => $appUrl . '/party/' . $party->id,
-                        'action_label' => 'ดูรายละเอียดปาร์ตี้',
-                    ]
-                );
+            foreach ($party->members as $member) {
+                if ($member->user) {
+                    $service->sendPush(
+                        $member->user,
+                        'game_result',
+                        "📊 สรุป {$partyName}",
+                        $message,
+                        [
+                            'party_id' => $party->id,
+                            'action_url' => $appUrl . '/party/' . $party->id,
+                            'action_label' => 'ดูรายละเอียดปาร์ตี้',
+                        ]
+                    );
+                }
             }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('sendPartySummary error', ['party_id' => $party->id, 'error' => $e->getMessage()]);
         }
     }
 
