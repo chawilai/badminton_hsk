@@ -1,0 +1,1 @@
+import{_ as a}from"./Main-U9VYbEv2.js";import{c as t,o,a as e,u as r,h as s,F as _}from"./app-7d2BAGFP.js";const f={__name:"Textbook",setup(c){return(n,m)=>(o(),t(_,null,[e(r(s),{title:"แบบเรียน HSK"}),e(a)],64))}};export{f as default};

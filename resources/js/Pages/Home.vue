@@ -113,23 +113,23 @@ const features = [
 ];
 
 const quickActions = [
-  { icon: '🏸', label: 'หาปาร์ตี้', href: '/party-lists', color: 'bg-green-100 text-green-700' },
-  { icon: '🎮', label: 'ปาร์ตี้ของฉัน', href: '/my-parties', color: 'bg-blue-100 text-blue-700' },
-  { icon: '💬', label: 'แชท', href: '/chat', color: 'bg-purple-100 text-purple-700', badge: 'unreadChatCount' },
-  { icon: '👤', label: 'โปรไฟล์', href: '/profile', color: 'bg-orange-100 text-orange-700' },
+  { icon: '🏸', label: 'หาปาร์ตี้', href: '/party-lists', color: 'bg-primary/15 text-primary' },
+  { icon: '🎮', label: 'ปาร์ตี้ของฉัน', href: '/my-parties', color: 'bg-info/15 text-info' },
+  { icon: '💬', label: 'แชท', href: '/chat', color: 'bg-secondary/15 text-secondary', badge: 'unreadChatCount' },
+  { icon: '👤', label: 'โปรไฟล์', href: '/profile', color: 'bg-warning/15 text-warning' },
 ];
 </script>
 
 <template>
   <Head title="Home" />
   <AppLayout>
-    <div class="space-y-6 pb-8 bg-slate-50/50 min-h-screen">
+    <div class="space-y-6 pb-8 min-h-screen">
 
       <!-- Hero Carousel -->
       <div class="relative group max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <div
           ref="carouselRef"
-          class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-[2.5rem] shadow-xl relative z-0 bg-white"
+          class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-[2.5rem] shadow-xl relative z-0 bg-base-200"
           style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;"
           @scroll="handleScroll"
         >
