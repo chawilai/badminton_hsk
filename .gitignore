@@ -17,6 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+.DS_Store
 
 # Firebase service account keys
 badmintonparty-*.json
