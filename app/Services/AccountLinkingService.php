@@ -210,6 +210,12 @@ class AccountLinkingService
             }
             $keepUser->mmr_games_played = ($keepUser->mmr_games_played ?? 0) + ($deleteUser->mmr_games_played ?? 0);
 
+            // Update random email from merged user's real email
+            if (str_ends_with($keepUser->email, '@example.com') && $deleteUser->email && !str_ends_with($deleteUser->email, '@example.com')) {
+                $keepUser->email = $deleteUser->email;
+                $keepUser->email_verified_at = now();
+            }
+
             // Copy profile data if keepUser is missing it
             if (!$keepUser->gender && $deleteUser->gender) $keepUser->gender = $deleteUser->gender;
             if (!$keepUser->date_of_birth && $deleteUser->date_of_birth) $keepUser->date_of_birth = $deleteUser->date_of_birth;
