@@ -36,6 +36,7 @@ export default {
   'auth.namePlaceholder': 'ชื่อของคุณ',
   'auth.loginWithLine': 'เข้าสู่ระบบด้วย LINE',
   'auth.loginWithEmail': 'เข้าสู่ระบบด้วย Email',
+  'auth.loginWithGoogle': 'เข้าสู่ระบบด้วย Google',
   'auth.or': 'หรือ',
   'auth.loggingIn': 'กำลังเข้าสู่ระบบ...',
   'auth.hasAccount': 'มีบัญชีอยู่แล้ว?',

@@ -36,6 +36,7 @@ export default {
   'auth.namePlaceholder': 'Your name',
   'auth.loginWithLine': 'Login with LINE',
   'auth.loginWithEmail': 'Login with Email',
+  'auth.loginWithGoogle': 'Login with Google',
   'auth.or': 'or',
   'auth.loggingIn': 'Logging in...',
   'auth.hasAccount': 'Already have an account?',
