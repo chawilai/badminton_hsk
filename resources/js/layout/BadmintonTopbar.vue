@@ -52,10 +52,8 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
         <!-- Left: Logo -->
         <div class="flex items-center gap-3 shrink-0">
             <Link href="/home" class="flex items-center gap-2 no-underline">
-                <img src="/icons/logo-80.png" alt="Badminton Party" class="w-8 h-8" />
-                <span class="font-bold text-lg text-primary hidden sm:inline">
-                    Badminton Party
-                </span>
+                <img src="/icons/logo3.png" alt="Badminton Party" class="w-8 h-8" />
+                <img src="/icons/logo2.png" alt="Badminton Party" class="h-8 hidden sm:inline" />
             </Link>
         </div>
 
