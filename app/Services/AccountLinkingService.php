@@ -227,7 +227,10 @@ class AccountLinkingService
 
             // Update random email from merged user's real email
             if (str_ends_with($keepUser->email, '@example.com') && $deleteUser->email && !str_ends_with($deleteUser->email, '@example.com')) {
-                $keepUser->email = $deleteUser->email;
+                // Clear deleteUser's email first to avoid unique constraint violation
+                $realEmail = $deleteUser->email;
+                $deleteUser->update(['email' => 'merged_' . $deleteId . '@example.com']);
+                $keepUser->email = $realEmail;
                 $keepUser->email_verified_at = now();
             }
 
