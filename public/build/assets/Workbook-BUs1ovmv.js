@@ -1,0 +1,1 @@
+import{_ as a}from"./Main-C_c9iB5B.js";import{c as t,o,a as e,u as r,h as s,F as _}from"./app-B3rlbRmQ.js";const f={__name:"Workbook",setup(c){return(n,m)=>(o(),t(_,null,[e(r(s),{title:"แบบฝึกหัด HSK"}),e(a)],64))}};export{f as default};
