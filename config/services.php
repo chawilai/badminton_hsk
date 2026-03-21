@@ -54,6 +54,10 @@ return [
         'redirect' => env('APPLE_REDIRECT_URI'),
     ],
 
+    'fcm' => [
+        'server_key' => env('FCM_SERVER_KEY'),
+    ],
+
     'thsms' => [
         'api_token' => env('THSMS_API_KEY'),
         'sender' => env('THSMS_SENDER', 'BADMINTON'),
