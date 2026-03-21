@@ -37,9 +37,9 @@ class CheckUserSetup
                 return redirect()->route('pdpa.consent');
             }
 
-            // Then check setup
+            // Auto-assign default rank if not set (rank 14 = mmr 1000)
             if (!$user->badminton_rank_id) {
-                return redirect()->route('user.setup');
+                $user->update(['badminton_rank_id' => 14]);
             }
         }
 

@@ -15,12 +15,10 @@ class UserController extends Controller
 
     public function acceptPdpaConsent(Request $request)
     {
-        $request->user()->update(['pdpa_consented_at' => now()]);
-
-        // If user still needs setup, go to setup, otherwise go to party-lists
-        if (!$request->user()->badminton_rank_id) {
-            return redirect()->route('user.setup');
-        }
+        $request->user()->update([
+            'pdpa_consented_at' => now(),
+            'badminton_rank_id' => $request->user()->badminton_rank_id ?? 14,
+        ]);
 
         return redirect('/party-lists');
     }
