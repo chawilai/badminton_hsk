@@ -54,6 +54,15 @@ class AccountLinkingService
             LinkedAccount::where('provider', $provider)
                 ->where('provider_id', $providerId)
                 ->update(['provider_name' => $name, 'provider_avatar' => $avatar]);
+
+            // Update random email if provider now gives a real one
+            if ($email && str_ends_with($user->email, '@example.com')) {
+                // Check no other user has this email
+                if (!User::where('email', $email)->where('id', '!=', $user->id)->exists()) {
+                    $user->update(['email' => $email]);
+                }
+            }
+
             return $user;
         }
 
@@ -95,6 +104,12 @@ class AccountLinkingService
         // 1. Check linked_accounts
         $user = $this->findUserByLinkedAccount($provider, $providerId);
         if ($user) {
+            // Update random email if LINE now gives a real one
+            if ($email && str_ends_with($user->email, '@example.com')) {
+                if (!User::where('email', $email)->where('id', '!=', $user->id)->exists()) {
+                    $user->update(['email' => $email]);
+                }
+            }
             return $user;
         }
 
