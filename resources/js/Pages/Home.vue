@@ -10,36 +10,73 @@ const user = page.props.auth?.user;
 
 const slides = [
   {
-    icon: '🏸',
-    title: 'จัดปาร์ตี้แบดมินตัน',
-    subtitle: 'สร้างปาร์ตี้ จัดเกม ลงผล ครบจบในที่เดียว',
+    image: '/images/carousel/party-members-cartoon.png',
+    imageLg: '/images/carousel/party-members-cartoon.png',
+    title: 'สร้างปาร์ตี้ หาเพื่อนใหม่',
+    subtitle: 'ระบบสร้างปาร์ตี้อัจฉริยะ ค้นหาเพื่อนร่วมก๊วนที่มีระดับฝีมือใกล้เคียงกัน',
     cta: 'หาปาร์ตี้',
     href: '/party-lists',
-    gradient: 'from-primary/20 to-success/10',
+    textColor: 'text-slate-800',
+    buttonColor: 'btn-primary'
   },
   {
-    icon: '📊',
-    title: 'ติดตามสถิติ',
-    subtitle: 'ดูผลงาน Win Rate แคลอรี่ที่เผาผลาญ',
-    cta: 'ดูสถิติ',
+    image: '/images/carousel/public-private-cartoon.png',
+    imageLg: '/images/carousel/public-private-cartoon.png',
+    title: 'เข้าร่วมได้ทุกรูปแบบ',
+    subtitle: 'เลือกเข้าร่วมปาร์ตี้สาธารณะ หรือสร้างห้องส่วนตัวสำหรับก๊วนของคุณเอง',
+    cta: 'สร้างปาร์ตี้',
+    href: '/party-create',
+    textColor: 'text-slate-800',
+    buttonColor: 'btn-secondary'
+  },
+  {
+    image: '/images/carousel/auto-balance.png',
+    imageLg: '/images/carousel/auto-balance-lg.png',
+    title: 'ระบบจัดเกมอัตโนมัติ',
+    subtitle: 'บลาลานซ์ทักษะ เกลี่ยจำนวนเกม และจัดลำดับความสำคัญให้ทุกคนสนุกเท่ากัน',
+    cta: 'ดูวิธีการ',
+    href: '/tutorial',
+  },
+  {
+    image: '/images/carousel/realtime-stats.png',
+    imageLg: '/images/carousel/realtime-stats-lg.png',
+    title: 'ข้อมูลแบบ Real-time',
+    subtitle: 'บอกระยะเวลารอ จำนวนเกมที่เล่น และจำนวนลูกขนไก่ที่ใช้ไปแบบวินาทีต่อวินาที',
+    cta: 'ร่วมปาร์ตี้',
+    href: '/party-lists',
+  },
+  {
+    image: '/images/carousel/player-stats.png',
+    imageLg: '/images/carousel/player-stats-lg.png',
+    title: 'สถิติและประวัติการเล่น',
+    subtitle: 'บันทึกทุกแมตซ์ วิเคราะห์ผลงาน และอัปเลเวลเพื่อพัฒนาฝีมืออย่างต่อเนื่อง',
+    cta: 'ดูสถิติของฉัน',
     href: '/profile',
-    gradient: 'from-info/20 to-primary/10',
   },
   {
-    icon: '💬',
-    title: 'แชทกับเพื่อน',
-    subtitle: 'คุยกับก๊วนแบด นัดเล่นได้ง่ายๆ',
-    cta: 'เปิดแชท',
-    href: '/chat',
-    gradient: 'from-secondary/20 to-info/10',
-  },
-  {
-    icon: '👥',
-    title: 'ระบบเพื่อน',
-    subtitle: 'เพิ่มเพื่อน ดูสถิติเทียบกัน',
-    cta: 'ดูเพื่อน',
+    image: '/images/carousel/social-friends.png',
+    imageLg: '/images/carousel/social-friends-lg.png',
+    title: 'สังคมแบดมินตันครบวงจร',
+    subtitle: 'ระบบเพื่อน แชทพูดคุย และนัดหมายการเล่นได้สะดวกทุกที่ทุกเวลา',
+    cta: 'ดูรายชื่อเพื่อน',
     href: '/friends',
-    gradient: 'from-accent/20 to-warning/10',
+  },
+  {
+    image: '/images/carousel/line-signup.png',
+    imageLg: '/images/carousel/line-signup-lg.png',
+    title: 'สมัครง่ายผ่าน LINE',
+    subtitle: 'เพียงแอด LINE @badmintonparty ก็เริ่มใช้งานและรับการแจ้งเตือนได้ทันที',
+    cta: 'แอดไลน์',
+    href: 'https://line.me/R/ti/p/@badmintonparty',
+    external: true
+  },
+  {
+    image: '/images/carousel/free-badge.png',
+    imageLg: '/images/carousel/free-badge-lg.png',
+    title: 'ใช้งานฟรี! ไม่มีค่าใช้จ่าย',
+    subtitle: 'ร่วมสร้างคอมมูนิตี้แบดมินตันที่สนุกและเป็นธรรมได้ฟรีวันนี้',
+    cta: 'เริ่มเลย',
+    href: '/register',
   },
 ];
 
@@ -74,61 +111,87 @@ onUnmounted(() => {
 });
 
 const features = [
-  { icon: '🎯', title: 'จัดเกมอัตโนมัติ', desc: 'ระบบ Auto Balance จัดทีมให้สมดุลตามเลเวล' },
-  { icon: '⏱️', title: 'ติดตามเวลาเล่น', desc: 'นับเวลา แคลอรี่ สถิติครบถ้วน' },
-  { icon: '🔔', title: 'แจ้งเตือน Realtime', desc: 'อัพเดทเกมทันทีผ่าน WebSocket' },
+  { icon: '⚖️', title: 'Smart Matchmaking', desc: 'บาลานซ์ทีมตาม MMR และจำนวนเกมที่เล่น' },
+  { icon: '📈', title: 'Performance Tracking', desc: 'วิเคราะห์ฟอร์มการเล่นและสถิติรายบุคคล' },
+  { icon: '💬', title: 'Community & Connect', desc: 'เชื่อมต่อกับก๊วนแบดผ่าน Chat และ Friend System' },
 ];
 
 const quickActions = [
-  { icon: '🏸', label: 'หาปาร์ตี้', href: '/party-lists', color: 'bg-success/10 text-success' },
-  { icon: '🎮', label: 'ปาร์ตี้ของฉัน', href: '/my-parties', color: 'bg-info/10 text-info' },
-  { icon: '💬', label: 'แชท', href: '/chat', color: 'bg-secondary/10 text-secondary', badge: 'unreadChatCount' },
-  { icon: '👤', label: 'โปรไฟล์', href: '/profile', color: 'bg-warning/10 text-warning' },
+  { icon: '🏸', label: 'หาปาร์ตี้', href: '/party-lists', color: 'bg-green-100 text-green-700' },
+  { icon: '🎮', label: 'ปาร์ตี้ของฉัน', href: '/my-parties', color: 'bg-blue-100 text-blue-700' },
+  { icon: '💬', label: 'แชท', href: '/chat', color: 'bg-purple-100 text-purple-700', badge: 'unreadChatCount' },
+  { icon: '👤', label: 'โปรไฟล์', href: '/profile', color: 'bg-orange-100 text-orange-700' },
 ];
 </script>
 
 <template>
   <Head title="Home" />
   <AppLayout>
-    <div class="space-y-4 pb-4">
+    <div class="space-y-6 pb-8 bg-slate-50/50 min-h-screen">
 
       <!-- Hero Carousel -->
-      <div class="relative">
+      <div class="relative group max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <div
           ref="carouselRef"
-          class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-2xl"
+          class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-[2.5rem] shadow-xl relative z-0 bg-white"
           style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;"
           @scroll="handleScroll"
         >
           <div
             v-for="(slide, i) in slides"
             :key="i"
-            class="w-full shrink-0 snap-center"
+            class="w-full shrink-0 snap-center relative aspect-[4/3] md:h-[420px] lg:h-[480px] overflow-hidden"
           >
-            <div
-              class="bg-gradient-to-br rounded-2xl p-6 min-h-[180px] flex flex-col justify-between"
-              :class="slide.gradient"
+            <!-- Background Image with Overlay -->
+            <picture>
+              <source :srcset="slide.imageLg" media="(min-width: 768px)">
+              <img 
+                :src="slide.image" 
+                class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                alt=""
+              />
+            </picture>
+            
+            <!-- Dynamic Overlay and Text Color -->
+            <div 
+              class="absolute inset-0 bg-gradient-to-t"
+              :class="slide.textColor ? 'from-white/60 via-transparent' : 'from-black/70 via-black/20 to-transparent'"
+            ></div>
+            
+            <!-- Content -->
+            <div 
+              class="absolute inset-0 p-8 flex flex-col justify-end"
+              :class="slide.textColor || 'text-white'"
             >
-              <div>
-                <span class="text-4xl mb-2 block">{{ slide.icon }}</span>
-                <h2 class="text-lg font-bold text-base-content m-0 mb-1">{{ slide.title }}</h2>
-                <p class="text-xs text-base-content/60 m-0">{{ slide.subtitle }}</p>
+              <div class="animate-slide-up transform transition-all duration-500">
+                <h2 class="text-3xl md:text-5xl font-black mb-2 leading-tight tracking-tight drop-shadow-sm">{{ slide.title }}</h2>
+                <p class="text-sm md:text-lg opacity-90 max-w-xl mb-6 font-medium leading-relaxed">{{ slide.subtitle }}</p>
+                <div class="flex items-center gap-4">
+                    <component
+                        :is="slide.external ? 'a' : Link"
+                        :href="slide.href"
+                        :target="slide.external ? '_blank' : null"
+                        class="h-12 px-8 rounded-2xl text-sm font-black no-underline flex items-center gap-2 hover:scale-105 transition-all shadow-lg active:scale-95"
+                        :class="slide.buttonColor ? `btn ${slide.buttonColor} border-none` : 'bg-primary text-primary-content'"
+                    >
+                        {{ slide.cta }}
+                        <span v-if="!slide.external">→</span>
+                        <span v-else>➚</span>
+                    </component>
+                </div>
               </div>
-              <Link
-                :href="slide.href"
-                class="self-start mt-3 h-8 px-4 rounded-lg bg-primary text-white text-xs font-semibold no-underline flex items-center gap-1 hover:bg-primary/80 transition-colors"
-              >{{ slide.cta }} →</Link>
             </div>
           </div>
         </div>
-        <!-- Dots -->
-        <div class="flex justify-center gap-1.5 mt-2">
+
+        <!-- Navigation Dots (Inside Carousel for premium look) -->
+        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
           <button
             v-for="(_, i) in slides"
             :key="i"
             @click="scrollToSlide(i)"
-            class="w-2 h-2 rounded-full border-0 cursor-pointer transition-all"
-            :class="currentSlide === i ? 'bg-primary w-5' : 'bg-base-300'"
+            class="w-2 h-2 rounded-full border-0 cursor-pointer transition-all duration-300 shadow-sm"
+            :class="currentSlide === i ? 'bg-primary w-8' : 'bg-white/30 backdrop-blur-md'"
           ></button>
         </div>
       </div>
