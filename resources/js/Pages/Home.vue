@@ -10,8 +10,8 @@ const user = page.props.auth?.user;
 
 const slides = [
   {
-    image: '/images/carousel/party-members-cartoon.png',
-    imageLg: '/images/carousel/party-members-cartoon.png',
+    image: '/images/carousel/party-members-cartoon.jpg',
+    imageLg: '/images/carousel/party-members-cartoon-lg.jpg',
     title: 'สร้างปาร์ตี้ หาเพื่อนใหม่',
     subtitle: 'ระบบสร้างปาร์ตี้อัจฉริยะ ค้นหาเพื่อนร่วมก๊วนที่มีระดับฝีมือใกล้เคียงกัน',
     cta: 'หาปาร์ตี้',
@@ -20,8 +20,8 @@ const slides = [
     buttonColor: 'btn-primary'
   },
   {
-    image: '/images/carousel/public-private-cartoon.png',
-    imageLg: '/images/carousel/public-private-cartoon.png',
+    image: '/images/carousel/public-private-cartoon.jpg',
+    imageLg: '/images/carousel/public-private-cartoon-lg.jpg',
     title: 'เข้าร่วมได้ทุกรูปแบบ',
     subtitle: 'เลือกเข้าร่วมปาร์ตี้สาธารณะ หรือสร้างห้องส่วนตัวสำหรับก๊วนของคุณเอง',
     cta: 'สร้างปาร์ตี้',
@@ -30,40 +30,40 @@ const slides = [
     buttonColor: 'btn-secondary'
   },
   {
-    image: '/images/carousel/auto-balance.png',
-    imageLg: '/images/carousel/auto-balance-lg.png',
+    image: '/images/carousel/auto-balance.jpg',
+    imageLg: '/images/carousel/auto-balance-lg.jpg',
     title: 'ระบบจัดเกมอัตโนมัติ',
     subtitle: 'บลาลานซ์ทักษะ เกลี่ยจำนวนเกม และจัดลำดับความสำคัญให้ทุกคนสนุกเท่ากัน',
     cta: 'ดูวิธีการ',
     href: '/tutorial',
   },
   {
-    image: '/images/carousel/realtime-stats.png',
-    imageLg: '/images/carousel/realtime-stats-lg.png',
+    image: '/images/carousel/realtime-stats.jpg',
+    imageLg: '/images/carousel/realtime-stats-lg.jpg',
     title: 'ข้อมูลแบบ Real-time',
     subtitle: 'บอกระยะเวลารอ จำนวนเกมที่เล่น และจำนวนลูกขนไก่ที่ใช้ไปแบบวินาทีต่อวินาที',
     cta: 'ร่วมปาร์ตี้',
     href: '/party-lists',
   },
   {
-    image: '/images/carousel/player-stats.png',
-    imageLg: '/images/carousel/player-stats-lg.png',
+    image: '/images/carousel/player-stats.jpg',
+    imageLg: '/images/carousel/player-stats-lg.jpg',
     title: 'สถิติและประวัติการเล่น',
     subtitle: 'บันทึกทุกแมตซ์ วิเคราะห์ผลงาน และอัปเลเวลเพื่อพัฒนาฝีมืออย่างต่อเนื่อง',
     cta: 'ดูสถิติของฉัน',
     href: '/profile',
   },
   {
-    image: '/images/carousel/social-friends.png',
-    imageLg: '/images/carousel/social-friends-lg.png',
+    image: '/images/carousel/social-friends.jpg',
+    imageLg: '/images/carousel/social-friends-lg.jpg',
     title: 'สังคมแบดมินตันครบวงจร',
     subtitle: 'ระบบเพื่อน แชทพูดคุย และนัดหมายการเล่นได้สะดวกทุกที่ทุกเวลา',
     cta: 'ดูรายชื่อเพื่อน',
     href: '/friends',
   },
   {
-    image: '/images/carousel/line-signup.png',
-    imageLg: '/images/carousel/line-signup-lg.png',
+    image: '/images/carousel/line-signup.jpg',
+    imageLg: '/images/carousel/line-signup-lg.jpg',
     title: 'สมัครง่ายผ่าน LINE',
     subtitle: 'เพียงแอด LINE @badmintonparty ก็เริ่มใช้งานและรับการแจ้งเตือนได้ทันที',
     cta: 'แอดไลน์',
@@ -71,8 +71,8 @@ const slides = [
     external: true
   },
   {
-    image: '/images/carousel/free-badge.png',
-    imageLg: '/images/carousel/free-badge-lg.png',
+    image: '/images/carousel/free-badge.jpg',
+    imageLg: '/images/carousel/free-badge-lg.jpg',
     title: 'ใช้งานฟรี! ไม่มีค่าใช้จ่าย',
     subtitle: 'ร่วมสร้างคอมมูนิตี้แบดมินตันที่สนุกและเป็นธรรมได้ฟรีวันนี้',
     cta: 'เริ่มเลย',
