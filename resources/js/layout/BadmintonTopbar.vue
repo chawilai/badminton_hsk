@@ -51,8 +51,7 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
     <header class="topbar-accent sticky top-0 z-50 h-14 lg:h-16 flex items-center px-4 lg:px-8 bg-base-100/80 backdrop-blur-xl border-b border-base-300">
         <!-- Left: Logo -->
         <div class="flex items-center gap-3 shrink-0">
-            <Link href="/home" class="flex items-center gap-1 no-underline">
-                <img src="/icons/logo3.png" alt="Badminton Party" class="w-7 h-7 lg:w-8 lg:h-8" />
+            <Link href="/home" class="flex items-center no-underline">
                 <img src="/icons/logo2.png" alt="Badminton Party" class="h-10 lg:h-12" />
             </Link>
         </div>

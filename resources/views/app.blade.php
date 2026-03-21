@@ -16,8 +16,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- facebook --}}
 
-    <link rel="icon" type="image/png" href="/icons/icon-96x96.png">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="/icons/logo3.png">
+    <link rel="apple-touch-icon" href="/icons/logo3.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#1a4731">
     <meta name="apple-mobile-web-app-capable" content="yes">
