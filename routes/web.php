@@ -24,6 +24,16 @@ use Inertia\Inertia;
 Route::get('/', fn() => Inertia::render('Home'))->name('home');
 Route::get('/home', fn() => Inertia::render('Home'));
 
+// Tutorial auto-login (local only — for screenshot capture)
+if (app()->environment('local')) {
+    Route::get('/tutorial-login', function () {
+        $userId = request()->query('user_id', 1);
+        $user = \App\Models\User::findOrFail($userId);
+        \Illuminate\Support\Facades\Auth::login($user);
+        return redirect('/party-lists');
+    });
+}
+
 // LINE webhook (exclude CSRF — external POST from LINE Platform)
 Route::post('/webhook', [LineMessagingController::class, 'webhook'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
@@ -134,6 +144,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
 
     // Verification (phone OTP + email code)
     Route::post('/verify/phone/send', [\App\Http\Controllers\VerificationController::class, 'sendPhoneOtp'])->name('verify.phone.send');

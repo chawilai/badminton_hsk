@@ -293,6 +293,41 @@ class ProfileController extends Controller
         return Redirect::route('profile.index')->with('success', 'บันทึกโปรไฟล์เรียบร้อย');
     }
 
+    /**
+     * Upload avatar (web + api).
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $user = $request->user();
+
+        // Delete old avatar file if it was a local upload
+        if ($user->avatar && str_starts_with($user->avatar, '/storage/avatars/')) {
+            $oldPath = str_replace('/storage/', '', $user->avatar);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $url = '/storage/' . $path;
+
+        $user->update([
+            'avatar' => $url,
+            'profile_picture' => $url,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'อัพโหลดรูปโปรไฟล์เรียบร้อย',
+                'avatar' => $url,
+            ]);
+        }
+
+        return Redirect::route('profile.index')->with('success', 'อัพโหลดรูปโปรไฟล์เรียบร้อย');
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
