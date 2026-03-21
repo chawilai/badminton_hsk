@@ -89,6 +89,23 @@ class LinkedAccountController extends Controller
             return redirect('/linked-accounts/merge');
         }
 
+        // Email check before linking
+        $socialEmail = $socialUser->getEmail();
+        $isRandomEmail = str_ends_with($currentUser->email, '@example.com');
+
+        if ($isRandomEmail && $socialEmail) {
+            // Auto-update random email to real email from provider
+            $currentUser->update([
+                'email' => $socialEmail,
+                'email_verified_at' => now(),
+            ]);
+        } elseif (!$isRandomEmail && $socialEmail && $currentUser->email !== $socialEmail) {
+            // Real email doesn't match provider email → block
+            return redirect('/profile/edit')->with('error',
+                'อีเมลในระบบ (' . $currentUser->email . ') ไม่ตรงกับอีเมล ' . $provider . ' (' . $socialEmail . ') กรุณาเปลี่ยนอีเมลให้ตรงกันก่อนเชื่อมต่อ'
+            );
+        }
+
         // Not linked anywhere → simply link
         $this->linkingService->linkAccountToUser(
             $currentUser,
@@ -98,7 +115,11 @@ class LinkedAccountController extends Controller
             $socialUser->getAvatar()
         );
 
-        return redirect('/profile/edit')->with('success', 'เชื่อมต่อ ' . $provider . ' เรียบร้อย');
+        $msg = 'เชื่อมต่อ ' . $provider . ' เรียบร้อย';
+        if ($isRandomEmail && $socialEmail) {
+            $msg .= ' และอัปเดตอีเมลเป็น ' . $socialEmail . ' แล้ว';
+        }
+        return redirect('/profile/edit')->with('success', $msg);
     }
 
     /**
