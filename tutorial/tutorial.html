@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badminton Party — คู่มือการใช้งาน</title>
+  <style>
+    /* ────────────── Fonts & Base ────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Prompt', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1f2937;
+      background: #fff;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0 8mm;
+    }
+
+    /* ────────────── Print / PDF ────────────── */
+    @media print {
+      body { padding: 0; max-width: 100%; }
+      .page-break { page-break-before: always; }
+      .no-break { page-break-inside: avoid; }
+      .cover { page-break-after: always; }
+    }
+
+    /* ────────────── Typography ────────────── */
+    h1 { font-size: 28px; font-weight: 700; color: #059669; margin: 30px 0 10px; }
+    h2 { font-size: 22px; font-weight: 600; color: #065f46; margin: 28px 0 12px; border-bottom: 3px solid #10b981; padding-bottom: 6px; }
+    h3 { font-size: 17px; font-weight: 600; color: #047857; margin: 20px 0 8px; }
+    h4 { font-size: 15px; font-weight: 500; color: #374151; margin: 14px 0 6px; }
+    p { margin: 6px 0; }
+    ul, ol { margin: 6px 0 12px 24px; }
+    li { margin: 3px 0; }
+
+    /* ────────────── Cover ────────────── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
+      border-radius: 0;
+      margin: -8mm -8mm 0;
+      padding: 40mm 20mm;
+    }
+    .cover-icon { font-size: 80px; margin-bottom: 20px; }
+    .cover h1 { font-size: 42px; color: #059669; margin-bottom: 8px; border: none; }
+    .cover .subtitle { font-size: 20px; color: #065f46; font-weight: 400; margin-bottom: 30px; }
+    .cover .version { font-size: 14px; color: #6b7280; margin-top: 40px; }
+
+    /* ────────────── TOC ────────────── */
+    .toc { margin: 20px 0 30px; }
+    .toc h2 { border-color: #059669; }
+    .toc ol { counter-reset: toc; list-style: none; margin-left: 0; }
+    .toc > ol > li { margin: 6px 0; counter-increment: toc; }
+    .toc > ol > li::before {
+      content: counter(toc) ". ";
+      font-weight: 600; color: #059669;
+    }
+    .toc a { text-decoration: none; color: #1f2937; }
+    .toc a:hover { color: #059669; text-decoration: underline; }
+
+    /* ────────────── Screenshot / Figure ────────────── */
+    .figure {
+      margin: 16px 0;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .figure img {
+      max-width: 280px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .figure.wide img { max-width: 100%; }
+    .figure-caption {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ────────────── Callout boxes ────────────── */
+    .tip, .warning, .info, .important {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-size: 13px;
+      page-break-inside: avoid;
+    }
+    .tip { background: #ecfdf5; border-left: 4px solid #10b981; }
+    .tip::before { content: "💡 เคล็ดลับ: "; font-weight: 600; }
+    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; }
+    .warning::before { content: "⚠️ หมายเหตุ: "; font-weight: 600; }
+    .info { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .info::before { content: "ℹ️ "; font-weight: 600; }
+    .important { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .important::before { content: "❗ สำคัญ: "; font-weight: 600; }
+
+    /* ────────────── Step boxes ────────────── */
+    .step {
+      display: flex;
+      gap: 12px;
+      margin: 12px 0;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      page-break-inside: avoid;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      background: #059669;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .step-content { flex: 1; }
+    .step-content strong { color: #047857; }
+
+    /* ────────────── Table ────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; }
+    th { background: #ecfdf5; font-weight: 600; color: #065f46; }
+    tr:nth-child(even) { background: #f9fafb; }
+
+    /* ────────────── Badge ────────────── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-orange { background: #ffedd5; color: #9a3412; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    /* ────────────── Keyboard shortcut ────────────── */
+    kbd {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    /* ────────────── Two-column layout ────────────── */
+    .cols {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin: 12px 0;
+    }
+    .cols > * { flex: 1; }
+
+    /* ────────────── Divider ────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 24px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     COVER PAGE
+     ═══════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-icon">🏸</div>
+  <h1>Badminton Party</h1>
+  <div class="subtitle">คู่มือการใช้งานฉบับสมบูรณ์</div>
+  <p style="font-size:16px; color:#374151; max-width:400px;">
+    จัดปาร์ตี้แบดมินตัน สร้างเกม จัดทีมอัตโนมัติ<br>
+    ติดตามสถิติ เลเวล และเชื่อมต่อกับเพื่อน
+  </p>
+  <div class="version">
+    เวอร์ชัน 1.0 &middot; มีนาคม 2026<br>
+    <small>สำหรับผู้เล่นใหม่และผู้จัดก๊วน</small>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<div class="toc">
+  <h2>สารบัญ</h2>
+  <ol>
+    <li><a href="#sec-register">สมัครสมาชิกและเข้าสู่ระบบ</a></li>
+    <li><a href="#sec-home">หน้าหลัก (Home)</a></li>
+    <li><a href="#sec-party-lists">รายการปาร์ตี้ (Party Lists)</a></li>
+    <li><a href="#sec-create-party">สร้างปาร์ตี้ใหม่</a></li>
+    <li><a href="#sec-invite">เชิญผู้เล่นเข้าปาร์ตี้</a></li>
+    <li><a href="#sec-party-detail">หน้าปาร์ตี้ — แท็บต่าง ๆ</a></li>
+    <li><a href="#sec-create-game">สร้างเกมและจัดทีม</a></li>
+    <li><a href="#sec-auto-game">ระบบจัดเกมอัตโนมัติ</a></li>
+    <li><a href="#sec-start-game">ตั้งค่าคอร์ท &amp; เริ่มเกม</a></li>
+    <li><a href="#sec-shuttlecock">จัดการลูกแบดมินตัน</a></li>
+    <li><a href="#sec-scoring">ลงผลคะแนน</a></li>
+    <li><a href="#sec-finish-game">จบเกมและเริ่มเกมจากลิสต์</a></li>
+    <li><a href="#sec-player-tab">รายการผู้เล่น &amp; ชื่อเรียก</a></li>
+    <li><a href="#sec-player-status">หยุดพัก / พร้อมเล่น</a></li>
+    <li><a href="#sec-party-stats">สถิติปาร์ตี้</a></li>
+    <li><a href="#sec-leave-party">ออกจากปาร์ตี้</a></li>
+    <li><a href="#sec-party-tv">โหมดทีวี (TV Dashboard)</a></li>
+    <li><a href="#sec-profile">โปรไฟล์หลัก</a></li>
+    <li><a href="#sec-skill">ประเมินทักษะ (Skill Assessment)</a></li>
+    <li><a href="#sec-mmr">ระบบเลเวล MMR</a></li>
+    <li><a href="#sec-friends">ระบบเพื่อน</a></li>
+    <li><a href="#sec-chat">แชท</a></li>
+    <li><a href="#sec-notifications">ตั้งค่าแจ้งเตือน</a></li>
+    <li><a href="#sec-feedback">แจ้งปัญหา / ข้อเสนอแนะ</a></li>
+    <li><a href="#sec-line-oa">LINE OA เมนู</a></li>
+    <li><a href="#sec-passcode">ปาร์ตี้ส่วนตัว (Passcode)</a></li>
+  </ol>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     1. REGISTRATION & LOGIN
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-register">1. สมัครสมาชิกและเข้าสู่ระบบ</h2>
+
+<p>Badminton Party รองรับการเข้าสู่ระบบ 2 วิธี:</p>
+
+<h3>วิธีที่ 1: เข้าสู่ระบบผ่าน LINE (แนะนำ)</h3>
+<p>วิธีนี้สะดวกที่สุด เพราะใช้บัญชี LINE ที่มีอยู่แล้ว และยังรับแจ้งเตือนผ่าน LINE OA ได้</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>เปิดแอป</strong> — เข้าเว็บไซต์ Badminton Party จะเจอหน้า Login
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "เข้าสู่ระบบด้วย LINE"</strong> — ปุ่มสีเขียวขนาดใหญ่ ระบบจะพาไปหน้า LINE Login
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>อนุญาตการเข้าถึง</strong> — กด "อนุญาต" เพื่อให้แอปใช้ข้อมูลชื่อและรูปโปรไฟล์จาก LINE
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>ตั้งค่าโปรไฟล์</strong> — ครั้งแรกระบบจะให้ตั้งชื่อแสดง, เพศ, วันเกิด (ถ้ามี) ก่อนเข้าใช้งาน
+  </div>
+</div>
+
+<div class="figure">
+  <img src="screenshots/annotated/01-login-page.png" alt="หน้า Login">
+  <div class="figure-caption">รูปที่ 1.1 — หน้าเข้าสู่ระบบ: กดปุ่ม LINE สีเขียว (1) หรือเลือกเข้าด้วยอีเมล (2)</div>
+</div>
+
+<h3>วิธีที่ 2: สมัครด้วยอีเมล</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดลิงก์ "สมัครสมาชิก"</strong> — ที่ด้านล่างของหน้า Login
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>กรอกข้อมูล:</strong>
+    <ul>
+      <li><strong>ชื่อ</strong> — ชื่อที่ต้องการแสดงในแอป</li>
+      <li><strong>อีเมล</strong> — อีเมลสำหรับเข้าสู่ระบบ</li>
+      <li><strong>รหัสผ่าน</strong> — อย่างน้อย 8 ตัวอักษร</li>
+      <li><strong>ยืนยันรหัสผ่าน</strong> — กรอกรหัสผ่านอีกครั้ง</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "สมัครสมาชิก"</strong> — ระบบจะส่งอีเมลยืนยัน (ต้องยืนยันก่อนใช้งาน)
+  </div>
+</div>
+
+<div class="figure">
+  <img src="screenshots/annotated/02-register-page.png" alt="หน้าสมัครสมาชิก">
+  <div class="figure-caption">รูปที่ 1.2 — หน้าสมัครสมาชิก</div>
+</div>
+
+<div class="tip">สมัครผ่าน LINE จะได้รับการแจ้งเตือนผ่าน LINE OA โดยอัตโนมัติ เช่น เมื่อมีคนเชิญเข้าปาร์ตี้ หรือเมื่อเกมจบ</div>
+
+<div class="warning">หากสมัครด้วยอีเมล คุณสามารถเชื่อมบัญชี LINE ภายหลังได้จากหน้าโปรไฟล์</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     2. HOME
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-home">2. หน้าหลัก (Home)</h2>
+
+<p>หลังเข้าสู่ระบบ คุณจะเจอหน้า Home ซึ่งเป็นจุดเริ่มต้นของทุกฟีเจอร์</p>
+
+<div class="figure">
+  <img src="screenshots/annotated/03-home-page.png" alt="หน้า Home">
+  <div class="figure-caption">รูปที่ 2.1 — หน้าหลัก แสดงแบนเนอร์เลื่อนอัตโนมัติ และเมนูลัด</div>
+</div>
+
+<h3>ส่วนประกอบของหน้า Home</h3>
+
+<table>
+  <tr>
+    <th>ส่วน</th>
+    <th>คำอธิบาย</th>
+  </tr>
+  <tr>
+    <td><strong>แบนเนอร์</strong></td>
+    <td>Carousel เลื่อนอัตโนมัติทุก 5 วินาที แสดง 4 สไลด์: จัดปาร์ตี้, ดูสถิติ, แชท, ระบบเพื่อน กดที่สไลด์เพื่อไปหน้านั้น</td>
+  </tr>
+  <tr>
+    <td><strong>เมนูลัด 4 ปุ่ม</strong></td>
+    <td>
+      1) <strong>รายการปาร์ตี้</strong> — ดูปาร์ตี้ทั้งหมดที่เปิดอยู่<br>
+      2) <strong>ปาร์ตี้ของฉัน</strong> — ปาร์ตี้ที่เข้าร่วมอยู่<br>
+      3) <strong>แชท</strong> — ข้อความกับเพื่อน (มี badge แจ้งจำนวนข้อความใหม่)<br>
+      4) <strong>โปรไฟล์</strong> — ดูสถิติ เลเวล ทักษะ
+    </td>
+  </tr>
+  <tr>
+    <td><strong>ฟีเจอร์เด่น</strong></td>
+    <td>3 การ์ดแนะนำ: จัดทีมอัตโนมัติ, ติดตามเวลา, แจ้งเตือน Realtime</td>
+  </tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     3. PARTY LISTS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-party-lists">3. รายการปาร์ตี้ (Party Lists)</h2>
+
+<p>หน้านี้แสดงปาร์ตี้ทั้งหมดที่เปิดรับสมาชิก คุณสามารถเข้าร่วมปาร์ตี้ที่มีอยู่ หรือสร้างปาร์ตี้ใหม่</p>
+
+<div class="figure">
+  <img src="screenshots/annotated/04-party-lists.png" alt="รายการปาร์ตี้">
+  <div class="figure-caption">รูปที่ 3.1 — รายการปาร์ตี้ กดปุ่ม + มุมขวาบนเพื่อสร้างปาร์ตี้ใหม่</div>
+</div>
+
+<h3>สิ่งที่แสดงบนการ์ดปาร์ตี้</h3>
+<ul>
+  <li><strong>ชื่อปาร์ตี้</strong> — ชื่อที่ host ตั้งไว้</li>
+  <li><strong>สถานะ</strong> — <span class="badge badge-green">เปิดรับ</span> <span class="badge badge-orange">เต็ม</span> <span class="badge badge-red">จบแล้ว</span></li>
+  <li><strong>ชื่อสนาม</strong> — สนามที่จัดเล่น</li>
+  <li><strong>วัน/เวลา</strong> — วันที่และเวลาเริ่ม-จบ</li>
+  <li><strong>ประเภทเกม</strong> — <span class="badge badge-blue">2v2</span> หรือ <span class="badge badge-purple">1v1</span></li>
+  <li><strong>รูปสมาชิก</strong> — avatar ของผู้เล่นที่เข้าร่วมแล้ว</li>
+  <li><strong>ไอคอนแม่กุญแจ</strong> 🔒 — ปาร์ตี้ส่วนตัว (ต้องใส่ passcode)</li>
+</ul>
+
+<h3>ปุ่มบนการ์ด</h3>
+<table>
+  <tr><th>ปุ่ม</th><th>แสดงเมื่อ</th><th>การทำงาน</th></tr>
+  <tr><td><strong>เข้าร่วม</strong></td><td>ยังไม่เป็นสมาชิก</td><td>เข้าร่วมปาร์ตี้ (ถ้า private ต้องใส่ passcode)</td></tr>
+  <tr><td><strong>เข้า</strong></td><td>เป็นสมาชิกแล้ว</td><td>ไปหน้าปาร์ตี้</td></tr>
+  <tr><td><strong>แก้ไข</strong></td><td>เป็น host</td><td>แก้ไขข้อมูลปาร์ตี้</td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     4. CREATE PARTY
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-create-party">4. สร้างปาร์ตี้ใหม่</h2>
+
+<p>กดปุ่ม <strong>+</strong> หรือ <strong>"สร้างปาร์ตี้"</strong> ที่มุมขวาบน จะเปิด Dialog ให้กรอกข้อมูล</p>
+
+<div class="figure">
+  <img src="screenshots/annotated/05-create-party-dialog.png" alt="สร้างปาร์ตี้">
+  <div class="figure-caption">รูปที่ 4.1 — ฟอร์มสร้างปาร์ตี้</div>
+</div>
+
+<h3>ข้อมูลที่ต้องกรอก</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>ชื่อปาร์ตี้</strong> — ตั้งชื่อให้เพื่อนจำได้ เช่น "ก๊วนวันอาทิตย์", "แบดตอนเช้า"
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เลือกสนาม</strong> — เลือกจากรายการสนามในระบบ (admin จัดการรายชื่อสนาม)
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>วันที่เล่น</strong> — เลือกวันที่จะจัดปาร์ตี้
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>เวลาเริ่ม-จบ</strong> — กำหนดช่วงเวลาที่จะเล่น
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-content">
+    <strong>จำนวนผู้เล่นสูงสุด</strong> — กี่คนถึงจะแสดงสถานะ "เต็ม"
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-content">
+    <strong>ประเภทค่าใช้จ่าย</strong>:
+    <ul>
+      <li><strong>ฟรี</strong> — ไม่เก็บค่าใช้จ่าย</li>
+      <li><strong>ต่อหัว</strong> — กำหนดค่าใช้จ่ายต่อคน</li>
+      <li><strong>หารเท่า</strong> — หารค่าสนาม + ค่าลูก เท่ากันทุกคน</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">7</div>
+  <div class="step-content">
+    <strong>ประเภทเกม</strong> — เลือก <span class="badge badge-blue">คู่ (2v2)</span> หรือ <span class="badge badge-purple">เดี่ยว (1v1)</span>
+  </div>
+</div>
+
+<div class="tip">หลังสร้างปาร์ตี้ คุณจะเป็น "Host" โดยอัตโนมัติ มีสิทธิ์จัดการเกม แก้ไขข้อมูล เชิญคน และจบปาร์ตี้</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     5. INVITE
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-invite">5. เชิญผู้เล่นเข้าปาร์ตี้</h2>
+
+<p>มีหลายวิธีในการเชิญผู้เล่นเข้าปาร์ตี้:</p>
+
+<h3>วิธีที่ 1: แชร์ลิงก์เชิญ</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "แชร์"</strong> ที่หน้าปาร์ตี้ (ไอคอน share มุมขวาบน)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>คัดลอกลิงก์</strong> — ระบบจะสร้างลิงก์เชิญพร้อม token เฉพาะ ส่งต่อผ่าน LINE, Facebook หรือช่องทางอื่น
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>เพื่อนกดลิงก์</strong> — จะเห็นหน้า preview ข้อมูลปาร์ตี้ แล้วกด "เข้าร่วม"
+  </div>
+</div>
+
+<h3>วิธีที่ 2: ส่ง Invitation ผ่าน LINE OA</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "เชิญผ่าน LINE"</strong> ในหน้าปาร์ตี้
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เลือกเพื่อนที่ต้องการเชิญ</strong> — ระบบจะแสดงรายชื่อเพื่อนและคนที่เคยร่วมปาร์ตี้
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ส่ง</strong> — เพื่อนจะได้รับ Flex Message สวยงามทาง LINE พร้อมปุ่ม "เข้าร่วม"
+  </div>
+</div>
+
+<h3>วิธีที่ 3: ให้เพื่อนค้นหาปาร์ตี้เอง</h3>
+<p>เพื่อนสามารถเปิดหน้า "รายการปาร์ตี้" แล้วกด "เข้าร่วม" ที่ปาร์ตี้ที่ต้องการ (เฉพาะปาร์ตี้สาธารณะ)</p>
+
+<div class="info">กดปุ่ม "แชร์" ที่มุมขวาบนของหน้าปาร์ตี้ จะแสดงตัวเลือกคัดลอกลิงก์หรือแชร์ผ่านแอปอื่น</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     6. PARTY DETAIL TABS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-party-detail">6. หน้าปาร์ตี้ — แท็บต่าง ๆ</h2>
+
+<p>เมื่อเข้าไปในปาร์ตี้ จะเจอ <strong>4 แท็บ</strong> หลัก:</p>
+
+<div class="figure">
+  <img src="screenshots/annotated/07-party-tab-game.png" alt="แท็บเกม">
+  <div class="figure-caption">รูปที่ 6.1 — หน้าปาร์ตี้ แถบเมนู 4 แท็บ</div>
+</div>
+
+<table>
+  <tr>
+    <th>แท็บ</th>
+    <th>ไอคอน</th>
+    <th>คำอธิบาย</th>
+  </tr>
+  <tr>
+    <td><strong>เกม</strong></td>
+    <td>🏸</td>
+    <td>สร้างเกม, จัดทีม, เริ่มเกม, ลงคะแนน — <strong>แท็บหลักที่ใช้บ่อยสุด</strong></td>
+  </tr>
+  <tr>
+    <td><strong>ข้อมูล</strong></td>
+    <td>ℹ️</td>
+    <td>รายละเอียดปาร์ตี้: สนาม, เวลา, ค่าใช้จ่าย, แก้ไขข้อมูล, ลบ, แชร์ลิงก์</td>
+  </tr>
+  <tr>
+    <td><strong>ผู้เล่น</strong></td>
+    <td>👥</td>
+    <td>รายชื่อผู้เล่น, ชื่อเรียก, สถานะ พร้อม/พัก, เตะออก</td>
+  </tr>
+  <tr>
+    <td><strong>สถิติ</strong></td>
+    <td>📊</td>
+    <td>สถิติปาร์ตี้: อัตราชนะ, เวลาเล่น, คู่ที่เล่นด้วยกัน, MVP</td>
+  </tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     7. CREATE GAME
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-create-game">7. สร้างเกมและจัดทีม</h2>
+
+<p>ในแท็บ <strong>"เกม"</strong> กดปุ่ม <strong>"สร้างเกม"</strong> เพื่อเริ่มต้น</p>
+
+<h3>ขั้นตอนสร้างเกม (Manual)</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กด "สร้างเกม"</strong> — ระบบจะสร้างเกมใหม่ในสถานะ <span class="badge badge-blue">Setting</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เพิ่มผู้เล่น</strong> — กดชื่อผู้เล่นจากรายการเพื่อเพิ่มเข้าเกม (สูงสุด 4 คนสำหรับ 2v2)
+    <ul>
+      <li>ผู้เล่นที่กำลังเล่นเกมอื่นอยู่จะแสดงเป็นสีจาง (เพิ่มไม่ได้)</li>
+      <li>ผู้เล่นที่ "หยุดพัก" จะแสดง badge สีเหลือง</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>จัดทีม</strong> — ลากผู้เล่นไปทีม A หรือทีม B (หรือกดปุ่มสลับทีม)
+    <ul>
+      <li>ทีมต้องสมดุล (2v2 ต้องมีฝั่งละ 2)</li>
+      <li>ถ้าไม่สมดุล ระบบจะเตือนตอนกด "เริ่ม"</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>กำหนดคอร์ท</strong> — เลือกคอร์ทที่จะเล่น (ถ้ามีหลายคอร์ท)
+  </div>
+</div>
+
+<div class="figure">
+  <img src="screenshots/annotated/11-create-game.png" alt="สร้างเกม">
+  <div class="figure-caption">รูปที่ 7.1 — หน้าจัดเกม เพิ่มผู้เล่นและจัดทีม</div>
+</div>
+
+<div class="important">ผู้เล่นคนเดียวกันไม่สามารถอยู่ในหลายเกมที่กำลังเล่นพร้อมกันได้ ระบบจะป้องกันอัตโนมัติ</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     8. AUTO GAME
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-auto-game">8. ระบบจัดเกมอัตโนมัติ</h2>
+
+<p>ฟีเจอร์จัดเกมอัตโนมัติช่วยให้ host ไม่ต้องเลือกคนเองทุกครั้ง</p>
+
+<h3>หลักการทำงาน</h3>
+<ol>
+  <li><strong>เลือกจากคนที่ "พร้อม"</strong> — ระบบดูเฉพาะผู้เล่นที่สถานะเป็น <span class="badge badge-green">พร้อม</span></li>
+  <li><strong>เรียงตามเวลารอ</strong> — คนที่รอนานที่สุด (ไม่ได้เล่นนานสุด) จะถูกเลือกก่อน</li>
+  <li><strong>จัดทีมสมดุล</strong> — ระบบพยายามจัดให้ทีมมี MMR ใกล้เคียงกัน</li>
+  <li><strong>สร้างเกมใหม่</strong> — เกมถูกสร้างในสถานะ <span class="badge badge-blue">Listing</span> พร้อมให้ host ตรวจสอบก่อนเริ่ม</li>
+</ol>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "จัดเกมอัตโนมัติ"</strong> — ระบบจะสร้างเกมให้อัตโนมัติ
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>ตรวจสอบผลการจัด</strong> — เกมจะปรากฏในสถานะ Listing ให้ host ตรวจดูทีม
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>สลับทีมได้</strong> — ถ้าไม่พอใจ host สามารถลาก/สลับผู้เล่นระหว่างทีมได้
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>เริ่มเกม</strong> — เลือกคอร์ทแล้วกด "เริ่มเกม"
+  </div>
+</div>
+
+<div class="tip">คนที่ตั้งสถานะ "หยุดพัก" จะไม่ถูกจัดเข้าเกมอัตโนมัติ จนกว่าจะเปลี่ยนเป็น "พร้อม"</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     9. START GAME (COURT + SHUTTLECOCK)
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-start-game">9. ตั้งค่าคอร์ท &amp; เริ่มเกม</h2>
+
+<h3>การกำหนดคอร์ท</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "เริ่มเกม"</strong> หรือ <strong>"List"</strong> ที่การ์ดเกม
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เลือกหมายเลขคอร์ท</strong> — ป๊อปอัพจะแสดงให้เลือกคอร์ทที่ว่าง ถ้าปาร์ตี้มี court booking จะแสดงคอร์ทที่จองไว้
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ยืนยัน</strong> — ระบบจะบันทึกคอร์ทและเปลี่ยนสถานะเกมเป็น <span class="badge badge-green">Playing</span>
+  </div>
+</div>
+
+<h3>สถานะเกม</h3>
+<table>
+  <tr><th>สถานะ</th><th>ความหมาย</th><th>ทำอะไรได้</th></tr>
+  <tr>
+    <td><span class="badge badge-blue">Setting</span></td>
+    <td>กำลังตั้งค่า เพิ่ม/ลบผู้เล่น</td>
+    <td>เพิ่มผู้เล่น, สลับทีม, เลือกคอร์ท</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-orange">Listing</span></td>
+    <td>จัดทีมเสร็จ รอเริ่ม</td>
+    <td>ตรวจสอบทีม, เปลี่ยนคอร์ท, เริ่มเกม</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-green">Playing</span></td>
+    <td>กำลังเล่น</td>
+    <td>เพิ่มลูก, ดูเวลา, จบเกม</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-red">Finished</span></td>
+    <td>เล่นจบแล้ว</td>
+    <td>ดูผลคะแนน, ดูสถิติ</td>
+  </tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     10. SHUTTLECOCK
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-shuttlecock">10. จัดการลูกแบดมินตัน</h2>
+
+<p>ระบบติดตามจำนวนลูกแบดที่ใช้ในแต่ละเกม สำหรับคำนวณค่าใช้จ่าย</p>
+
+<h3>กำหนดลูกเริ่มต้น</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>ก่อนเริ่มปาร์ตี้</strong> — host สามารถกำหนด "จำนวนลูกเริ่มต้น" ของปาร์ตี้ได้ เช่น เตรียมมา 12 ลูก
+  </div>
+</div>
+
+<h3>เพิ่มลูกระหว่างเล่น</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "เพิ่มลูก" ที่การ์ดเกม</strong> — เมื่อลูกเก่าขาดหรือเสีย
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>ระบุจำนวน</strong> — กี่ลูกที่เพิ่ม (default = 1)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ยืนยัน</strong> — ระบบจะรวมจำนวนลูกที่ใช้ทั้งปาร์ตี้
+  </div>
+</div>
+
+<div class="info">จำนวนลูกจะแสดงในสรุปค่าใช้จ่ายตอนจบปาร์ตี้ เพื่อหารค่าลูกตามจำนวนเกมที่เล่น</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     11. SCORING
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-scoring">11. ลงผลคะแนน</h2>
+
+<h3>ใครมีสิทธิ์ลงผล?</h3>
+<ul>
+  <li><strong>Host</strong> ของปาร์ตี้ — ลงผลได้ทุกเกม</li>
+  <li><strong>ผู้เล่นในเกมนั้น ๆ</strong> — ลงผลเกมที่ตัวเองเล่นได้</li>
+</ul>
+
+<h3>วิธีลงผลคะแนน</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดที่การ์ดเกม</strong> ที่มีสถานะ <span class="badge badge-green">Playing</span> หรือ <span class="badge badge-red">Finished</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "แก้ไขคะแนน"</strong> — จะเปิด dialog แก้ไขคะแนน
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ใส่คะแนนแต่ละเซ็ต</strong>:
+    <ul>
+      <li>เซ็ต 1, เซ็ต 2 (บังคับ)</li>
+      <li>เซ็ต 3 (ถ้ามี — กรณีเสมอ 1:1)</li>
+      <li>ใส่คะแนนทีม A และทีม B แต่ละเซ็ต</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>กด "บันทึก"</strong> — ระบบจะคำนวณผลแพ้/ชนะ และอัพเดท MMR ของทุกคนในเกม
+  </div>
+</div>
+
+<div class="warning">การแก้ไขคะแนนจะใช้ deep clone ข้อมูลเดิม ดังนั้นถ้ากด "ยกเลิก" คะแนนจะกลับเป็นค่าเดิม ไม่มีผลกระทบ</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     12. FINISH GAME & RESTART
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-finish-game">12. จบเกมและเริ่มเกมจากลิสต์</h2>
+
+<h3>จบเกม</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "จบเกม"</strong> ที่การ์ดเกมสถานะ Playing
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>ยืนยัน</strong> — เกมจะเปลี่ยนเป็น <span class="badge badge-red">Finished</span>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ลงคะแนน</strong> — ถ้ายังไม่ได้ลง ระบบจะให้ลงคะแนนก่อนจบ (หรือจบก่อนลงทีหลังก็ได้)
+  </div>
+</div>
+
+<h3>เริ่มเกมจากลิสต์ (Listing → Playing)</h3>
+<p>เกมที่อยู่ในสถานะ <span class="badge badge-orange">Listing</span> (จัดทีมไว้แล้วแต่ยังไม่เริ่ม) สามารถ:</p>
+<ul>
+  <li><strong>กดปุ่ม "เริ่มเกม"</strong> — เลือกคอร์ท → เริ่มเล่น</li>
+  <li><strong>แก้ไขทีม</strong> — เปลี่ยนคน/สลับทีมก่อนเริ่มได้</li>
+  <li><strong>ลบเกม</strong> — ยกเลิกเกมที่ยังไม่เริ่ม</li>
+</ul>
+
+<div class="tip">เกมที่ Listing ไว้หลายเกมช่วยให้ host เตรียมคิวล่วงหน้า พอคอร์ทว่างก็เริ่มเกมถัดไปได้เลย</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     13. PLAYER TAB
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-player-tab">13. รายการผู้เล่น &amp; ชื่อเรียก</h2>
+
+<p>แท็บ <strong>"ผู้เล่น"</strong> แสดงรายชื่อสมาชิกทั้งหมดในปาร์ตี้</p>
+
+<div class="cols" style="gap:12px; align-items:flex-start;">
+  <div class="figure" style="flex:1; margin:0;">
+    <img src="screenshots/annotated/09-party-tab-player.png" alt="แท็บผู้เล่น" style="max-width:100%">
+    <div class="figure-caption">รูปที่ 13.1 — ลำดับ, ชื่อเรียก, สถานะ</div>
+  </div>
+  <div class="figure" style="flex:1; margin:0;">
+    <img src="screenshots/annotated/09b-party-tab-player-scroll.png" alt="แท็บผู้เล่น (เลื่อนลง)" style="max-width:100%">
+    <div class="figure-caption">รูปที่ 13.2 — เลื่อนลงเห็นครบทุกคน</div>
+  </div>
+</div>
+
+<h3>ข้อมูลที่แสดง</h3>
+<ul>
+  <li><strong>ลำดับ</strong> — ตัวเลขลำดับที่เข้าปาร์ตี้</li>
+  <li><strong>รูป Avatar</strong> — รูปโปรไฟล์ (ถ้าไม่มีจะแสดงตัวอักษรย่อ)</li>
+  <li><strong>ชื่อเรียก (Display Name)</strong> — สามารถกดแก้ไขได้</li>
+  <li><strong>ชื่อจริง</strong> — ชื่อในระบบ (ตัวเล็กสีเทา)</li>
+  <li><strong>ไอคอน Role</strong> — 👑 = Host, 👤 = สมาชิก</li>
+  <li><strong>สถานะ</strong> — สวิตช์ <span class="badge badge-green">พร้อม</span> / <span class="badge badge-orange">พัก</span></li>
+</ul>
+
+<h3>การตั้งชื่อเรียก (Display Name)</h3>
+<p>ชื่อเรียกใช้ภายในปาร์ตี้เท่านั้น เช่น ถ้าชื่อจริงยาว host สามารถตั้งชื่อสั้น ๆ เช่น "พี่บอล", "น้องฝ้าย"</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดที่ช่องชื่อเรียก</strong> — จะเปิดให้แก้ไขได้ทันที
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>พิมพ์ชื่อใหม่</strong> → กดที่อื่น (blur) — ระบบจะบันทึกอัตโนมัติ
+  </div>
+</div>
+
+<h3>เตะผู้เล่นออก (Host เท่านั้น)</h3>
+<p>Host สามารถเตะผู้เล่นออกได้ <strong>เฉพาะกรณีที่ผู้เล่นยังไม่ได้เล่นเกมใดเลย</strong></p>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     14. PLAYER STATUS
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-player-status">14. หยุดพัก / พร้อมเล่น</h2>
+
+<p>ผู้เล่นสามารถตั้งสถานะของตัวเองได้:</p>
+
+<table>
+  <tr>
+    <th>สถานะ</th>
+    <th>สี</th>
+    <th>ผลกระทบ</th>
+  </tr>
+  <tr>
+    <td><strong>พร้อม (Ready)</strong></td>
+    <td><span class="badge badge-green">เขียว</span></td>
+    <td>ถูกจัดเข้าเกมอัตโนมัติได้, แสดงในคิวปกติ</td>
+  </tr>
+  <tr>
+    <td><strong>พัก (Break)</strong></td>
+    <td><span class="badge badge-orange">เหลือง</span></td>
+    <td>ไม่ถูกจัดเข้าเกมอัตโนมัติ, แต่ host ยังเพิ่มเข้าเกมเองได้</td>
+  </tr>
+</table>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>กดสวิตช์สถานะ</strong> ในแท็บ "ผู้เล่น" หรือในรายชื่อข้างเกม
+  </div>
+</div>
+
+<div class="tip">ตั้ง "พัก" เมื่อต้องการพักผ่อน ดื่มน้ำ หรือไม่พร้อมเล่นชั่วคราว ระบบจัดเกมอัตโนมัติจะข้ามคุณไป</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     15. PARTY STATISTICS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-party-stats">15. สถิติปาร์ตี้</h2>
+
+<p>แท็บ <strong>"สถิติ"</strong> แสดงข้อมูลสรุปของปาร์ตี้</p>
+
+<div class="figure">
+  <img src="screenshots/annotated/10-party-tab-statistic.png" alt="สถิติปาร์ตี้">
+  <div class="figure-caption">รูปที่ 15.1 — สถิติปาร์ตี้</div>
+</div>
+
+<h3>มุมมอง 2 แบบ</h3>
+
+<h4>แบบ 1: ตามจำนวนเกม (Games)</h4>
+<ul>
+  <li>จำนวนเกมที่เล่น</li>
+  <li>เซ็ตที่ชนะ / แพ้</li>
+  <li>อัตราชนะ (%)</li>
+  <li>เรียงตามเซ็ตชนะ</li>
+</ul>
+
+<h4>แบบ 2: ตามเวลาเล่น (Duration)</h4>
+<ul>
+  <li>เวลารวมที่เล่น</li>
+  <li>เวลาเฉลี่ยต่อเกม</li>
+  <li>เรียงตามเวลาเล่นรวม</li>
+</ul>
+
+<h4>สถิติคู่ (Pair Stats)</h4>
+<ul>
+  <li>คู่ที่เล่นด้วยกันบ่อย</li>
+  <li>อัตราชนะของแต่ละคู่</li>
+  <li>ค้นหาด้วยชื่อได้</li>
+</ul>
+
+<p><strong>MVP</strong> — ผู้เล่นที่มีอัตราชนะสูงสุด (ต้องเล่นอย่างน้อย 2 เกม) จะได้ badge MVP</p>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     16. LEAVE PARTY
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-leave-party">16. ออกจากปาร์ตี้</h2>
+
+<h3>สำหรับสมาชิก (ไม่ใช่ Host)</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    ไปแท็บ <strong>"ข้อมูล"</strong> หรือแท็บ <strong>"ผู้เล่น"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    กดปุ่ม <strong>"ออกจากปาร์ตี้"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    ยืนยัน — จะออกจากปาร์ตี้ทันที
+  </div>
+</div>
+
+<div class="important">ออกจากปาร์ตี้ได้เฉพาะเมื่อ<strong>ยังไม่ได้เล่นเกมใดเลย</strong> ถ้าเล่นไปแล้วจะออกไม่ได้</div>
+
+<h3>สำหรับ Host</h3>
+<p>Host ไม่สามารถออกจากปาร์ตี้ได้ แต่สามารถ:</p>
+<ul>
+  <li><strong>ลบปาร์ตี้</strong> — ถ้ายังไม่มีเกม และไม่มีสมาชิกคนอื่น</li>
+  <li><strong>จบปาร์ตี้</strong> — เปลี่ยนสถานะเป็น "จบแล้ว" ส่งสรุปผ่าน LINE</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     17. TV DASHBOARD
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-party-tv">17. โหมดทีวี (TV Dashboard)</h2>
+
+<p>เปิดหน้าจอ TV ขนาดใหญ่แสดงสถานะเกมและคิวผู้เล่น สำหรับฉายบนจอทีวีที่สนาม</p>
+
+<div class="figure wide">
+  <img src="screenshots/14-tv-dashboard.png" alt="TV Dashboard">
+  <div class="figure-caption">รูปที่ 17.1 — โหมดทีวี แสดงเกมที่กำลังเล่นและคิวรอ</div>
+</div>
+
+<h3>วิธีเปิดโหมดทีวี</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    ในหน้าปาร์ตี้ กดปุ่ม <strong>"TV"</strong> หรือไอคอนจอทีวี
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    ฉายบนจอทีวีหรือโปรเจคเตอร์ที่สนาม (แนะนำใช้ HDMI หรือ Chromecast)
+  </div>
+</div>
+
+<h3>หน้าจอที่แสดง</h3>
+<table>
+  <tr><th>หน้าจอ</th><th>แสดง</th></tr>
+  <tr><td><strong>เกมที่กำลังเล่น</strong></td><td>ทีม, คะแนน, คอร์ท, เวลาที่เล่น</td></tr>
+  <tr><td><strong>เกมที่รอเริ่ม</strong></td><td>ทีมที่จัดไว้, เวลารอ</td></tr>
+  <tr><td><strong>คิวผู้เล่น</strong></td><td>ผู้เล่นที่ "พร้อม" เรียงตามเวลารอ</td></tr>
+  <tr><td><strong>สถิติคอร์ท</strong></td><td>คอร์ทไหนว่าง, คอร์ทไหนกำลังเล่น</td></tr>
+</table>
+
+<h3>การควบคุม</h3>
+<ul>
+  <li><strong>สลับหน้าจออัตโนมัติ</strong> — ทุก 10 วินาทีจะสลับระหว่างหน้าจอ</li>
+  <li><strong>ล็อคหน้าจอ</strong> — กดปุ่ม 🔒 เพื่อหยุดสลับ ค้างที่หน้าปัจจุบัน</li>
+  <li><strong>นาฬิกา</strong> — แสดงเวลาปัจจุบัน (อัพเดททุกวินาที)</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     18. PROFILE
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-profile">18. โปรไฟล์หลัก</h2>
+
+<div class="figure">
+  <img src="screenshots/annotated/15-profile.png" alt="โปรไฟล์">
+  <div class="figure-caption">รูปที่ 18.1 — หน้าโปรไฟล์ แสดงเลเวล MMR และสถิติ</div>
+</div>
+
+<h3>ข้อมูลที่แสดง</h3>
+
+<h4>ส่วนบน — ข้อมูลผู้เล่น</h4>
+<ul>
+  <li><strong>รูป Avatar</strong> + ชื่อ + อีเมล</li>
+  <li><strong>Motto</strong> — คำคม/คำอธิบายตัวเอง</li>
+  <li><strong>เลเวล MMR</strong> — ชื่อ tier + badge สี (เช่น "เข้าคอร์ท Lv.4")</li>
+</ul>
+
+<h4>ส่วนกลาง — สถิติ</h4>
+<ul>
+  <li>จำนวนเกมที่เล่น / ชนะ / แพ้</li>
+  <li>อัตราชนะ (%)</li>
+  <li>เวลาเล่นรวม</li>
+  <li>แคลอรี่ที่เผาผลาญ</li>
+</ul>
+
+<h4>ส่วนล่าง — ประวัติ</h4>
+<ul>
+  <li><strong>เกมล่าสุด</strong> — วันที่, ทีม, คะแนน</li>
+  <li><strong>ปาร์ตี้ล่าสุด</strong> — สนาม, วันที่</li>
+</ul>
+
+<h3>การกรองสถิติ</h3>
+<p>กดปุ่มช่วงเวลาเพื่อกรอง:</p>
+<ul>
+  <li><strong>สัปดาห์นี้</strong> — 7 วันล่าสุด</li>
+  <li><strong>เดือนนี้</strong> — เดือนปัจจุบัน</li>
+  <li><strong>ทั้งหมด</strong> — ตั้งแต่เริ่มใช้งาน</li>
+  <li><strong>เลือกปี/เดือน</strong> — dropdown เลือกปีและเดือนที่ต้องการ</li>
+</ul>
+
+<h3>แก้ไขโปรไฟล์</h3>
+<p>กดปุ่ม "แก้ไข" ที่หน้าโปรไฟล์ เพื่อเปลี่ยน:</p>
+<ul>
+  <li>ชื่อ, อีเมล, motto</li>
+  <li>เพศ, วันเกิด</li>
+  <li>ที่อยู่ (ตำบล, อำเภอ, จังหวัด)</li>
+  <li>เบอร์โทร (ยืนยันด้วย OTP)</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     19. SKILL ASSESSMENT
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-skill">19. ประเมินทักษะ (Skill Assessment)</h2>
+
+<p>ประเมินตัวเอง 10 ด้าน ผลจะแสดงเป็น Radar Chart บนโปรไฟล์</p>
+
+<div class="figure">
+  <img src="screenshots/17-skill-assessment.png" alt="Skill Assessment">
+  <div class="figure-caption">รูปที่ 19.1 — หน้าประเมินทักษะ เลือกระดับ 1-10 แต่ละด้าน</div>
+</div>
+
+<h3>10 ทักษะที่ประเมิน</h3>
+<table>
+  <tr><th>#</th><th>ทักษะ</th><th>คำอธิบาย</th></tr>
+  <tr><td>1</td><td>เสิร์ฟ</td><td>ความแม่น เสิร์ฟสั้น/ยาว</td></tr>
+  <tr><td>2</td><td>สแมช</td><td>ความแรง เลือกมุม</td></tr>
+  <tr><td>3</td><td>ลูกเคลียร์</td><td>ตีลูกยาวไปหลังสนาม</td></tr>
+  <tr><td>4</td><td>เกมหน้าเน็ต</td><td>ดร็อป หยอด ขว้าง สปิน</td></tr>
+  <tr><td>5</td><td>เกมรับ</td><td>รับสแมช กลับตัว</td></tr>
+  <tr><td>6</td><td>แบ็คแฮนด์</td><td>ตีด้านหลังมือ</td></tr>
+  <tr><td>7</td><td>ลูกหลอก</td><td>หลอกทิศทาง จังหวะ</td></tr>
+  <tr><td>8</td><td>ฟุตเวิร์ค</td><td>การเคลื่อนที่ในสนาม</td></tr>
+  <tr><td>9</td><td>ความเร็ว</td><td>ความเร็วในการเคลื่อนไหว</td></tr>
+  <tr><td>10</td><td>สตามิน่า</td><td>ความอึด ทนเล่นได้นาน</td></tr>
+</table>
+
+<h3>วิธีประเมิน</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    ไปหน้า <strong>โปรไฟล์</strong> → กด <strong>"ประเมินทักษะ"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เลือกระดับ 1-10</strong> สำหรับทักษะแต่ละด้าน (กดปุ่มตัวเลข)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    กด <strong>"ถัดไป"</strong> ไปทักษะต่อไป (หรือกด dot ด้านบนเพื่อข้ามไปด้านที่ต้องการ)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    ดู <strong>สรุป Radar Chart</strong> แล้วกด <strong>"บันทึก"</strong>
+  </div>
+</div>
+
+<div class="tip">ประเมินใหม่ได้เมื่อไหร่ก็ได้ ถ้ารู้สึกว่าทักษะเปลี่ยนไป</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     20. MMR SYSTEM
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-mmr">20. ระบบเลเวล MMR</h2>
+
+<p>MMR (Matchmaking Rating) คือระบบจัดอันดับฝีมือ คำนวณจากผลเกม</p>
+
+<h3>10 Tiers (ขั้น)</h3>
+<table>
+  <tr><th>Tier</th><th>ชื่อ (TH)</th><th>จำนวน Level</th><th>สี</th></tr>
+  <tr><td>1</td><td>หัดเล่น</td><td>2 levels</td><td><span class="badge" style="background:#e5e7eb">เทา</span></td></tr>
+  <tr><td>2</td><td>หน้าบ้าน</td><td>3 levels</td><td><span class="badge" style="background:#bbf7d0">เขียวอ่อน</span></td></tr>
+  <tr><td>3</td><td>ในสวน</td><td>4 levels</td><td><span class="badge" style="background:#86efac">เขียว</span></td></tr>
+  <tr><td>4</td><td>เข้าคอร์ท</td><td>5 levels</td><td><span class="badge" style="background:#93c5fd">ฟ้า</span></td></tr>
+  <tr><td>5</td><td>มือดี</td><td>5 levels</td><td><span class="badge" style="background:#a78bfa">ม่วง</span></td></tr>
+  <tr><td>6</td><td>มือแข็ง</td><td>4 levels</td><td><span class="badge" style="background:#fbbf24;color:#000">ทอง</span></td></tr>
+  <tr><td>7</td><td>มือโปร</td><td>3 levels</td><td><span class="badge" style="background:#f97316;color:#fff">ส้ม</span></td></tr>
+  <tr><td>8</td><td>สายแข่ง</td><td>2 levels</td><td><span class="badge" style="background:#ef4444;color:#fff">แดง</span></td></tr>
+  <tr><td>9</td><td>แชมเปี้ยน</td><td>1 level</td><td><span class="badge" style="background:#ec4899;color:#fff">ชมพู</span></td></tr>
+  <tr><td>10</td><td>ตำนาน</td><td>1 level</td><td><span class="badge" style="background:#8b5cf6;color:#fff">ม่วงเข้ม</span></td></tr>
+</table>
+
+<h3>MMR เปลี่ยนอย่างไร?</h3>
+<ul>
+  <li>ทุกเกมที่จบ ระบบจะคำนวณ MMR ใหม่ตาม ELO algorithm</li>
+  <li><strong>ชนะ</strong> → MMR เพิ่ม | <strong>แพ้</strong> → MMR ลด</li>
+  <li>ชนะทีมที่ MMR สูงกว่า → ได้ MMR เพิ่มมากกว่าปกติ</li>
+  <li>คะแนนที่ห่างกันมาก (21-5) → ได้ bonus มากกว่า (21-19)</li>
+  <li>ชนะติดต่อหลายเกม → ได้ streak multiplier</li>
+</ul>
+
+<h3>Level Up Notification</h3>
+<p>เมื่อ MMR ข้ามเส้น level ใหม่ ระบบจะแสดง popup แจ้งเลื่อนขั้น พร้อมชื่อ tier เดิม → tier ใหม่</p>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     21. FRIENDS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-friends">21. ระบบเพื่อน</h2>
+
+<div class="figure">
+  <img src="screenshots/annotated/19-friends.png" alt="เพื่อน">
+  <div class="figure-caption">รูปที่ 21.1 — หน้าเพื่อน 3 แท็บ</div>
+</div>
+
+<h3>3 แท็บ</h3>
+<table>
+  <tr><th>แท็บ</th><th>คำอธิบาย</th></tr>
+  <tr><td><strong>เพื่อนของฉัน</strong></td><td>รายชื่อเพื่อนที่ตอบรับแล้ว</td></tr>
+  <tr><td><strong>คำขอที่ได้รับ</strong></td><td>คนที่ส่งคำขอเป็นเพื่อนมาหาคุณ → กด ตอบรับ/ปฏิเสธ</td></tr>
+  <tr><td><strong>คำขอที่ส่ง</strong></td><td>คำขอที่คุณส่งไป → กด ยกเลิก ได้</td></tr>
+</table>
+
+<h3>วิธีเพิ่มเพื่อน</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    ในหน้าปาร์ตี้ แท็บ <strong>"ผู้เล่น"</strong> จะเห็นปุ่ม <strong>"เพิ่มเพื่อน"</strong> ข้างชื่อผู้เล่นที่ยังไม่เป็นเพื่อน
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>กดปุ่ม "เพิ่มเพื่อน"</strong> — ระบบจะส่งคำขอไปยังอีกฝ่าย
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>อีกฝ่ายตอบรับ</strong> — ทั้งสองจะเป็นเพื่อนกัน สามารถแชทได้
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     22. CHAT
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-chat">22. แชท</h2>
+
+<div class="figure">
+  <img src="screenshots/annotated/18-chat.png" alt="แชท">
+  <div class="figure-caption">รูปที่ 22.1 — หน้าแชท</div>
+</div>
+
+<h3>ฟีเจอร์แชท</h3>
+<ul>
+  <li><strong>แชทตัวต่อตัว</strong> — ส่งข้อความหาเพื่อนโดยตรง</li>
+  <li><strong>Realtime</strong> — ข้อความอัพเดททันที ไม่ต้อง refresh</li>
+  <li><strong>Read Receipt</strong> — เห็นว่าอีกฝ่ายอ่านข้อความแล้วหรือยัง</li>
+  <li><strong>Badge ข้อความใหม่</strong> — แสดงจำนวนข้อความที่ยังไม่ได้อ่าน</li>
+</ul>
+
+<h3>วิธีเริ่มแชท</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    กดปุ่ม <strong>"แชทใหม่"</strong> (ไอคอน + มุมขวาบน)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>ค้นหาชื่อเพื่อน</strong> → เลือกจากรายการ
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>พิมพ์ข้อความ</strong> แล้วกด <strong>ส่ง</strong>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     23. NOTIFICATIONS
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-notifications">23. ตั้งค่าแจ้งเตือน</h2>
+
+<div class="figure">
+  <img src="screenshots/annotated/20-notification-settings.png" alt="ตั้งค่าแจ้งเตือน">
+  <div class="figure-caption">รูปที่ 23.1 — หน้าตั้งค่าแจ้งเตือน LINE</div>
+</div>
+
+<p>ตั้งค่าการแจ้งเตือนผ่าน LINE OA (ต้องเชื่อมบัญชี LINE)</p>
+
+<h3>ประเภทแจ้งเตือน</h3>
+<table>
+  <tr><th>ประเภท</th><th>คำอธิบาย</th></tr>
+  <tr><td>🎉 เชิญเข้าปาร์ตี้</td><td>เมื่อมีคนเชิญคุณเข้าปาร์ตี้</td></tr>
+  <tr><td>⏰ เตือนก่อนเวลา</td><td>เตือนก่อนปาร์ตี้เริ่ม</td></tr>
+  <tr><td>🏸 เริ่มเกม</td><td>เมื่อเกมที่คุณเล่นเริ่มแล้ว</td></tr>
+  <tr><td>🏆 ผลเกม</td><td>สรุปผลเกมที่จบ</td></tr>
+  <tr><td>👋 คำขอเพื่อน</td><td>เมื่อมีคนส่งคำขอเป็นเพื่อน</td></tr>
+  <tr><td>👥 มีคนเข้าร่วม</td><td>เมื่อมีสมาชิกใหม่เข้าปาร์ตี้ของคุณ</td></tr>
+</table>
+
+<p>แต่ละประเภทสามารถ <strong>เปิด/ปิด</strong> แยกกันได้ หรือกดสวิตช์หลักเพื่อปิดทั้งหมด</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    กดสวิตช์เปิด/ปิดแต่ละประเภท
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    กดปุ่ม <strong>"บันทึก"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    กดปุ่ม <strong>"ทดสอบ"</strong> เพื่อลองส่งแจ้งเตือนตัวอย่าง
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     24. FEEDBACK
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-feedback">24. แจ้งปัญหา / ข้อเสนอแนะ</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    กดเมนู <strong>"แจ้งปัญหา/ข้อเสนอแนะ"</strong> จากเมนูหลัก หรือ bottom nav
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>เลือกประเภท:</strong>
+    <ul>
+      <li>🐛 <strong>แจ้งบัค</strong> — พบปัญหาในการใช้งาน</li>
+      <li>💡 <strong>ขอฟีเจอร์</strong> — อยากให้เพิ่มอะไร</li>
+      <li>💬 <strong>ข้อเสนอแนะ</strong> — ความคิดเห็นทั่วไป</li>
+    </ul>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    กรอก <strong>หัวข้อ</strong> และ <strong>รายละเอียด</strong> → แนบ screenshot (ถ้ามี) → กด <strong>"ส่ง"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    Admin จะตอบกลับ — คุณจะได้รับแจ้งเตือนผ่าน LINE เมื่อ admin ตอบกลับหรือเปลี่ยนสถานะ
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     25. LINE OA MENU
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2 id="sec-line-oa">25. LINE OA เมนู</h2>
+
+<p>Badminton Party มี LINE Official Account ชื่อ <strong>"แบดมินตันปาร์ตี้"</strong> (LINE ID: <strong>@badmintonparty</strong>) สำหรับรับแจ้งเตือนและเข้าถึงฟีเจอร์ต่าง ๆ ผ่าน LINE ได้ทันที</p>
+
+<h3>วิธีเพิ่มเพื่อน LINE OA</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    เปิด LINE → ค้นหา <strong>@badmintonparty</strong> หรือค้นหาชื่อ <strong>"แบดมินตันปาร์ตี้"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    กด <strong>"เพิ่มเพื่อน"</strong> — จะได้รับข้อความต้อนรับอัตโนมัติ
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    หรือเข้าเว็บไซต์ <strong>https://badmintonparty.com</strong> เพื่อสมัครและเริ่มใช้งาน
+  </div>
+</div>
+
+<h3>เมนู LINE OA (6 ปุ่ม)</h3>
+<p>ที่ด้านล่างของห้องแชท กดปุ่ม "เมนู" จะแสดง 6 ปุ่มลัด:</p>
+
+<div class="info">ดูตัวอย่าง Flex Message และเมนู LINE OA ได้จากรูปที่แนบด้านล่าง</div>
+
+<div class="figure">
+  <img src="screenshots/line-oa-menu.jpg" alt="LINE OA เมนูและ Flex Message">
+  <div class="figure-caption">รูปที่ 25.1 — LINE OA: เมนู 6 ปุ่ม + Flex Message เชิญเข้าปาร์ตี้</div>
+</div>
+
+<table>
+  <tr><th>เมนู</th><th>การทำงาน</th></tr>
+  <tr><td><strong>Party Lists</strong></td><td>เปิดหน้ารายการปาร์ตี้ ดูปาร์ตี้ที่เปิดอยู่ทั้งหมด</td></tr>
+  <tr><td><strong>Party</strong></td><td>เปิดหน้าปาร์ตี้ของฉัน ดูปาร์ตี้ที่เข้าร่วมอยู่</td></tr>
+  <tr><td><strong>Chat</strong></td><td>เปิดหน้าแชท ส่งข้อความหาเพื่อน</td></tr>
+  <tr><td><strong>Stats</strong></td><td>ดูสถิติการเล่น เลเวล อัตราชนะ</td></tr>
+  <tr><td><strong>Friend List</strong></td><td>จัดการเพื่อน ดูคำขอ ตอบรับ/ปฏิเสธ</td></tr>
+  <tr><td><strong>Rank Board</strong></td><td>ดูอันดับผู้เล่น จัดตามเลเวล MMR</td></tr>
+</table>
+
+<div class="tip">ทุกเมนูจะเปิดผ่าน LINE LIFF ไม่ต้อง login ใหม่ — ใช้บัญชี LINE ที่เชื่อมไว้อัตโนมัติ</div>
+
+<h3>Flex Message เชิญเข้าปาร์ตี้</h3>
+<p>เมื่อ host เชิญคุณเข้าปาร์ตี้ คุณจะได้รับ Flex Message สวยงามผ่าน LINE OA แสดงข้อมูล:</p>
+<ul>
+  <li><strong>ชื่อปาร์ตี้</strong> + ข้อความจาก host</li>
+  <li><strong>วันเล่น</strong> + <strong>เวลา</strong></li>
+  <li><strong>สนาม</strong> ที่จัดเล่น</li>
+  <li><strong>เชิญโดย</strong> — ชื่อ host ที่เชิญ</li>
+  <li>ปุ่ม <strong>"ดูรายละเอียด &amp; เข้าร่วม"</strong> — กดเพื่อเข้าร่วมปาร์ตี้ทันที</li>
+</ul>
+
+<h3>การแจ้งเตือนที่ส่งผ่าน LINE OA</h3>
+<ul>
+  <li>เชิญเข้าปาร์ตี้ (Flex Message พร้อมรายละเอียดครบ)</li>
+  <li>เตือนก่อนปาร์ตี้เริ่ม</li>
+  <li>สรุปผลปาร์ตี้เมื่อจบ (จำนวนเกม, MVP, ค่าใช้จ่าย)</li>
+  <li>แจ้งเลื่อนเลเวล</li>
+  <li>คำขอเพื่อน</li>
+  <li>admin ตอบกลับ feedback</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     26. PASSCODE
+     ═══════════════════════════════════════════════════════ -->
+<h2 id="sec-passcode">26. ปาร์ตี้ส่วนตัว (Passcode)</h2>
+
+<p>ตั้ง passcode เพื่อให้เฉพาะคนที่รู้รหัสเท่านั้นถึงเข้าร่วมได้</p>
+
+<h3>การตั้ง Passcode (Host เท่านั้น)</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    ไปแท็บ <strong>"ข้อมูล"</strong> → กด <strong>"แก้ไข"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    เปิดตัวเลือก <strong>"ปาร์ตี้ส่วนตัว"</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>ตั้งรหัส Passcode</strong> — ตัวเลขหรือตัวอักษร
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    กด <strong>"บันทึก"</strong> — ปาร์ตี้จะแสดงไอคอน 🔒 ในรายการ
+  </div>
+</div>
+
+<h3>การเข้าร่วมปาร์ตี้ส่วนตัว</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    กดปุ่ม <strong>"เข้าร่วม"</strong> ที่ปาร์ตี้ที่มีไอคอน 🔒
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    ระบบจะแสดง dialog ให้ <strong>กรอก Passcode</strong>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>กรอกรหัสถูกต้อง</strong> → เข้าร่วมสำเร็จ
+  </div>
+</div>
+
+<div class="tip">แจ้ง passcode ให้เพื่อนผ่าน LINE หรือบอกปากต่อปากที่สนาม ผู้ที่เข้าผ่าน invite link จาก host ไม่ต้องกรอก passcode</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     BOTTOM NAV REFERENCE
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>แถบเมนูด้านล่าง (Bottom Navigation)</h2>
+
+<div class="figure">
+  <img src="screenshots/annotated/22-bottom-nav.png" alt="Bottom Navigation">
+  <div class="figure-caption">รูปที่ — แถบเมนูด้านล่าง 5 ปุ่ม</div>
+</div>
+
+<table>
+  <tr><th>#</th><th>ไอคอน</th><th>ชื่อ</th><th>หน้าที่เปิด</th></tr>
+  <tr><td>1</td><td>🏠</td><td>หน้าหลัก</td><td>Home — carousel + เมนูลัด</td></tr>
+  <tr><td>2</td><td>📋</td><td>ปาร์ตี้</td><td>Party Lists — ดูปาร์ตี้ทั้งหมด</td></tr>
+  <tr><td>3</td><td>💬</td><td>แชท</td><td>Chat — ข้อความกับเพื่อน</td></tr>
+  <tr><td>4</td><td>👥</td><td>เพื่อน</td><td>Friends — จัดการเพื่อน</td></tr>
+  <tr><td>5</td><td>👤</td><td>โปรไฟล์</td><td>Profile — สถิติ + เลเวล</td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     QUICK REFERENCE
+     ═══════════════════════════════════════════════════════ -->
+<h2>สรุปการใช้งานด่วน</h2>
+
+<table>
+  <tr><th>ต้องการ</th><th>ทำอย่างไร</th></tr>
+  <tr><td>สร้างปาร์ตี้</td><td>หน้า Party Lists → กด + → กรอกข้อมูล → สร้าง</td></tr>
+  <tr><td>เข้าร่วมปาร์ตี้</td><td>หน้า Party Lists → กด "เข้าร่วม" หรือเปิดลิงก์เชิญ</td></tr>
+  <tr><td>สร้างเกม</td><td>ในปาร์ตี้ แท็บเกม → "สร้างเกม" → เพิ่มคน → จัดทีม → เริ่ม</td></tr>
+  <tr><td>จัดเกมอัตโนมัติ</td><td>แท็บเกม → "จัดเกมอัตโนมัติ" → ตรวจสอบ → เริ่ม</td></tr>
+  <tr><td>ลงคะแนน</td><td>กดการ์ดเกม → "แก้ไขคะแนน" → ใส่คะแนนเซ็ต → บันทึก</td></tr>
+  <tr><td>หยุดพัก</td><td>แท็บผู้เล่น → สวิตช์เป็น "พัก"</td></tr>
+  <tr><td>เชิญเพื่อน</td><td>กดปุ่มแชร์ → คัดลอกลิงก์ → ส่งให้เพื่อน</td></tr>
+  <tr><td>เปิดโหมด TV</td><td>ในปาร์ตี้ → กดไอคอน TV</td></tr>
+  <tr><td>ดูสถิติ</td><td>โปรไฟล์ → เลือกช่วงเวลา</td></tr>
+  <tr><td>ประเมินทักษะ</td><td>โปรไฟล์ → "ประเมินทักษะ" → เลือก 1-10 ทุกด้าน</td></tr>
+  <tr><td>แชท</td><td>หน้าแชท → เลือกเพื่อน → พิมพ์ข้อความ → ส่ง</td></tr>
+  <tr><td>แจ้งปัญหา</td><td>เมนู → "แจ้งปัญหา" → เลือกประเภท → กรอกรายละเอียด → ส่ง</td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<div style="text-align: center; padding: 60px 20px;">
+  <div style="font-size: 60px;">🏸</div>
+  <h1 style="margin-top: 20px;">Badminton Party</h1>
+  <p style="font-size: 18px; color: #6b7280; margin-top: 10px;">ขอให้สนุกกับการเล่นแบดมินตันครับ!</p>
+  <hr style="margin: 40px auto; max-width: 200px;">
+  <p style="font-size: 12px; color: #9ca3af;">
+    Badminton Party &copy; 2026<br>
+    สงวนลิขสิทธิ์ทุกประการ<br><br>
+    เว็บไซต์: https://badmintonparty.com<br>
+    LINE OA: @badmintonparty<br><br>
+    มีปัญหาหรือข้อเสนอแนะ? แจ้งได้ผ่านเมนู "แจ้งปัญหา" ในแอป<br>
+    หรือติดต่อผ่าน LINE OA
+  </p>
+</div>
+
+</body>
+</html>

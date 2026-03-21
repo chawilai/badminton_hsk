@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sharp + SVG Annotation — คู่มือการใช้งาน</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Prompt', sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #1e293b;
+      background: #f8fafc;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin: 40px 0 12px; }
+    h2 { font-size: 22px; font-weight: 600; color: #1e40af; margin: 36px 0 12px; border-bottom: 3px solid #3b82f6; padding-bottom: 6px; }
+    h3 { font-size: 17px; font-weight: 600; color: #1e3a5f; margin: 24px 0 8px; }
+    h4 { font-size: 15px; font-weight: 500; color: #475569; margin: 16px 0 6px; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 12px 24px; }
+    li { margin: 4px 0; }
+    a { color: #2563eb; }
+
+    /* Code blocks */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 12px 0;
+      position: relative;
+    }
+    pre .comment { color: #64748b; }
+    pre .string { color: #86efac; }
+    pre .keyword { color: #93c5fd; }
+    pre .number { color: #fbbf24; }
+    pre .fn { color: #c4b5fd; }
+
+    code {
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #be185d;
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; }
+    th { background: #eff6ff; font-weight: 600; color: #1e40af; }
+    tr:nth-child(even) { background: #f8fafc; }
+
+    /* Callouts */
+    .tip, .warning, .info, .danger {
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 14px 0;
+      font-size: 13px;
+    }
+    .tip { background: #ecfdf5; border-left: 4px solid #10b981; }
+    .tip::before { content: "💡 เคล็ดลับ: "; font-weight: 600; }
+    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; }
+    .warning::before { content: "⚠️ สำคัญ: "; font-weight: 600; }
+    .info { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .info::before { content: "ℹ️ "; font-weight: 600; }
+    .danger { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .danger::before { content: "🔴 "; font-weight: 600; }
+
+    /* Color swatches */
+    .swatch {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 4px;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    /* Demo SVG */
+    .demo-svg {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 12px 0;
+      text-align: center;
+    }
+    .demo-svg svg { max-width: 100%; }
+
+    /* Param table */
+    .param-table td:first-child { font-family: 'JetBrains Mono', monospace; color: #7c3aed; font-weight: 500; white-space: nowrap; }
+    .param-table td:nth-child(2) { font-family: 'JetBrains Mono', monospace; color: #64748b; font-size: 12px; white-space: nowrap; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+    /* TOC */
+    .toc { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 28px; margin: 20px 0; }
+    .toc h3 { margin-top: 0; }
+    .toc ol { counter-reset: toc; list-style: none; margin-left: 0; }
+    .toc > ol > li { margin: 5px 0; counter-increment: toc; }
+    .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #3b82f6; }
+    .toc a { text-decoration: none; color: #1e293b; }
+    .toc a:hover { color: #2563eb; text-decoration: underline; }
+
+    /* Copy button */
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: #475569; color: #e2e8f0; border: none; border-radius: 6px;
+      padding: 4px 10px; font-size: 11px; cursor: pointer;
+      font-family: 'Prompt', sans-serif;
+    }
+    .copy-btn:hover { background: #64748b; }
+
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
+
+    @media print {
+      body { max-width: 100%; padding: 0; background: white; }
+      pre { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<h1>🎨 Sharp + SVG Annotation</h1>
+<p style="font-size:18px; color:#64748b;">คู่มือสร้างกรอบ ลูกศร ตัวเลข ข้อความ บน Screenshot ด้วย Node.js</p>
+
+<div class="toc">
+  <h3>สารบัญ</h3>
+  <ol>
+    <li><a href="#sec-overview">ภาพรวมระบบ</a></li>
+    <li><a href="#sec-install">ติดตั้ง</a></li>
+    <li><a href="#sec-structure">โครงสร้างไฟล์</a></li>
+    <li><a href="#sec-how-it-works">หลักการทำงาน</a></li>
+    <li><a href="#sec-tools">เครื่องมือทั้ง 6 แบบ</a></li>
+    <li><a href="#sec-colors">สีที่ใช้ได้</a></li>
+    <li><a href="#sec-find-coords">วิธีหาพิกัด x, y</a></li>
+    <li><a href="#sec-example-full">ตัวอย่างเต็ม — ทำ Annotation จากศูนย์</a></li>
+    <li><a href="#sec-tips">เทคนิคขั้นสูง</a></li>
+    <li><a href="#sec-api-ref">API Reference — Sharp</a></li>
+    <li><a href="#sec-troubleshoot">แก้ปัญหาที่พบบ่อย</a></li>
+    <li><a href="#sec-recipes">สูตรสำเร็จ</a></li>
+  </ol>
+</div>
+
+
+<!-- ═══════ 1. OVERVIEW ═══════ -->
+<h2 id="sec-overview">1. ภาพรวมระบบ</h2>
+
+<p>ระบบ annotation ใช้ 2 เทคโนโลยีร่วมกัน:</p>
+
+<table>
+  <tr><th>เทคโนโลยี</th><th>หน้าที่</th><th>ทำไมถึงเลือก</th></tr>
+  <tr>
+    <td><strong>Sharp</strong></td>
+    <td>อ่าน/เขียนรูปภาพ, วาง SVG overlay ทับ</td>
+    <td>เร็วมาก (ใช้ libvips), รองรับ PNG/JPEG/WebP</td>
+  </tr>
+  <tr>
+    <td><strong>SVG</strong></td>
+    <td>วาดกรอบ, ลูกศร, ข้อความ, วงกลม</td>
+    <td>Vector = คมชัดทุกขนาด, เขียน code ได้ง่าย</td>
+  </tr>
+</table>
+
+<p><strong>Flow:</strong> รูปต้นฉบับ (.png) → Sharp อ่านรูป → สร้าง SVG overlay ตามพิกัด → Sharp วาง SVG ทับ → บันทึกเป็นรูปใหม่</p>
+
+
+<!-- ═══════ 2. INSTALL ═══════ -->
+<h2 id="sec-install">2. ติดตั้ง</h2>
+
+<pre><button class="copy-btn" onclick="copyCode(this)">คัดลอก</button><span class="comment"># ติดตั้ง sharp</span>
+npm install sharp
+
+<span class="comment"># ตรวจสอบว่าใช้ได้</span>
+node -e <span class="string">"const sharp = require('sharp'); console.log('sharp version:', sharp.versions.sharp);"</span></pre>
+
+<div class="info">Sharp ต้องการ Node.js 18+ และจะดาวน์โหลด native binary (libvips) ให้อัตโนมัติ ใช้ได้ทั้ง macOS, Linux, Windows</div>
+
+<div class="warning">ถ้าโปรเจคใช้ <code>"type": "module"</code> ใน package.json ให้ตั้งชื่อไฟล์เป็น <code>.cjs</code> แทน <code>.js</code></div>
+
+
+<!-- ═══════ 3. STRUCTURE ═══════ -->
+<h2 id="sec-structure">3. โครงสร้างไฟล์</h2>
+
+<pre>tutorial/
+├── annotate-screenshots.cjs    <span class="comment"># Script หลัก — แก้ไขที่นี่</span>
+├── screenshots/
+│   ├── 01-login-page.png       <span class="comment"># รูปต้นฉบับ (ไม่ถูกแก้ไข)</span>
+│   ├── 02-register-page.png
+│   └── annotated/
+│       ├── 01-login-page.png   <span class="comment"># ผลลัพธ์ (มี annotation)</span>
+│       └── 02-register-page.png</pre>
+
+
+<!-- ═══════ 4. HOW IT WORKS ═══════ -->
+<h2 id="sec-how-it-works">4. หลักการทำงาน</h2>
+
+<h3>ขั้นตอน 1 — กำหนด annotations</h3>
+<p>เปิดไฟล์ <code>annotate-screenshots.cjs</code> แล้วเพิ่ม/แก้ไขใน object <code>annotations</code>:</p>
+
+<pre><span class="keyword">const</span> annotations = {
+  <span class="comment">// key = ชื่อไฟล์ (ไม่มี .png)</span>
+  <span class="string">'01-login-page'</span>: [
+    <span class="comment">// array ของเครื่องมือที่จะวาด</span>
+    { <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">38</span>, y: <span class="number">520</span>, w: <span class="number">314</span>, h: <span class="number">52</span>, color: <span class="string">'#22c55e'</span> },
+    { <span class="fn">type</span>: <span class="string">'number'</span>, x: <span class="number">18</span>, y: <span class="number">546</span>, num: <span class="number">1</span>, color: <span class="string">'#22c55e'</span> },
+  ],
+};</pre>
+
+<h3>ขั้นตอน 2 — รัน script</h3>
+<pre>node tutorial/annotate-screenshots.cjs</pre>
+
+<h3>ขั้นตอน 3 — ดูผลลัพธ์</h3>
+<pre>open tutorial/screenshots/annotated/01-login-page.png</pre>
+
+
+<!-- ═══════ 5. TOOLS ═══════ -->
+<h2 id="sec-tools">5. เครื่องมือทั้ง 6 แบบ</h2>
+
+<!-- ─── 5.1 RECT ─── -->
+<h3>5.1 กรอบสี่เหลี่ยม (rect)</h3>
+<p>ใช้ครอบส่วนของ UI ที่ต้องการอธิบาย</p>
+
+<div class="demo-svg">
+  <svg width="360" height="100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="150" height="60" fill="none" stroke="#22c55e" stroke-width="3" rx="8"/>
+    <text x="20" y="46" font-family="sans-serif" font-size="14" fill="#22c55e" font-weight="bold">กรอบปกติ</text>
+    <rect x="200" y="10" width="150" height="60" fill="none" stroke="#3b82f6" stroke-width="2" rx="8" stroke-dasharray="8 4"/>
+    <text x="210" y="46" font-family="sans-serif" font-size="14" fill="#3b82f6" font-weight="bold">กรอบเส้นประ</text>
+  </svg>
+</div>
+
+<pre>{ <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">38</span>, y: <span class="number">520</span>, w: <span class="number">314</span>, h: <span class="number">52</span>, color: <span class="string">'#22c55e'</span>, strokeWidth: <span class="number">3</span> }
+
+<span class="comment">// กรอบเส้นประ</span>
+{ <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">30</span>, y: <span class="number">453</span>, w: <span class="number">335</span>, h: <span class="number">340</span>, color: <span class="string">'#3b82f6'</span>, dashed: <span class="keyword">true</span> }</pre>
+
+<table class="param-table">
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+  <tr><td>x</td><td>number</td><td>—</td><td>ระยะจากขอบซ้ายถึงมุมซ้ายบนของกรอบ (px)</td></tr>
+  <tr><td>y</td><td>number</td><td>—</td><td>ระยะจากขอบบนถึงมุมซ้ายบนของกรอบ (px)</td></tr>
+  <tr><td>w</td><td>number</td><td>—</td><td>ความกว้างของกรอบ (px)</td></tr>
+  <tr><td>h</td><td>number</td><td>—</td><td>ความสูงของกรอบ (px)</td></tr>
+  <tr><td>color</td><td>string</td><td>#ef4444</td><td>สีของเส้นกรอบ (hex)</td></tr>
+  <tr><td>strokeWidth</td><td>number</td><td>3</td><td>ความหนาของเส้น (px)</td></tr>
+  <tr><td>radius</td><td>number</td><td>8</td><td>ความโค้งของมุม (px, 0 = มุมเหลี่ยม)</td></tr>
+  <tr><td>dashed</td><td>boolean</td><td>false</td><td>true = เส้นประ</td></tr>
+</table>
+
+<div class="tip">ใช้ <code>dashed: true</code> สำหรับกรอบที่เป็นข้อมูลเสริม ไม่ใช่จุดเด่นหลัก</div>
+
+<!-- ─── 5.2 ARROW ─── -->
+<h3>5.2 ลูกศร (arrow)</h3>
+<p>ใช้ชี้จากข้อความไปยังจุดที่ต้องการ</p>
+
+<div class="demo-svg">
+  <svg width="360" height="80" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="demo-ah" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+      </marker>
+    </defs>
+    <rect x="260" y="25" width="80" height="30" fill="#22c55e" rx="6" opacity="0.3"/>
+    <text x="270" y="45" font-family="sans-serif" font-size="12" fill="white">ปุ่มเป้าหมาย</text>
+    <line x1="100" y1="40" x2="250" y2="40" stroke="#ef4444" stroke-width="3" marker-end="url(#demo-ah)"/>
+    <text x="20" y="45" font-family="sans-serif" font-size="13" fill="#ef4444" font-weight="bold">กดตรงนี้</text>
+  </svg>
+</div>
+
+<pre>{ <span class="fn">type</span>: <span class="string">'arrow'</span>, x1: <span class="number">215</span>, y1: <span class="number">80</span>, x2: <span class="number">270</span>, y2: <span class="number">95</span>, color: <span class="string">'#ef4444'</span>, strokeWidth: <span class="number">3</span> }</pre>
+
+<table class="param-table">
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+  <tr><td>x1, y1</td><td>number</td><td>—</td><td>จุดเริ่มต้นของลูกศร (ด้านหาง)</td></tr>
+  <tr><td>x2, y2</td><td>number</td><td>—</td><td>จุดปลายของลูกศร (ด้านหัว/ปลายแหลม)</td></tr>
+  <tr><td>color</td><td>string</td><td>#ef4444</td><td>สีลูกศร (รองรับ: แดง, น้ำเงิน, เขียว, ส้ม)</td></tr>
+  <tr><td>strokeWidth</td><td>number</td><td>3</td><td>ความหนาของเส้น</td></tr>
+</table>
+
+<div class="warning">หัวลูกศรใช้ SVG marker — สีที่รองรับมี 4 สี: <code>#ef4444</code> (แดง), <code>#3b82f6</code> (น้ำเงิน), <code>#22c55e</code> (เขียว), <code>#f97316</code> (ส้ม) ถ้าใช้สีอื่น หัวลูกศรจะไม่แสดง</div>
+
+<!-- ─── 5.3 LABEL ─── -->
+<h3>5.3 ป้ายข้อความ (label)</h3>
+<p>ข้อความพร้อมพื้นหลังสีขาว ใช้อธิบายสิ่งที่ชี้ไป</p>
+
+<div class="demo-svg">
+  <svg width="360" height="60" xmlns="http://www.w3.org/2000/svg">
+    <rect x="18" y="8" width="170" height="24" fill="white" stroke="#22c55e" stroke-width="2" rx="5"/>
+    <text x="24" y="26" font-family="sans-serif" font-size="13" fill="#22c55e" font-weight="bold">กดเข้าสู่ระบบผ่าน LINE</text>
+    <rect x="220" y="8" width="120" height="24" fill="white" stroke="#ef4444" stroke-width="2" rx="5"/>
+    <text x="226" y="26" font-family="sans-serif" font-size="13" fill="#ef4444" font-weight="bold">กดสร้างปาร์ตี้</text>
+  </svg>
+</div>
+
+<pre>{ <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">80</span>, y: <span class="number">512</span>, text: <span class="string">'กดเข้าสู่ระบบผ่าน LINE'</span>, color: <span class="string">'#22c55e'</span>, fontSize: <span class="number">13</span> }</pre>
+
+<table class="param-table">
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+  <tr><td>x</td><td>number</td><td>—</td><td>ตำแหน่ง x ของข้อความ (ด้านซ้าย)</td></tr>
+  <tr><td>y</td><td>number</td><td>—</td><td>ตำแหน่ง y ของ <strong>baseline</strong> ข้อความ (ไม่ใช่ขอบบน!)</td></tr>
+  <tr><td>text</td><td>string</td><td>—</td><td>ข้อความที่แสดง</td></tr>
+  <tr><td>color</td><td>string</td><td>#ef4444</td><td>สีข้อความ + สีกรอบ</td></tr>
+  <tr><td>bg</td><td>string</td><td>white</td><td>สีพื้นหลัง</td></tr>
+  <tr><td>fontSize</td><td>number</td><td>14</td><td>ขนาดตัวอักษร (px)</td></tr>
+</table>
+
+<div class="danger">ตำแหน่ง <code>y</code> คือ <strong>baseline</strong> ของข้อความ (ด้านล่างตัวอักษร) ไม่ใช่ขอบบน! กรอบพื้นหลังจะวาดขึ้นไปจาก y โดยอัตโนมัติ ดังนั้น y ควรอยู่ <strong>ต่ำกว่า</strong> ตำแหน่งที่ต้องการเล็กน้อย</div>
+
+<!-- ─── 5.4 NUMBER ─── -->
+<h3>5.4 ตัวเลขในวงกลม (number)</h3>
+<p>ใช้แสดงลำดับขั้นตอน เช่น (1) (2) (3)</p>
+
+<div class="demo-svg">
+  <svg width="360" height="60" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="30" r="14" fill="#ef4444"/>
+    <text x="40" y="35" font-family="sans-serif" font-size="17" fill="white" text-anchor="middle" font-weight="bold">1</text>
+    <circle cx="100" cy="30" r="14" fill="#22c55e"/>
+    <text x="100" y="35" font-family="sans-serif" font-size="17" fill="white" text-anchor="middle" font-weight="bold">2</text>
+    <circle cx="160" cy="30" r="14" fill="#3b82f6"/>
+    <text x="160" y="35" font-family="sans-serif" font-size="17" fill="white" text-anchor="middle" font-weight="bold">3</text>
+    <circle cx="220" cy="30" r="14" fill="#f97316"/>
+    <text x="220" y="35" font-family="sans-serif" font-size="17" fill="white" text-anchor="middle" font-weight="bold">4</text>
+    <circle cx="280" cy="30" r="14" fill="#8b5cf6"/>
+    <text x="280" y="35" font-family="sans-serif" font-size="17" fill="white" text-anchor="middle" font-weight="bold">5</text>
+  </svg>
+</div>
+
+<pre>{ <span class="fn">type</span>: <span class="string">'number'</span>, x: <span class="number">18</span>, y: <span class="number">546</span>, num: <span class="number">1</span>, color: <span class="string">'#22c55e'</span>, size: <span class="number">28</span> }</pre>
+
+<table class="param-table">
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+  <tr><td>x</td><td>number</td><td>—</td><td>ตำแหน่ง x <strong>จุดกลาง</strong> วงกลม</td></tr>
+  <tr><td>y</td><td>number</td><td>—</td><td>ตำแหน่ง y <strong>จุดกลาง</strong> วงกลม</td></tr>
+  <tr><td>num</td><td>number</td><td>—</td><td>ตัวเลขที่แสดง (1-99)</td></tr>
+  <tr><td>color</td><td>string</td><td>#ef4444</td><td>สีพื้นหลังวงกลม (ตัวเลขสีขาวเสมอ)</td></tr>
+  <tr><td>size</td><td>number</td><td>28</td><td>เส้นผ่าศูนย์กลางวงกลม (px)</td></tr>
+</table>
+
+<div class="tip">วาง <code>number</code> ด้านซ้ายของ <code>rect</code> เพื่อบอกลำดับ เช่น (1) ชื่อปาร์ตี้ (2) วันเล่น (3) จำนวนคน</div>
+
+<!-- ─── 5.5 CIRCLE ─── -->
+<h3>5.5 วงกลมเปล่า (circle)</h3>
+<p>ใช้วนรอบปุ่มเล็ก ๆ เช่น ปุ่ม + หรือไอคอน</p>
+
+<div class="demo-svg">
+  <svg width="360" height="60" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="30" r="20" fill="none" stroke="#22c55e" stroke-width="3"/>
+    <text x="45" y="37" font-family="sans-serif" font-size="22" fill="#22c55e" font-weight="bold">+</text>
+    <circle cx="150" cy="30" r="16" fill="none" stroke="#ef4444" stroke-width="3"/>
+    <text x="141" y="36" font-family="sans-serif" font-size="16" fill="#ef4444">✕</text>
+  </svg>
+</div>
+
+<pre>{ <span class="fn">type</span>: <span class="string">'circle'</span>, x: <span class="number">350</span>, y: <span class="number">93</span>, r: <span class="number">16</span>, color: <span class="string">'#22c55e'</span>, strokeWidth: <span class="number">3</span> }</pre>
+
+<table class="param-table">
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+  <tr><td>x</td><td>number</td><td>—</td><td>ตำแหน่ง x <strong>จุดกลาง</strong></td></tr>
+  <tr><td>y</td><td>number</td><td>—</td><td>ตำแหน่ง y <strong>จุดกลาง</strong></td></tr>
+  <tr><td>r</td><td>number</td><td>20</td><td>รัศมี (px)</td></tr>
+  <tr><td>color</td><td>string</td><td>#ef4444</td><td>สีเส้นวงกลม</td></tr>
+  <tr><td>strokeWidth</td><td>number</td><td>3</td><td>ความหนาของเส้น</td></tr>
+</table>
+
+<!-- ─── 5.6 COMBO ─── -->
+<h3>5.6 การใช้ร่วมกัน (Combo Pattern)</h3>
+<p>ปกติจะใช้หลายเครื่องมือร่วมกัน:</p>
+
+<pre><span class="comment">// Pattern: ตัวเลข + กรอบ + label</span>
+{ <span class="fn">type</span>: <span class="string">'number'</span>, x: <span class="number">16</span>, y: <span class="number">180</span>, num: <span class="number">1</span>, color: <span class="string">'#ef4444'</span>, size: <span class="number">22</span> },
+{ <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">30</span>, y: <span class="number">148</span>, w: <span class="number">345</span>, h: <span class="number">58</span>, color: <span class="string">'#ef4444'</span> },
+
+<span class="comment">// Pattern: label + ลูกศร + วงกลม (ชี้ปุ่ม)</span>
+{ <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">150</span>, y: <span class="number">74</span>, text: <span class="string">'สร้างแชทใหม่'</span>, color: <span class="string">'#22c55e'</span> },
+{ <span class="fn">type</span>: <span class="string">'arrow'</span>, x1: <span class="number">280</span>, y1: <span class="number">80</span>, x2: <span class="number">330</span>, y2: <span class="number">89</span>, color: <span class="string">'#22c55e'</span> },
+{ <span class="fn">type</span>: <span class="string">'circle'</span>, x: <span class="number">350</span>, y: <span class="number">93</span>, r: <span class="number">16</span>, color: <span class="string">'#22c55e'</span> },
+
+<span class="comment">// Pattern: กรอบ + label ด้านล่าง</span>
+{ <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">20</span>, y: <span class="number">142</span>, w: <span class="number">358</span>, h: <span class="number">148</span>, color: <span class="string">'#22c55e'</span> },
+{ <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">30</span>, y: <span class="number">295</span>, text: <span class="string">'การ์ดปาร์ตี้'</span>, color: <span class="string">'#22c55e'</span> },</pre>
+
+
+<!-- ═══════ 6. COLORS ═══════ -->
+<h2 id="sec-colors">6. สีที่ใช้ได้</h2>
+
+<table>
+  <tr>
+    <th>สี</th><th>Hex Code</th><th>ตัวอย่าง</th><th>ใช้สำหรับ</th>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#ef4444"></span> แดง</td>
+    <td><code>#ef4444</code></td>
+    <td>สีเริ่มต้น (default)</td>
+    <td>จุดสำคัญ, ปุ่มหลัก, ลูกศรชี้</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#22c55e"></span> เขียว</td>
+    <td><code>#22c55e</code></td>
+    <td></td>
+    <td>ขั้นตอนหลัก, ปุ่ม LINE, สิ่งที่แนะนำ</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#3b82f6"></span> น้ำเงิน</td>
+    <td><code>#3b82f6</code></td>
+    <td></td>
+    <td>ข้อมูลเสริม, แท็บ, ตัวเลือกรอง</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#f97316"></span> ส้ม</td>
+    <td><code>#f97316</code></td>
+    <td></td>
+    <td>คำเตือน, สถานะ, toggle</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#8b5cf6"></span> ม่วง</td>
+    <td><code>#8b5cf6</code></td>
+    <td></td>
+    <td>ข้อมูลเพิ่มเติม, หมายเหตุ</td>
+  </tr>
+</table>
+
+<div class="info">ลูกศร (<code>arrow</code>) รองรับเฉพาะ 4 สี: แดง, น้ำเงิน, เขียว, ส้ม เพราะหัวลูกศรใช้ SVG marker ที่กำหนดไว้ล่วงหน้า ส่วนเครื่องมืออื่นใช้สีอะไรก็ได้</div>
+
+
+<!-- ═══════ 7. FIND COORDS ═══════ -->
+<h2 id="sec-find-coords">7. วิธีหาพิกัด x, y</h2>
+
+<h3>วิธีที่ 1: Preview (Mac) — ง่ายที่สุด</h3>
+<ol>
+  <li>เปิดรูปด้วย <strong>Preview</strong></li>
+  <li>เลือก <strong>Tools → Show Inspector</strong> (หรือ <code>Cmd+I</code>)</li>
+  <li>เลื่อนเมาส์ไปบนรูป — ดูพิกัด x, y ที่ Inspector panel</li>
+  <li>จด x, y ของมุมซ้ายบน + มุมขวาล่าง ของพื้นที่ที่ต้องการ</li>
+  <li>คำนวณ: <code>w = x_right - x_left</code>, <code>h = y_bottom - y_top</code></li>
+</ol>
+
+<h3>วิธีที่ 2: Playwright วัดอัตโนมัติ — แม่นที่สุด</h3>
+
+<pre><span class="keyword">const</span> { chromium } = <span class="fn">require</span>(<span class="string">'playwright'</span>);
+
+(<span class="keyword">async</span> () => {
+  <span class="keyword">const</span> browser = <span class="keyword">await</span> chromium.<span class="fn">launch</span>();
+  <span class="keyword">const</span> page = <span class="keyword">await</span> browser.<span class="fn">newPage</span>({ viewport: { width: <span class="number">390</span>, height: <span class="number">844</span> } });
+
+  <span class="keyword">await</span> page.<span class="fn">goto</span>(<span class="string">'http://your-app.test/login'</span>);
+
+  <span class="comment">// วัดตำแหน่งปุ่มจริง</span>
+  <span class="keyword">const</span> btn = <span class="keyword">await</span> page
+    .<span class="fn">locator</span>(<span class="string">'button'</span>)
+    .<span class="fn">filter</span>({ hasText: <span class="string">/LINE/</span> })
+    .first()
+    .<span class="fn">boundingBox</span>();
+
+  console.<span class="fn">log</span>(btn);
+  <span class="comment">// { x: 43, y: 525, width: 304, height: 42 }</span>
+
+  <span class="keyword">await</span> browser.<span class="fn">close</span>();
+})();</pre>
+
+<div class="tip">ใช้ Playwright วัดเมื่อต้องการความแม่นยำสูง หรือรูปมี element เยอะ ไม่ต้องเดาพิกัดเอง</div>
+
+<h3>วิธีที่ 3: เว็บ Online</h3>
+<ul>
+  <li><a href="https://pixspy.com" target="_blank">pixspy.com</a> — อัพโหลดรูป แล้วดูพิกัดเมาส์</li>
+  <li><a href="https://www.image-map.net" target="_blank">image-map.net</a> — วาดพื้นที่แล้วได้พิกัด</li>
+</ul>
+
+<h3>วิธีที่ 4: Browser DevTools</h3>
+<ol>
+  <li>เปิดรูปในเบราว์เซอร์ (ลาก drop ลง Chrome)</li>
+  <li>กด <code>F12</code> เปิด DevTools</li>
+  <li>Tab Console → พิมพ์:
+<pre>document.<span class="fn">querySelector</span>(<span class="string">'img'</span>).<span class="fn">addEventListener</span>(<span class="string">'click'</span>, e =>
+  console.<span class="fn">log</span>(<span class="string">`x: ${e.offsetX}, y: ${e.offsetY}`</span>)
+);</pre>
+  </li>
+  <li>คลิกบนรูป — Console จะแสดงพิกัด</li>
+</ol>
+
+
+<!-- ═══════ 8. FULL EXAMPLE ═══════ -->
+<h2 id="sec-example-full">8. ตัวอย่างเต็ม — ทำ Annotation จากศูนย์</h2>
+
+<p>สมมติมีรูป <code>my-screen.png</code> (390x844) และต้องการ annotate 3 จุด:</p>
+
+<h4>ขั้นตอน 1 — วางรูปต้นฉบับ</h4>
+<pre>cp my-screen.png tutorial/screenshots/my-screen.png</pre>
+
+<h4>ขั้นตอน 2 — หาพิกัด</h4>
+<p>เปิดใน Preview แล้ววัด:</p>
+<ul>
+  <li>ปุ่ม A: มุมซ้ายบน (40, 200), ขนาด 300x45</li>
+  <li>ปุ่ม B: จุดกลาง (350, 90), รัศมี 16</li>
+  <li>พื้นที่ C: มุมซ้ายบน (20, 300), ขนาด 350x200</li>
+</ul>
+
+<h4>ขั้นตอน 3 — เพิ่มใน annotate-screenshots.cjs</h4>
+
+<pre><span class="keyword">const</span> annotations = {
+  <span class="comment">// ... รูปอื่นๆ ...</span>
+
+  <span class="string">'my-screen'</span>: [
+    <span class="comment">// (1) กรอบครอบปุ่ม A</span>
+    { <span class="fn">type</span>: <span class="string">'number'</span>, x: <span class="number">22</span>, y: <span class="number">222</span>, num: <span class="number">1</span>, color: <span class="string">'#22c55e'</span>, size: <span class="number">26</span> },
+    { <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">35</span>, y: <span class="number">196</span>, w: <span class="number">310</span>, h: <span class="number">53</span>, color: <span class="string">'#22c55e'</span> },
+    { <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">60</span>, y: <span class="number">190</span>, text: <span class="string">'กดปุ่มนี้'</span>, color: <span class="string">'#22c55e'</span>, fontSize: <span class="number">13</span> },
+
+    <span class="comment">// (2) วงกลมครอบปุ่ม B + ลูกศรชี้</span>
+    { <span class="fn">type</span>: <span class="string">'circle'</span>, x: <span class="number">350</span>, y: <span class="number">90</span>, r: <span class="number">18</span>, color: <span class="string">'#ef4444'</span> },
+    { <span class="fn">type</span>: <span class="string">'arrow'</span>, x1: <span class="number">260</span>, y1: <span class="number">78</span>, x2: <span class="number">328</span>, y2: <span class="number">86</span>, color: <span class="string">'#ef4444'</span> },
+    { <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">130</span>, y: <span class="number">72</span>, text: <span class="string">'ปุ่มเพิ่ม'</span>, color: <span class="string">'#ef4444'</span> },
+
+    <span class="comment">// (3) กรอบเส้นประครอบพื้นที่ C</span>
+    { <span class="fn">type</span>: <span class="string">'rect'</span>, x: <span class="number">15</span>, y: <span class="number">296</span>, w: <span class="number">360</span>, h: <span class="number">208</span>, color: <span class="string">'#3b82f6'</span>, dashed: <span class="keyword">true</span> },
+    { <span class="fn">type</span>: <span class="string">'label'</span>, x: <span class="number">25</span>, y: <span class="number">510</span>, text: <span class="string">'รายการข้อมูล'</span>, color: <span class="string">'#3b82f6'</span> },
+  ],
+};</pre>
+
+<h4>ขั้นตอน 4 — รัน</h4>
+<pre>node tutorial/annotate-screenshots.cjs
+<span class="comment"># ✅ my-screen.png — annotated</span>
+
+<span class="comment"># ดูผลลัพธ์</span>
+open tutorial/screenshots/annotated/my-screen.png</pre>
+
+
+<!-- ═══════ 9. TIPS ═══════ -->
+<h2 id="sec-tips">9. เทคนิคขั้นสูง</h2>
+
+<h3>9.1 เว้นช่องระหว่างกรอบกับ element</h3>
+<p>ควรเว้น padding 4-6px รอบ element:</p>
+<pre><span class="comment">// ถ้า element อยู่ที่ x=43 y=525 w=304 h=42</span>
+<span class="comment">// กรอบควรเป็น:</span>
+{ x: <span class="number">38</span>, y: <span class="number">520</span>, w: <span class="number">314</span>, h: <span class="number">52</span> }
+<span class="comment">//   -5    -5   +10    +10  (padding 5px รอบด้าน)</span></pre>
+
+<h3>9.2 วาง label ไม่ให้บัง content</h3>
+<ul>
+  <li>วาง label <strong>ด้านบน</strong> กรอบ: <code>y = rect.y - 8</code></li>
+  <li>วาง label <strong>ด้านล่าง</strong> กรอบ: <code>y = rect.y + rect.h + 16</code></li>
+  <li>อย่าวาง label <strong>ทับ</strong> บนข้อความของ UI</li>
+</ul>
+
+<h3>9.3 วางตัวเลขให้ตรง</h3>
+<pre><span class="comment">// number ใช้ x, y เป็นจุดกลาง</span>
+<span class="comment">// ถ้ากรอบ rect อยู่ที่ y=520 h=52 → กึ่งกลาง = 520+26 = 546</span>
+{ <span class="fn">type</span>: <span class="string">'number'</span>, x: <span class="number">18</span>, y: <span class="number">546</span>, num: <span class="number">1</span> }
+<span class="comment">//                       ^ ตรงกลางแนวตั้งของกรอบ</span></pre>
+
+<h3>9.4 ใช้สีเดียวกันสำหรับกลุ่มที่เกี่ยวข้อง</h3>
+<pre><span class="comment">// ปุ่ม LINE → ทั้ง rect, number, label ใช้สีเขียวหมด</span>
+{ <span class="fn">type</span>: <span class="string">'rect'</span>, ..., color: <span class="string">'#22c55e'</span> },
+{ <span class="fn">type</span>: <span class="string">'number'</span>, ..., color: <span class="string">'#22c55e'</span> },
+{ <span class="fn">type</span>: <span class="string">'label'</span>, ..., color: <span class="string">'#22c55e'</span> },
+
+<span class="comment">// ปุ่ม Email → ใช้สีน้ำเงินหมด</span>
+{ <span class="fn">type</span>: <span class="string">'rect'</span>, ..., color: <span class="string">'#3b82f6'</span> },
+{ <span class="fn">type</span>: <span class="string">'number'</span>, ..., color: <span class="string">'#3b82f6'</span> },
+{ <span class="fn">type</span>: <span class="string">'label'</span>, ..., color: <span class="string">'#3b82f6'</span> },</pre>
+
+<h3>9.5 Shadow effect</h3>
+<p>ทุกเครื่องมือมี drop shadow อัตโนมัติ (ผ่าน SVG filter) เพื่อให้เห็นชัดบนพื้นหลังสีเข้ม</p>
+
+
+<!-- ═══════ 10. API REF ═══════ -->
+<h2 id="sec-api-ref">10. API Reference — Sharp</h2>
+
+<p>คำสั่ง Sharp ที่ใช้ในโปรเจคนี้:</p>
+
+<h3>10.1 อ่านรูป</h3>
+<pre><span class="keyword">const</span> sharp = <span class="fn">require</span>(<span class="string">'sharp'</span>);
+
+<span class="comment">// อ่านรูปและดูข้อมูล</span>
+<span class="keyword">const</span> image = <span class="fn">sharp</span>(<span class="string">'input.png'</span>);
+<span class="keyword">const</span> metadata = <span class="keyword">await</span> image.<span class="fn">metadata</span>();
+console.<span class="fn">log</span>(metadata.width, metadata.height, metadata.format);
+<span class="comment">// 390 844 png</span></pre>
+
+<h3>10.2 วาง SVG overlay ทับ</h3>
+<pre><span class="keyword">const</span> svgBuffer = Buffer.<span class="fn">from</span>(<span class="string">`
+  &lt;svg xmlns="http://www.w3.org/2000/svg" width="390" height="844"&gt;
+    &lt;rect x="38" y="520" width="314" height="52"
+      fill="none" stroke="#22c55e" stroke-width="3" rx="8"/&gt;
+  &lt;/svg&gt;
+`</span>);
+
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">composite</span>([{ input: svgBuffer, top: <span class="number">0</span>, left: <span class="number">0</span> }])
+  .<span class="fn">png</span>()
+  .<span class="fn">toFile</span>(<span class="string">'output.png'</span>);</pre>
+
+<h3>10.3 Resize (ย่อ/ขยาย)</h3>
+<pre><span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">resize</span>(<span class="number">200</span>, <span class="number">400</span>)  <span class="comment">// กว้าง 200, สูง 400</span>
+  .<span class="fn">toFile</span>(<span class="string">'thumb.png'</span>);
+
+<span class="comment">// รักษาสัดส่วน — กำหนดแค่ width</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">resize</span>({ width: <span class="number">200</span> })
+  .<span class="fn">toFile</span>(<span class="string">'thumb.png'</span>);</pre>
+
+<h3>10.4 Crop (ตัด)</h3>
+<pre><span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">extract</span>({ left: <span class="number">0</span>, top: <span class="number">764</span>, width: <span class="number">390</span>, height: <span class="number">80</span> })
+  .<span class="fn">toFile</span>(<span class="string">'bottom-nav.png'</span>);</pre>
+
+<h3>10.5 แปลงฟอร์แมต</h3>
+<pre><span class="comment">// PNG → JPEG (ลดขนาด)</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">jpeg</span>({ quality: <span class="number">85</span> }).<span class="fn">toFile</span>(<span class="string">'output.jpg'</span>);
+
+<span class="comment">// PNG → WebP (เล็กสุด)</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">webp</span>({ quality: <span class="number">80</span> }).<span class="fn">toFile</span>(<span class="string">'output.webp'</span>);
+
+<span class="comment">// JPEG → PNG</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.jpg'</span>).<span class="fn">png</span>().<span class="fn">toFile</span>(<span class="string">'output.png'</span>);</pre>
+
+<h3>10.6 หมุน / พลิก</h3>
+<pre><span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">rotate</span>(<span class="number">90</span>).<span class="fn">toFile</span>(<span class="string">'rotated.png'</span>);
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">flip</span>().<span class="fn">toFile</span>(<span class="string">'flipped.png'</span>);     <span class="comment">// พลิกแนวตั้ง</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">flop</span>().<span class="fn">toFile</span>(<span class="string">'flopped.png'</span>);   <span class="comment">// พลิกแนวนอน</span></pre>
+
+<h3>10.7 เบลอ / ปรับสี</h3>
+<pre><span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">blur</span>(<span class="number">5</span>).<span class="fn">toFile</span>(<span class="string">'blurred.png'</span>);
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">grayscale</span>().<span class="fn">toFile</span>(<span class="string">'gray.png'</span>);
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>).<span class="fn">tint</span>({ r: <span class="number">255</span>, g: <span class="number">0</span>, b: <span class="number">0</span> }).<span class="fn">toFile</span>(<span class="string">'tinted.png'</span>);</pre>
+
+<h3>10.8 ต่อรูปหลายรูป</h3>
+<pre><span class="comment">// วางรูป B ทับบนรูป A ที่ตำแหน่ง (100, 200)</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'background.png'</span>)
+  .<span class="fn">composite</span>([
+    { input: <span class="string">'overlay1.png'</span>, top: <span class="number">200</span>, left: <span class="number">100</span> },
+    { input: <span class="string">'overlay2.png'</span>, top: <span class="number">400</span>, left: <span class="number">50</span> },
+    { input: svgBuffer, top: <span class="number">0</span>, left: <span class="number">0</span> },  <span class="comment">// SVG ก็ได้</span>
+  ])
+  .<span class="fn">toFile</span>(<span class="string">'combined.png'</span>);</pre>
+
+<h3>10.9 สร้างรูปเปล่า</h3>
+<pre><span class="comment">// สร้างรูปเปล่าขนาด 400x300 สีแดง</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>({
+  create: { width: <span class="number">400</span>, height: <span class="number">300</span>, channels: <span class="number">4</span>,
+    background: { r: <span class="number">239</span>, g: <span class="number">68</span>, b: <span class="number">68</span>, alpha: <span class="number">1</span> } }
+}).<span class="fn">png</span>().<span class="fn">toFile</span>(<span class="string">'red-box.png'</span>);</pre>
+
+<h3>10.10 อ่านเป็น Buffer (ไม่บันทึกไฟล์)</h3>
+<pre><span class="keyword">const</span> buffer = <span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">resize</span>(<span class="number">100</span>)
+  .<span class="fn">png</span>()
+  .<span class="fn">toBuffer</span>();
+
+console.<span class="fn">log</span>(buffer.length); <span class="comment">// ขนาด bytes</span></pre>
+
+
+<!-- ═══════ 11. TROUBLESHOOT ═══════ -->
+<h2 id="sec-troubleshoot">11. แก้ปัญหาที่พบบ่อย</h2>
+
+<table>
+  <tr><th>ปัญหา</th><th>สาเหตุ</th><th>วิธีแก้</th></tr>
+  <tr>
+    <td>กรอบเลื่อนไปด้านบน</td>
+    <td>พิกัด y น้อยเกินไป</td>
+    <td>เพิ่มค่า y ขึ้น (ลงมาในรูป)</td>
+  </tr>
+  <tr>
+    <td>กรอบเลื่อนไปด้านซ้าย</td>
+    <td>พิกัด x น้อยเกินไป</td>
+    <td>เพิ่มค่า x ขึ้น (ไปทางขวา)</td>
+  </tr>
+  <tr>
+    <td>label ทับข้อความ UI</td>
+    <td>ตำแหน่ง y ของ label ตรงกับ UI</td>
+    <td>เลื่อน label ขึ้น/ลง 20-30px</td>
+  </tr>
+  <tr>
+    <td>หัวลูกศรไม่แสดง</td>
+    <td>ใช้สีที่ไม่มี marker กำหนดไว้</td>
+    <td>ใช้เฉพาะ 4 สี: แดง/น้ำเงิน/เขียว/ส้ม</td>
+  </tr>
+  <tr>
+    <td>ข้อความภาษาไทยไม่แสดง</td>
+    <td>ระบบไม่มี Thai font</td>
+    <td>SVG ใช้ <code>font-family: sans-serif</code> ควรมี Noto Sans Thai ในระบบ</td>
+  </tr>
+  <tr>
+    <td>Cannot find module 'sharp'</td>
+    <td>ยังไม่ได้ติดตั้ง</td>
+    <td><code>npm install sharp</code></td>
+  </tr>
+  <tr>
+    <td>ReferenceError: require is not defined</td>
+    <td>package.json มี <code>"type": "module"</code></td>
+    <td>เปลี่ยนนามสกุลไฟล์เป็น <code>.cjs</code></td>
+  </tr>
+  <tr>
+    <td>รูป annotated ไม่ update</td>
+    <td>Cache หรือรูปต้นฉบับไม่เปลี่ยน</td>
+    <td>ลบ <code>screenshots/annotated/</code> แล้วรันใหม่</td>
+  </tr>
+</table>
+
+
+<!-- ═══════ 12. RECIPES ═══════ -->
+<h2 id="sec-recipes">12. สูตรสำเร็จ</h2>
+
+<h3>สูตร 1: Annotate รูปเดียว (ไม่ใช้ annotate-screenshots.cjs)</h3>
+<pre><span class="keyword">const</span> sharp = <span class="fn">require</span>(<span class="string">'sharp'</span>);
+
+<span class="keyword">const</span> svg = Buffer.<span class="fn">from</span>(<span class="string">`
+  &lt;svg xmlns="http://www.w3.org/2000/svg" width="390" height="844"&gt;
+    &lt;rect x="38" y="520" width="314" height="52"
+      fill="none" stroke="#22c55e" stroke-width="3" rx="8"/&gt;
+    &lt;circle cx="18" cy="546" r="14" fill="#22c55e"/&gt;
+    &lt;text x="18" y="551" font-family="sans-serif" font-size="17"
+      fill="white" text-anchor="middle" font-weight="bold"&gt;1&lt;/text&gt;
+  &lt;/svg&gt;
+`</span>);
+
+<span class="fn">sharp</span>(<span class="string">'screenshot.png'</span>)
+  .<span class="fn">composite</span>([{ input: svg, top: <span class="number">0</span>, left: <span class="number">0</span> }])
+  .<span class="fn">toFile</span>(<span class="string">'annotated.png'</span>)
+  .<span class="fn">then</span>(() => console.<span class="fn">log</span>(<span class="string">'Done!'</span>));</pre>
+
+<h3>สูตร 2: Batch resize ทุกรูป</h3>
+<pre><span class="keyword">const</span> sharp = <span class="fn">require</span>(<span class="string">'sharp'</span>);
+<span class="keyword">const</span> fs = <span class="fn">require</span>(<span class="string">'fs'</span>);
+<span class="keyword">const</span> path = <span class="fn">require</span>(<span class="string">'path'</span>);
+
+<span class="keyword">const</span> dir = <span class="string">'./screenshots'</span>;
+<span class="keyword">const</span> outDir = <span class="string">'./thumbnails'</span>;
+fs.<span class="fn">mkdirSync</span>(outDir, { recursive: <span class="keyword">true</span> });
+
+<span class="keyword">for</span> (<span class="keyword">const</span> file <span class="keyword">of</span> fs.<span class="fn">readdirSync</span>(dir).<span class="fn">filter</span>(f => f.<span class="fn">endsWith</span>(<span class="string">'.png'</span>))) {
+  <span class="keyword">await</span> <span class="fn">sharp</span>(path.<span class="fn">join</span>(dir, file))
+    .<span class="fn">resize</span>({ width: <span class="number">200</span> })
+    .<span class="fn">toFile</span>(path.<span class="fn">join</span>(outDir, file));
+  console.<span class="fn">log</span>(<span class="string">`✅ ${file}`</span>);
+}</pre>
+
+<h3>สูตร 3: เบลอส่วนที่ sensitive แล้ว annotate</h3>
+<pre><span class="comment">// 1. เบลอส่วนที่ต้องการ (ตัดออกมา → เบลอ → วางกลับ)</span>
+<span class="keyword">const</span> blurredPart = <span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">extract</span>({ left: <span class="number">50</span>, top: <span class="number">300</span>, width: <span class="number">200</span>, height: <span class="number">40</span> })
+  .<span class="fn">blur</span>(<span class="number">15</span>)
+  .<span class="fn">toBuffer</span>();
+
+<span class="comment">// 2. วาง blurred part + SVG annotation ทับ</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'input.png'</span>)
+  .<span class="fn">composite</span>([
+    { input: blurredPart, top: <span class="number">300</span>, left: <span class="number">50</span> },
+    { input: svgAnnotation, top: <span class="number">0</span>, left: <span class="number">0</span> },
+  ])
+  .<span class="fn">toFile</span>(<span class="string">'output.png'</span>);</pre>
+
+<h3>สูตร 4: สร้าง comparison (ก่อน/หลัง)</h3>
+<pre><span class="keyword">const</span> before = <span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'before.png'</span>).<span class="fn">resize</span>(<span class="number">400</span>, <span class="number">600</span>).<span class="fn">toBuffer</span>();
+<span class="keyword">const</span> after = <span class="keyword">await</span> <span class="fn">sharp</span>(<span class="string">'after.png'</span>).<span class="fn">resize</span>(<span class="number">400</span>, <span class="number">600</span>).<span class="fn">toBuffer</span>();
+
+<span class="comment">// สร้างรูปเปล่า 820x600 แล้ววางทั้ง 2 รูปข้างกัน</span>
+<span class="keyword">await</span> <span class="fn">sharp</span>({
+  create: { width: <span class="number">820</span>, height: <span class="number">600</span>, channels: <span class="number">4</span>,
+    background: { r: <span class="number">255</span>, g: <span class="number">255</span>, b: <span class="number">255</span>, alpha: <span class="number">1</span> } }
+})
+  .<span class="fn">composite</span>([
+    { input: before, top: <span class="number">0</span>, left: <span class="number">0</span> },
+    { input: after, top: <span class="number">0</span>, left: <span class="number">420</span> },
+  ])
+  .<span class="fn">png</span>().<span class="fn">toFile</span>(<span class="string">'comparison.png'</span>);</pre>
+
+<hr>
+
+<div style="text-align: center; padding: 40px 0; color: #94a3b8;">
+  <p style="font-size: 16px;">Sharp + SVG Annotation Guide</p>
+  <p>ใช้คู่กับ <code>tutorial/annotate-screenshots.cjs</code></p>
+  <p style="font-size: 12px; margin-top: 20px;">
+    Sharp docs: <a href="https://sharp.pixelplumbing.com" target="_blank">sharp.pixelplumbing.com</a><br>
+    SVG Reference: <a href="https://developer.mozilla.org/en-US/docs/Web/SVG" target="_blank">MDN SVG</a>
+  </p>
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const text = pre.textContent.replace('คัดลอก', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'คัดลอกแล้ว!';
+    setTimeout(() => btn.textContent = 'คัดลอก', 1500);
+  });
+}
+</script>
+
+</body>
+</html>
