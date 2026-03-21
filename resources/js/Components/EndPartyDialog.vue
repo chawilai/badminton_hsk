@@ -49,10 +49,12 @@ const initPlayers = () => {
       user_id: m.user_id,
       name: m.display_name || m.user?.name || 'Unknown',
       avatar: m.user?.avatar,
+      provider: m.user?.provider,
       games: gamesPlayed,
       totalSeconds,
       fixed: false,
       customAmount: 0,
+      sendLine: m.user?.provider === 'line',
     };
   });
 };
@@ -101,6 +103,16 @@ const toggleFixed = (player) => {
   }
 };
 
+// LINE send selection
+const linePlayers = computed(() => players.value.filter(p => p.provider === 'line'));
+const lineSelectedCount = computed(() => players.value.filter(p => p.sendLine).length);
+const allLineSelected = computed(() => linePlayers.value.length > 0 && linePlayers.value.every(p => p.sendLine));
+
+const toggleAllLine = () => {
+  const newVal = !allLineSelected.value;
+  linePlayers.value.forEach(p => p.sendLine = newVal);
+};
+
 const endParty = () => {
   if (submitting.value) return;
   submitting.value = true;
@@ -118,6 +130,7 @@ const endParty = () => {
     shuttlecock_used: shuttlecockUsed.value,
     total_cost: totalCost.value,
     settlements,
+    send_line_to: players.value.filter(p => p.sendLine).map(p => p.user_id),
   }, {
     onSuccess: () => {
       toast.add({ severity: 'success', summary: 'จบปาร์ตี้เรียบร้อย! ส่งสรุปเข้า LINE แล้ว', life: 3000 });
@@ -181,7 +194,15 @@ const endParty = () => {
         <div>
           <div class="flex items-center justify-between mb-2">
             <div class="text-xs font-bold text-base-content/60 uppercase">รายชื่อผู้เล่น ({{ players.length }})</div>
-            <div class="text-[10px] text-base-content/40">กด 📌 เพื่อ fix ราคา</div>
+            <div class="flex items-center gap-2">
+              <div class="text-[10px] text-base-content/40">กด 📌 เพื่อ fix ราคา</div>
+              <button
+                v-if="linePlayers.length > 0"
+                @click="toggleAllLine"
+                class="text-[10px] px-2 py-0.5 rounded-full border-0 cursor-pointer transition-all"
+                :class="allLineSelected ? 'bg-success/20 text-success' : 'bg-base-200 text-base-content/40 hover:bg-base-300'"
+              >LINE {{ allLineSelected ? 'ALL' : `${lineSelectedCount}/${linePlayers.length}` }}</button>
+            </div>
           </div>
 
           <div class="space-y-1.5">
@@ -197,6 +218,19 @@ const endParty = () => {
                 <div class="text-xs font-bold text-base-content truncate">{{ p.name }}</div>
                 <div class="text-[9px] text-base-content/40">{{ p.games }} เกม · {{ formatMinutes(p.totalSeconds) }}</div>
               </div>
+
+              <!-- LINE send toggle -->
+              <button
+                v-if="p.provider === 'line'"
+                @click="p.sendLine = !p.sendLine"
+                class="w-7 h-7 rounded-lg flex items-center justify-center border-0 cursor-pointer transition-all text-sm"
+                :class="p.sendLine ? 'bg-success/20 text-success' : 'bg-base-200 text-base-content/30 hover:bg-base-300'"
+                :title="p.sendLine ? 'ไม่ส่ง LINE' : 'ส่ง LINE'"
+              >
+                <svg v-if="p.sendLine" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+              </button>
+              <div v-else class="w-7 h-7 rounded-lg flex items-center justify-center bg-base-200/50 text-base-content/20 text-[10px]" title="ไม่มี LINE">--</div>
 
               <!-- Fix toggle -->
               <button
@@ -254,7 +288,7 @@ const endParty = () => {
             class="flex-1 h-10 rounded-xl text-sm font-bold bg-primary text-white border-0 cursor-pointer hover:bg-primary/80 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
           >
             <span v-if="submitting" class="loading loading-spinner loading-xs"></span>
-            📨 ส่งสรุปเข้า LINE
+            📨 ส่งสรุปเข้า LINE ({{ lineSelectedCount }})
           </button>
         </div>
       </div>

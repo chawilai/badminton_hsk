@@ -619,7 +619,11 @@ class PartyController extends Controller
             'settlements' => 'required|array',
             'settlements.*.user_id' => 'required|integer',
             'settlements.*.amount' => 'required|numeric|min:0',
+            'send_line_to' => 'nullable|array',
+            'send_line_to.*' => 'integer',
         ]);
+
+        $sendLineTo = $validated['send_line_to'] ?? [];
 
         // Update party cost fields & status
         $party->update([
@@ -643,6 +647,7 @@ class PartyController extends Controller
 
             foreach ($party->members as $member) {
                 if (!$member->user) continue;
+                if (!in_array($member->user_id, $sendLineTo)) continue;
 
                 $userId = $member->user_id;
                 $settlement = $settlementMap[$userId] ?? null;
