@@ -29,6 +29,7 @@ class Party extends Model
         'cost_type',    // per_person, split_equal, free
         'cost_amount',  // Cost amount
         'shuttlecock_cost', // Shuttlecock cost
+        'shuttlecock_used', // Number of shuttlecocks used
         'notes',        // Party notes/rules
         'is_inc_playing',   // Show playing player to make the game
         'is_break_aftergame',   // Set game_status to break after the game end

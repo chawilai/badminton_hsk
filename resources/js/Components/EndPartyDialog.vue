@@ -60,7 +60,13 @@ const initPlayers = () => {
 };
 
 watch(() => props.show, (val) => {
-  if (val) initPlayers();
+  if (val) {
+    courtCostPerHour.value = props.party.cost_amount || props.party.court?.play_price || 0;
+    playHours.value = props.party.play_hours || 0;
+    shuttleCostPerUnit.value = props.party.shuttlecock_cost || 0;
+    shuttlecockUsed.value = props.party.shuttlecock_used ?? props.costSummary?.shuttlecock_used ?? 0;
+    initPlayers();
+  }
 });
 
 // Cost calculations
@@ -111,6 +117,31 @@ const allLineSelected = computed(() => linePlayers.value.length > 0 && linePlaye
 const toggleAllLine = () => {
   const newVal = !allLineSelected.value;
   linePlayers.value.forEach(p => p.sendLine = newVal);
+};
+
+const savingCosts = ref(false);
+
+const saveCosts = () => {
+  if (savingCosts.value) return;
+  savingCosts.value = true;
+
+  router.post(`/party/${props.party.id}/save-costs`, {
+    court_cost_per_hour: courtCostPerHour.value,
+    play_hours: playHours.value,
+    shuttlecock_cost_per_unit: shuttleCostPerUnit.value,
+    shuttlecock_used: shuttlecockUsed.value,
+  }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.add({ severity: 'success', summary: 'บันทึกค่าใช้จ่ายแล้ว', life: 2000 });
+    },
+    onError: () => {
+      toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', life: 3000 });
+    },
+    onFinish: () => {
+      savingCosts.value = false;
+    },
+  });
 };
 
 const endParty = () => {
@@ -270,8 +301,16 @@ const endParty = () => {
         <div class="flex gap-2">
           <button
             @click="emit('close')"
-            class="flex-1 h-10 rounded-xl text-sm font-semibold bg-base-200 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors"
+            class="h-10 px-4 rounded-xl text-sm font-semibold bg-base-200 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors"
           >{{ isOver ? 'ปิด' : 'ยกเลิก' }}</button>
+          <button
+            @click="saveCosts"
+            :disabled="savingCosts"
+            class="h-10 px-4 rounded-xl text-sm font-bold bg-info text-white border-0 cursor-pointer hover:bg-info/80 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+          >
+            <span v-if="savingCosts" class="loading loading-spinner loading-xs"></span>
+            💾 บันทึก
+          </button>
           <button
             v-if="!isOver"
             @click="endParty"

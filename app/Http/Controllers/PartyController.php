@@ -602,6 +602,32 @@ class PartyController extends Controller
     }
 
     /**
+     * Save cost settings without ending the party.
+     */
+    public function saveCostSettings(Request $request, Party $party)
+    {
+        if ($party->creator_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'court_cost_per_hour' => 'numeric|min:0',
+            'play_hours' => 'numeric|min:0',
+            'shuttlecock_cost_per_unit' => 'numeric|min:0',
+            'shuttlecock_used' => 'integer|min:0',
+        ]);
+
+        $party->update([
+            'cost_amount' => $validated['court_cost_per_hour'],
+            'play_hours' => $validated['play_hours'],
+            'shuttlecock_cost' => $validated['shuttlecock_cost_per_unit'],
+            'shuttlecock_used' => $validated['shuttlecock_used'],
+        ]);
+
+        return back()->with('success', 'บันทึกค่าใช้จ่ายแล้ว');
+    }
+
+    /**
      * End party with settlement details and send personalized LINE push to each member.
      */
     public function endParty(Request $request, Party $party)
@@ -630,6 +656,7 @@ class PartyController extends Controller
             'cost_amount' => $validated['court_cost_per_hour'],
             'play_hours' => $validated['play_hours'],
             'shuttlecock_cost' => $validated['shuttlecock_cost_per_unit'],
+            'shuttlecock_used' => $validated['shuttlecock_used'],
             'status' => 'Over',
             'party_end_date' => now(),
         ]);

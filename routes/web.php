@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/party-create', [PartyController::class, 'store'])->name('parties.create');
     Route::post('/party/{party}/update', [PartyController::class, 'update'])->name('parties.update');
     Route::post('/party/{party}/end', [PartyController::class, 'endParty'])->name('parties.end');
+    Route::post('/party/{party}/save-costs', [PartyController::class, 'saveCostSettings'])->name('parties.save-costs');
     Route::post('/party/{party}/duplicate', [PartyController::class, 'duplicate'])->name('parties.duplicate');
     Route::delete('/party/{party}/delete', [PartyController::class, 'deleteParty'])->name('parties.delete');
     Route::post('/party-join', [PartyController::class, 'joinParty'])->name('parties.join');
