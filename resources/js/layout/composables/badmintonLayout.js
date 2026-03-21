@@ -44,6 +44,7 @@ const availableThemes = [
 
 export function useBadmintonLayout() {
     const initTheme = () => {
+        if (typeof window === 'undefined') return;
         const storedTheme = localStorage.getItem('badminton-theme');
         if (storedTheme) {
             currentTheme.value = storedTheme;
@@ -52,6 +53,7 @@ export function useBadmintonLayout() {
     };
 
     const applyTheme = (theme) => {
+        if (typeof window === 'undefined') return;
         document.documentElement.setAttribute('data-theme', theme);
         const isDark = availableThemes.find(t => t.name === theme)?.dark ?? false;
         if (isDark) {
@@ -63,7 +65,9 @@ export function useBadmintonLayout() {
 
     const switchTheme = (theme) => {
         currentTheme.value = theme;
-        localStorage.setItem('badminton-theme', theme);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('badminton-theme', theme);
+        }
         applyTheme(theme);
     };
 

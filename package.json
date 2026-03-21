@@ -22,6 +22,7 @@
     "dependencies": {
         "@braks/revue-draggable": "^0.5.1",
         "@line/liff": "^2.25.1",
+        "@playwright/test": "^1.58.2",
         "ably": "^2.6.2",
         "chart.js": "^4.4.7",
         "chartjs-plugin-datalabels": "^2.2.0",
@@ -34,6 +35,7 @@
         "qrcode": "^1.5.3",
         "quill": "^2.0.3",
         "sass": "^1.83.0",
+        "sharp": "^0.34.5",
         "sortablejs": "^1.15.6",
         "vite-svg-loader": "^4.0.0",
         "vue-dndrop": "1.2.2",

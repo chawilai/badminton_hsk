@@ -3,7 +3,7 @@ import th from '@/locales/th';
 import en from '@/locales/en';
 
 const messages = { th, en };
-const locale = ref(localStorage.getItem('badminton-locale') || 'th');
+const locale = ref(typeof window !== 'undefined' ? (localStorage.getItem('badminton-locale') || 'th') : 'th');
 
 export function useLocale() {
   const t = (key, params = {}) => {
@@ -16,8 +16,10 @@ export function useLocale() {
 
   const setLocale = (lang) => {
     locale.value = lang;
-    localStorage.setItem('badminton-locale', lang);
-    document.documentElement.setAttribute('lang', lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('badminton-locale', lang);
+      document.documentElement.setAttribute('lang', lang);
+    }
   };
 
   const toggleLocale = () => {
