@@ -140,6 +140,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/skill-assessment', [SkillAssessmentController::class, 'show']);
     Route::post('/skill-assessment', [SkillAssessmentController::class, 'store']);
 
+    // Linked Accounts
+    Route::get('/linked-accounts/link/{provider}', [\App\Http\Controllers\LinkedAccountController::class, 'redirectToLink'])->name('linked-accounts.link');
+    Route::get('/linked-accounts/link/{provider}/callback', [\App\Http\Controllers\LinkedAccountController::class, 'handleLinkCallback'])->name('linked-accounts.callback');
+    Route::delete('/linked-accounts/{provider}', [\App\Http\Controllers\LinkedAccountController::class, 'unlink'])->name('linked-accounts.unlink');
+    Route::get('/linked-accounts/merge', [\App\Http\Controllers\LinkedAccountController::class, 'showMergeConfirm'])->name('linked-accounts.merge');
+    Route::post('/linked-accounts/merge', [\App\Http\Controllers\LinkedAccountController::class, 'confirmMerge'])->name('linked-accounts.merge.confirm');
+    Route::post('/linked-accounts/check-email', [\App\Http\Controllers\LinkedAccountController::class, 'checkEmail'])->name('linked-accounts.check-email');
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');

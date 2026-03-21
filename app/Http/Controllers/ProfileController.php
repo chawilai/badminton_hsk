@@ -282,6 +282,12 @@ class ProfileController extends Controller
                 'district' => $user->district,
                 'province' => $user->province,
             ],
+            'linkedAccounts' => $user->linkedAccounts->map(fn($la) => [
+                'provider' => $la->provider,
+                'provider_name' => $la->provider_name,
+                'provider_avatar' => $la->provider_avatar,
+                'created_at' => $la->created_at,
+            ]),
         ]);
     }
 

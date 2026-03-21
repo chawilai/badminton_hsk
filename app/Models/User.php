@@ -96,10 +96,24 @@ class User extends Authenticatable
         return $this->hasMany(GamePlayer::class);
     }
 
-    // Optional: Users might have many PartyMembers if that relationship is useful for other features
     public function partyMembers()
     {
         return $this->hasMany(PartyMember::class);
+    }
+
+    public function linkedAccounts()
+    {
+        return $this->hasMany(LinkedAccount::class);
+    }
+
+    public function hasLinkedProvider(string $provider): bool
+    {
+        return $this->linkedAccounts()->where('provider', $provider)->exists();
+    }
+
+    public function getLinkedAccount(string $provider): ?LinkedAccount
+    {
+        return $this->linkedAccounts()->where('provider', $provider)->first();
     }
 
     /**

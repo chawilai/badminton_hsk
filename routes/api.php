@@ -99,6 +99,13 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('friends/{friendship}/accept', [Api\FriendController::class, 'acceptRequest']);
         Route::delete('friends/{friendship}', [Api\FriendController::class, 'cancelRequest']);
 
+        // ----- Linked Accounts -----
+        Route::get('linked-accounts', [Api\LinkedAccountController::class, 'index']);
+        Route::post('linked-accounts/link', [Api\LinkedAccountController::class, 'link']);
+        Route::delete('linked-accounts/{provider}', [Api\LinkedAccountController::class, 'unlink']);
+        Route::post('linked-accounts/check-merge', [Api\LinkedAccountController::class, 'checkMerge']);
+        Route::post('linked-accounts/merge', [Api\LinkedAccountController::class, 'confirmMerge']);
+
         // ----- Profile -----
         Route::get('profile', [Api\ProfileController::class, 'index']);
         Route::get('profile/edit', [Api\ProfileController::class, 'edit']);

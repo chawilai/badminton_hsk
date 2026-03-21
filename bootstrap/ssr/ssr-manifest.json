@@ -333,6 +333,9 @@
     "/build/assets/image-3-B4tBE0ka.png",
     "/build/assets/chat-vq5_xUsR.png"
   ],
+  "resources/js/Pages/LinkedAccounts/MergeConfirm.vue": [
+    "/build/assets/MergeConfirm-DVb6kNQx.js"
+  ],
   "resources/js/Pages/MenuAnimate.vue": [
     "/build/assets/MenuAnimate-DkvC-tzw.js"
   ],
@@ -423,12 +426,12 @@
     "/build/assets/Profile-B0Oa86K4.js"
   ],
   "resources/js/Pages/Profile/Edit.vue": [
-    "/build/assets/Edit-7OcRZrav.js",
-    "/build/assets/Edit-CORkR2f-.css"
+    "/build/assets/Edit-BuQNQrWn.js",
+    "/build/assets/Edit-BrESV6U1.css"
   ],
-  "resources/js/Pages/Profile/Edit.vue?vue&type=style&index=0&scoped=efcccecf&lang.css": [
-    "/build/assets/Edit-7OcRZrav.js",
-    "/build/assets/Edit-CORkR2f-.css"
+  "resources/js/Pages/Profile/Edit.vue?vue&type=style&index=0&scoped=d6f622f4&lang.css": [
+    "/build/assets/Edit-BuQNQrWn.js",
+    "/build/assets/Edit-BrESV6U1.css"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.vue": [
     "/build/assets/DeleteUserForm-CclychH2.js"
