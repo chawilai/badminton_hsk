@@ -167,17 +167,16 @@ class LinkedAccountController extends Controller
             return redirect('/profile/edit')->with('error', 'ไม่พบบัญชีที่ต้องการรวม');
         }
 
-        // Re-check conflicts
-        $conflicts = $this->linkingService->detectConflicts(auth()->user(), $otherUser);
-        if (!empty($conflicts)) {
-            return redirect('/linked-accounts/merge')->with('error', 'ยังมีปัญหาที่ต้องแก้ไขก่อนรวมบัญชี');
+        try {
+            $this->linkingService->mergeAccounts(
+                auth()->user(),
+                $otherUser,
+                $request->only(['name', 'avatar'])
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Merge failed', ['error' => $e->getMessage()]);
+            return redirect('/linked-accounts/merge')->with('error', 'รวมบัญชีไม่สำเร็จ: ' . $e->getMessage());
         }
-
-        $this->linkingService->mergeAccounts(
-            auth()->user(),
-            $otherUser,
-            $request->only(['name', 'avatar'])
-        );
 
         session()->forget('merge_data');
 

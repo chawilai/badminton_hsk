@@ -246,6 +246,9 @@ class AccountLinkingService
 
             $keepUser->save();
 
+            // Transfer party ownership
+            DB::table('parties')->where('creator_id', $deleteId)->update(['creator_id' => $keepId]);
+
             // Move linked_accounts
             LinkedAccount::where('user_id', $deleteId)->update(['user_id' => $keepId]);
 
@@ -291,6 +294,8 @@ class AccountLinkingService
             DB::table('mmr_history')->where('user_id', $deleteId)->update(['user_id' => $keepId]);
             DB::table('level_up_notifications')->where('user_id', $deleteId)->update(['user_id' => $keepId]);
             DB::table('feedbacks')->where('user_id', $deleteId)->update(['user_id' => $keepId]);
+            DB::table('feedback_replies')->where('user_id', $deleteId)->update(['user_id' => $keepId]);
+            DB::table('mmr_assessments')->where('user_id', $deleteId)->update(['user_id' => $keepId]);
 
             // Notification settings — keep keepUser's, delete deleteUser's
             DB::table('notification_settings')->where('user_id', $deleteId)->delete();
