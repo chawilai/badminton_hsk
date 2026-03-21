@@ -16,8 +16,6 @@ const slides = [
     subtitle: 'ระบบสร้างปาร์ตี้อัจฉริยะ ค้นหาเพื่อนร่วมก๊วนที่มีระดับฝีมือใกล้เคียงกัน',
     cta: 'หาปาร์ตี้',
     href: '/party-lists',
-    textColor: 'text-slate-800',
-    buttonColor: 'btn-primary'
   },
   {
     image: '/images/carousel/public-private-cartoon.jpg',
@@ -26,8 +24,6 @@ const slides = [
     subtitle: 'เลือกเข้าร่วมปาร์ตี้สาธารณะ หรือสร้างห้องส่วนตัวสำหรับก๊วนของคุณเอง',
     cta: 'สร้างปาร์ตี้',
     href: '/party-create',
-    textColor: 'text-slate-800',
-    buttonColor: 'btn-secondary'
   },
   {
     image: '/images/carousel/auto-balance.jpg',
@@ -152,27 +148,20 @@ const quickActions = [
               />
             </picture>
             
-            <!-- Dynamic Overlay and Text Color -->
-            <div 
-              class="absolute inset-0 bg-gradient-to-t"
-              :class="slide.textColor ? 'from-white/60 via-transparent' : 'from-black/70 via-black/20 to-transparent'"
-            ></div>
+            <!-- Dark gradient overlay for text readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10"></div>
             
             <!-- Content -->
-            <div 
-              class="absolute inset-0 p-8 flex flex-col justify-end"
-              :class="slide.textColor || 'text-white'"
-            >
+            <div class="absolute inset-0 p-8 flex flex-col justify-end text-white">
               <div class="animate-slide-up transform transition-all duration-500">
-                <h2 class="text-3xl md:text-5xl font-black mb-2 leading-tight tracking-tight drop-shadow-sm">{{ slide.title }}</h2>
-                <p class="text-sm md:text-lg opacity-90 max-w-xl mb-6 font-medium leading-relaxed">{{ slide.subtitle }}</p>
+                <h2 class="text-3xl md:text-5xl font-black mb-2 leading-tight tracking-tight" style="text-shadow: 0 2px 8px rgba(0,0,0,0.5);">{{ slide.title }}</h2>
+                <p class="text-sm md:text-lg opacity-95 max-w-xl mb-6 font-medium leading-relaxed" style="text-shadow: 0 1px 4px rgba(0,0,0,0.4);">{{ slide.subtitle }}</p>
                 <div class="flex items-center gap-4">
                     <component
                         :is="slide.external ? 'a' : Link"
                         :href="slide.href"
                         :target="slide.external ? '_blank' : null"
-                        class="h-12 px-8 rounded-2xl text-sm font-black no-underline flex items-center gap-2 hover:scale-105 transition-all shadow-lg active:scale-95"
-                        :class="slide.buttonColor ? `btn ${slide.buttonColor} border-none` : 'bg-primary text-primary-content'"
+                        class="btn btn-primary border-none h-12 px-8 rounded-2xl text-sm font-black no-underline flex items-center gap-2 hover:scale-105 transition-all shadow-lg active:scale-95"
                     >
                         {{ slide.cta }}
                         <span v-if="!slide.external">→</span>
