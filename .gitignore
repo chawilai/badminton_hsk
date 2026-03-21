@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Firebase service account keys
+badmintonparty-*.json
+*-firebase-adminsdk-*.json
