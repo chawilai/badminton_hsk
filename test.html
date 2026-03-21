@@ -11,3 +11,82 @@
 </svg>
 </body>
 </html>
+
+คำแนะนำแก้ source code ถาวร
+
+  ปัญหาอยู่ที่ resolve function ใน SSR entry file ของแต่ละโปรเจค เวลา page
+  ไม่เจอมัน throw error ทำให้ SSR process crash ทั้งตัว
+
+  วิธีแก้ — ครอบ try-catch ใน resolve
+
+  bearskill — resources/js/ssr.js:
+  createServer((page) =>
+      createInertiaApp({
+          page,
+          render: renderToString,
+          title: (title) => `${title} - ${appName}`,
+          resolve: async (name) => {
+              try {
+                  return await resolvePageComponent(
+                      `./Pages/${name}.vue`,
+                      import.meta.glob('./Pages/**/*.vue')
+                  );
+              } catch (e) {
+                  console.error(`SSR: Page not found: ${name}, falling
+  back`);
+                  // return หน้าที่มีอยู่จริงเป็น fallback
+                  return await resolvePageComponent(
+                      './Pages/Welcome.vue',
+                      import.meta.glob('./Pages/**/*.vue')
+                  );
+              }
+          },
+          // ...
+      })
+  );
+
+  hskwarrior — เหมือนกัน แต่ fallback เป็น Warrior.vue:
+  resolve: async (name) => {
+      try {
+          return await resolvePageComponent(
+              `./Pages/${name}.vue`,
+              import.meta.glob('./Pages/**/*.vue')
+          );
+      } catch (e) {
+          console.error(`SSR: Page not found: ${name}, falling back`);
+          return await resolvePageComponent(
+              './Pages/Warrior.vue',
+              import.meta.glob('./Pages/**/*.vue')
+          );
+      }
+  },
+
+  badminton — ถ้าจะทำเหมือนกัน fallback เป็น Welcome.vue หรือหน้า Landing
+
+  หลักการ
+
+  ┌─────────┬───────────────────────┬────────────────────────────────┐
+  │         │     ไม่มี try-catch     │          มี try-catch           │
+  ├─────────┼───────────────────────┼────────────────────────────────┤
+  │ Page    │ SSR render ปกติ        │ SSR render ปกติ                 │
+  │ มีอยู่     │                       │                                │
+  ├─────────┼───────────────────────┼────────────────────────────────┤
+  │ Page    │ crash → pm2 restart   │ log error → fallback → SSR     │
+  │ ไม่มี     │ วนซ้ำ                  │ ยังทำงานต่อ                      │
+  └─────────┴───────────────────────┴────────────────────────────────┘
+
+  ลำดับ deploy
+
+  1. แก้ resources/js/ssr.js ใน local ของแต่ละโปรเจค
+  2. npm run build
+  3. rsync หรือ git push + pull ขึ้น server
+  4. pm2 restart <ssr-process>
+
+  แก้ทีเดียวจะถาวร ไม่ต้องกลับมาแก้ bootstrap/ssr/ssr.js บน server ทุกครั้งที่ build
+  ใหม่ครับ
+
+─────────────────────────────────────────────────────────────────────────
+❯ 
+─────────────────────────────────────────────────────────────────────────
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+   Remote Control active
