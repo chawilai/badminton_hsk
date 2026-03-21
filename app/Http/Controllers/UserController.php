@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BadmintonRank;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,7 +27,11 @@ class UserController extends Controller
 
     public function showSetupForm()
     {
-        return Inertia::render('Empty', []);
+        $ranks = BadmintonRank::all()->groupBy('education_group_rank');
+
+        return Inertia::render('UserSetup', [
+            'rankGroups' => $ranks,
+        ]);
     }
 
     public function updateSetup(Request $request)

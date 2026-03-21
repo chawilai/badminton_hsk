@@ -523,6 +523,9 @@
   "resources/js/Pages/Textbook.vue": [
     "/build/assets/Textbook-CcHb7keg.js"
   ],
+  "resources/js/Pages/UserSetup.vue": [
+    "/build/assets/UserSetup-zvWeq8ON.js"
+  ],
   "resources/js/Pages/Welcome.vue": [
     "/build/assets/Welcome-B5BE8H7j.js"
   ],
