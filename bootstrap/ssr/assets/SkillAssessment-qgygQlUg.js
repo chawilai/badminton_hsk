@@ -1,7 +1,7 @@
 import { ref, computed, unref, withCtx, createVNode, createBlock, createCommentVNode, openBlock, toDisplayString, Fragment, renderList, createTextVNode, nextTick, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrInterpolate, ssrRenderStyle, ssrRenderList, ssrRenderClass, ssrIncludeBooleanAttr } from "vue/server-renderer";
 import { Head, router } from "@inertiajs/vue3";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { g as getSkillLevelLabel, a as getSkillLevelDesc, _ as _sfc_main$2 } from "./skillLevelDescriptions-BhqdlqaI.js";
 import { u as useLocale } from "./useLocale-QwrDLuQY.js";
 import "./badmintonLayout-C3Xd2fBf.js";

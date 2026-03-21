@@ -1,6 +1,6 @@
 import { onMounted, unref, withCtx, createVNode, createBlock, createCommentVNode, toDisplayString, openBlock, createTextVNode, Fragment, renderList, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrInterpolate, ssrRenderList, ssrRenderClass } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { usePage, Head, Link } from "@inertiajs/vue3";
 import "./useLocale-QwrDLuQY.js";
 import { u as useToast } from "./useToast-DyaFeJ92.js";

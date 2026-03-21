@@ -1,6 +1,6 @@
 import { unref, withCtx, createVNode, useSSRContext } from "vue";
 import { ssrRenderComponent } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { Head } from "@inertiajs/vue3";
 import "./badmintonLayout-C3Xd2fBf.js";
 import "./useLocale-QwrDLuQY.js";

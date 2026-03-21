@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted, unref, withCtx, createVNode, resolveDynamicComponent, createTextVNode, createBlock, toDisplayString, openBlock, createCommentVNode, Fragment, renderList, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrRenderStyle, ssrRenderList, ssrRenderAttr, ssrInterpolate, ssrRenderVNode, ssrRenderClass } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { usePage, Head, Link } from "@inertiajs/vue3";
 import "./useLocale-QwrDLuQY.js";
 import { _ as _export_sfc } from "./_plugin-vue_export-helper-1tPrXgE0.js";

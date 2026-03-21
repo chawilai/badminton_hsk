@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, unref, withCtx, createVNode, createBlock, createCommentVNode, openBlock, Fragment, renderList, withModifiers, toDisplayString, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrRenderClass, ssrRenderList, ssrRenderAttr, ssrInterpolate, ssrRenderStyle } from "vue/server-renderer";
 import { u as useDragDrop } from "./useDragDrop-NuEBXaBA.js";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { usePage, Head, router } from "@inertiajs/vue3";
 import { _ as _sfc_main$2 } from "./UserAvatar-Dwoh2ac-.js";
 import { u as useToast } from "./useToast-DyaFeJ92.js";

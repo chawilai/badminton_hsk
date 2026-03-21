@@ -1,6 +1,6 @@
 import { reactive, ref, onMounted, unref, withCtx, createBlock, openBlock, createVNode, createCommentVNode, toDisplayString, withDirectives, vModelCheckbox, Fragment, renderList, createTextVNode, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrRenderClass, ssrInterpolate, ssrIncludeBooleanAttr, ssrLooseContain, ssrRenderList } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { usePage, Head, Link, router } from "@inertiajs/vue3";
 import { u as useToast } from "./useToast-DyaFeJ92.js";
 import "./badmintonLayout-C3Xd2fBf.js";

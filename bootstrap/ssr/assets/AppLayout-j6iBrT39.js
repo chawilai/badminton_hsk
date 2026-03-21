@@ -93,19 +93,18 @@ const _sfc_main$6 = {
       _push(`<header${ssrRenderAttrs(mergeProps({ class: "topbar-accent sticky top-0 z-50 h-14 lg:h-16 flex items-center px-4 lg:px-8 bg-base-100/80 backdrop-blur-xl border-b border-base-300" }, _attrs))}><div class="flex items-center gap-3 shrink-0">`);
       _push(ssrRenderComponent(unref(Link), {
         href: "/home",
-        class: "flex items-center gap-2 no-underline"
+        class: "flex items-center no-underline"
       }, {
         default: withCtx((_, _push2, _parent2, _scopeId) => {
           if (_push2) {
-            _push2(`<img src="/icons/logo-80.png" alt="Badminton Party" class="w-8 h-8"${_scopeId}><span class="font-bold text-lg text-primary hidden sm:inline"${_scopeId}> Badminton Party </span>`);
+            _push2(`<img src="/icons/logo2.png" alt="Badminton Party" class="h-10 lg:h-12"${_scopeId}>`);
           } else {
             return [
               createVNode("img", {
-                src: "/icons/logo-80.png",
+                src: "/icons/logo2.png",
                 alt: "Badminton Party",
-                class: "w-8 h-8"
-              }),
-              createVNode("span", { class: "font-bold text-lg text-primary hidden sm:inline" }, " Badminton Party ")
+                class: "h-10 lg:h-12"
+              })
             ];
           }
         }),

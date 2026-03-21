@@ -1,6 +1,6 @@
 import { ref, unref, withCtx, createVNode, withDirectives, vModelCheckbox, createBlock, openBlock, vShow, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrRenderClass, ssrRenderStyle, ssrIncludeBooleanAttr, ssrLooseContain } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { u as useToast } from "./useToast-DyaFeJ92.js";
 import { router, Head } from "@inertiajs/vue3";
 import "./badmintonLayout-C3Xd2fBf.js";

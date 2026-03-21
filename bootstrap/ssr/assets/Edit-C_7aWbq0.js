@@ -1,6 +1,6 @@
 import { computed, ref, watch, unref, withCtx, createVNode, withModifiers, createBlock, createCommentVNode, openBlock, createTextVNode, withDirectives, vModelText, toDisplayString, Fragment, renderList, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrRenderAttr, ssrRenderClass, ssrIncludeBooleanAttr, ssrInterpolate, ssrRenderList } from "vue/server-renderer";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { _ as _sfc_main$2 } from "./UserAvatar-Dwoh2ac-.js";
 import { usePage, useForm, Head, router } from "@inertiajs/vue3";
 import { u as useToast } from "./useToast-DyaFeJ92.js";

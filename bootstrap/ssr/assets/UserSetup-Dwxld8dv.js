@@ -1,7 +1,7 @@
 import { ref, computed, unref, withCtx, createVNode, toDisplayString, withDirectives, createBlock, createCommentVNode, openBlock, Fragment, renderList, vModelSelect, vModelRadio, vModelText, createTextVNode, useSSRContext } from "vue";
 import { ssrRenderComponent, ssrInterpolate, ssrRenderClass, ssrRenderAttr, ssrIncludeBooleanAttr, ssrLooseContain, ssrLooseEqual, ssrRenderList } from "vue/server-renderer";
 import { Head, router } from "@inertiajs/vue3";
-import { _ as _sfc_main$1 } from "./AppLayout-BPNdCb7L.js";
+import { _ as _sfc_main$1 } from "./AppLayout-j6iBrT39.js";
 import { u as useLocale } from "./useLocale-QwrDLuQY.js";
 import "./badmintonLayout-C3Xd2fBf.js";
 import "./LocaleSwitcher-DHf7bxTb.js";

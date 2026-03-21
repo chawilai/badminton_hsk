@@ -1,6 +1,6 @@
 import { computed, ref, watch, mergeProps, useSSRContext, reactive, onMounted, onUnmounted, unref, withCtx, createVNode, withDirectives, createBlock, createCommentVNode, createTextVNode, toDisplayString, openBlock, Fragment, renderList, vShow, vModelText } from "vue";
-import { ssrRenderAttrs, ssrInterpolate, ssrRenderAttr, ssrRenderList, ssrRenderClass, ssrRenderComponent, ssrIncludeBooleanAttr, ssrRenderStyle } from "vue/server-renderer";
-import { _ as _sfc_main$4 } from "./AppLayout-BPNdCb7L.js";
+import { ssrRenderAttrs, ssrInterpolate, ssrRenderAttr, ssrRenderClass, ssrRenderList, ssrRenderComponent, ssrIncludeBooleanAttr, ssrRenderStyle } from "vue/server-renderer";
+import { _ as _sfc_main$4 } from "./AppLayout-j6iBrT39.js";
 import { _ as _sfc_main$3 } from "./UserAvatar-Dwoh2ac-.js";
 import Game from "./Game2-eQPJvbed.js";
 import _sfc_main$5 from "./TabGame-DWKvZjfx.js";
@@ -41,7 +41,7 @@ const _sfc_main$2 = {
     const initPlayers = () => {
       const finishedGames = props.games.filter((g) => g.status === "finished");
       players.value = (props.party.members || []).map((m) => {
-        var _a2, _b2;
+        var _a2, _b2, _c, _d;
         let gamesPlayed = 0;
         let totalSeconds = 0;
         finishedGames.forEach((game) => {
@@ -59,15 +59,24 @@ const _sfc_main$2 = {
           user_id: m.user_id,
           name: m.display_name || ((_a2 = m.user) == null ? void 0 : _a2.name) || "Unknown",
           avatar: (_b2 = m.user) == null ? void 0 : _b2.avatar,
+          provider: (_c = m.user) == null ? void 0 : _c.provider,
           games: gamesPlayed,
           totalSeconds,
           fixed: false,
-          customAmount: 0
+          customAmount: 0,
+          sendLine: ((_d = m.user) == null ? void 0 : _d.provider) === "line"
         };
       });
     };
     watch(() => props.show, (val) => {
-      if (val) initPlayers();
+      var _a2, _b2;
+      if (val) {
+        courtCostPerHour.value = props.party.cost_amount || ((_a2 = props.party.court) == null ? void 0 : _a2.play_price) || 0;
+        playHours.value = props.party.play_hours || 0;
+        shuttleCostPerUnit.value = props.party.shuttlecock_cost || 0;
+        shuttlecockUsed.value = props.party.shuttlecock_used ?? ((_b2 = props.costSummary) == null ? void 0 : _b2.shuttlecock_used) ?? 0;
+        initPlayers();
+      }
     });
     const courtCostTotal = computed(() => courtCostPerHour.value * playHours.value);
     const shuttleCostTotal = computed(() => shuttleCostPerUnit.value * shuttlecockUsed.value);
@@ -93,9 +102,19 @@ const _sfc_main$2 = {
       const m = Math.floor(seconds / 60);
       return `${m} นาที`;
     };
+    const linePlayers = computed(() => players.value.filter((p) => p.provider === "line"));
+    const lineSelectedCount = computed(() => players.value.filter((p) => p.sendLine).length);
+    const allLineSelected = computed(() => linePlayers.value.length > 0 && linePlayers.value.every((p) => p.sendLine));
+    const savingCosts = ref(false);
     return (_ctx, _push, _parent, _attrs) => {
       if (__props.show) {
-        _push(`<div${ssrRenderAttrs(mergeProps({ class: "fixed inset-0 z-50 flex items-end sm:items-center justify-center" }, _attrs))}><div class="fixed inset-0 bg-black/60"></div><div class="relative bg-base-100 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto z-10"><div class="sticky top-0 bg-base-100 px-4 py-3 border-b border-base-200 flex items-center justify-between z-10"><div class="text-base font-bold text-base-content">${ssrInterpolate(isOver.value ? "💰 สรุปค่าใช้จ่าย" : "🏁 จบปาร์ตี้ & สรุปค่าใช้จ่าย")}</div><button class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center border-0 cursor-pointer hover:bg-base-300">✕</button></div><div class="p-4 pb-24 space-y-4"><div class="bg-base-200/50 rounded-xl p-3 space-y-3"><div class="text-xs font-bold text-base-content/60 uppercase">ค่าใช้จ่าย</div><div class="grid grid-cols-2 gap-3"><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ค่าคอร์ท/ชม. (฿)</label><input type="number"${ssrRenderAttr("value", courtCostPerHour.value)} min="0" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">จำนวนชั่วโมง</label><input type="number"${ssrRenderAttr("value", playHours.value)} min="0" step="0.5" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ราคาลูก/ลูก (฿)</label><input type="number"${ssrRenderAttr("value", shuttleCostPerUnit.value)} min="0" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ลูกแบดที่ใช้</label><input type="number"${ssrRenderAttr("value", shuttlecockUsed.value)} min="0" class="input input-bordered input-sm w-full"></div></div><div class="flex items-center justify-between pt-2 border-t border-base-300"><div class="text-xs text-base-content/50"> คอร์ท ฿${ssrInterpolate(courtCostTotal.value.toLocaleString())} + ลูกแบด ฿${ssrInterpolate(shuttleCostTotal.value.toLocaleString())}</div><div class="text-sm font-black text-primary">รวม ฿${ssrInterpolate(totalCost.value.toLocaleString())}</div></div></div><div><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-base-content/60 uppercase">รายชื่อผู้เล่น (${ssrInterpolate(players.value.length)})</div><div class="text-[10px] text-base-content/40">กด 📌 เพื่อ fix ราคา</div></div><div class="space-y-1.5"><!--[-->`);
+        _push(`<div${ssrRenderAttrs(mergeProps({ class: "fixed inset-0 z-50 flex items-end sm:items-center justify-center" }, _attrs))}><div class="fixed inset-0 bg-black/60"></div><div class="relative bg-base-100 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto z-10"><div class="sticky top-0 bg-base-100 px-4 py-3 border-b border-base-200 flex items-center justify-between z-10"><div class="text-base font-bold text-base-content">${ssrInterpolate(isOver.value ? "💰 สรุปค่าใช้จ่าย" : "🏁 จบปาร์ตี้ & สรุปค่าใช้จ่าย")}</div><button class="w-8 h-8 rounded-lg bg-base-200 flex items-center justify-center border-0 cursor-pointer hover:bg-base-300">✕</button></div><div class="p-4 pb-24 space-y-4"><div class="bg-base-200/50 rounded-xl p-3 space-y-3"><div class="text-xs font-bold text-base-content/60 uppercase">ค่าใช้จ่าย</div><div class="grid grid-cols-2 gap-3"><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ค่าคอร์ท/ชม. (฿)</label><input type="number"${ssrRenderAttr("value", courtCostPerHour.value)} min="0" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">จำนวนชั่วโมง</label><input type="number"${ssrRenderAttr("value", playHours.value)} min="0" step="0.5" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ราคาลูก/ลูก (฿)</label><input type="number"${ssrRenderAttr("value", shuttleCostPerUnit.value)} min="0" class="input input-bordered input-sm w-full"></div><div><label class="text-[10px] text-base-content/50 mb-0.5 block">ลูกแบดที่ใช้</label><input type="number"${ssrRenderAttr("value", shuttlecockUsed.value)} min="0" class="input input-bordered input-sm w-full"></div></div><div class="flex items-center justify-between pt-2 border-t border-base-300"><div class="text-xs text-base-content/50"> คอร์ท ฿${ssrInterpolate(courtCostTotal.value.toLocaleString())} + ลูกแบด ฿${ssrInterpolate(shuttleCostTotal.value.toLocaleString())}</div><div class="text-sm font-black text-primary">รวม ฿${ssrInterpolate(totalCost.value.toLocaleString())}</div></div></div><div><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-base-content/60 uppercase">รายชื่อผู้เล่น (${ssrInterpolate(players.value.length)})</div><div class="flex items-center gap-2"><div class="text-[10px] text-base-content/40">กด 📌 เพื่อ fix ราคา</div>`);
+        if (linePlayers.value.length > 0) {
+          _push(`<button class="${ssrRenderClass([allLineSelected.value ? "bg-success/20 text-success" : "bg-base-200 text-base-content/40 hover:bg-base-300", "text-[10px] px-2 py-0.5 rounded-full border-0 cursor-pointer transition-all"])}">LINE ${ssrInterpolate(allLineSelected.value ? "ALL" : `${lineSelectedCount.value}/${linePlayers.value.length}`)}</button>`);
+        } else {
+          _push(`<!---->`);
+        }
+        _push(`</div></div><div class="space-y-1.5"><!--[-->`);
         ssrRenderList(players.value, (p) => {
           _push(`<div class="${ssrRenderClass([p.fixed ? "border-warning/50 bg-warning/5" : "border-base-300", "bg-base-100 rounded-xl border p-2.5 flex items-center gap-2"])}">`);
           _push(ssrRenderComponent(_sfc_main$3, {
@@ -104,7 +123,19 @@ const _sfc_main$2 = {
             size: "sm",
             rounded: "full"
           }, null, _parent));
-          _push(`<div class="flex-1 min-w-0"><div class="text-xs font-bold text-base-content truncate">${ssrInterpolate(p.name)}</div><div class="text-[9px] text-base-content/40">${ssrInterpolate(p.games)} เกม · ${ssrInterpolate(formatMinutes(p.totalSeconds))}</div></div><button class="${ssrRenderClass([p.fixed ? "bg-warning/20 text-warning" : "bg-base-200 text-base-content/30 hover:bg-base-300", "w-7 h-7 rounded-lg flex items-center justify-center border-0 cursor-pointer transition-all text-sm"])}"${ssrRenderAttr("title", p.fixed ? "ปลด fix" : "Fix ราคา")}>📌</button><div class="w-20 shrink-0">`);
+          _push(`<div class="flex-1 min-w-0"><div class="text-xs font-bold text-base-content truncate">${ssrInterpolate(p.name)}</div><div class="text-[9px] text-base-content/40">${ssrInterpolate(p.games)} เกม · ${ssrInterpolate(formatMinutes(p.totalSeconds))}</div></div>`);
+          if (p.provider === "line") {
+            _push(`<button class="${ssrRenderClass([p.sendLine ? "bg-success/20 text-success" : "bg-base-200 text-base-content/30 hover:bg-base-300", "w-7 h-7 rounded-lg flex items-center justify-center border-0 cursor-pointer transition-all text-sm"])}"${ssrRenderAttr("title", p.sendLine ? "ไม่ส่ง LINE" : "ส่ง LINE")}>`);
+            if (p.sendLine) {
+              _push(`<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>`);
+            } else {
+              _push(`<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>`);
+            }
+            _push(`</button>`);
+          } else {
+            _push(`<div class="w-7 h-7 rounded-lg flex items-center justify-center bg-base-200/50 text-base-content/20 text-[10px]" title="ไม่มี LINE">--</div>`);
+          }
+          _push(`<button class="${ssrRenderClass([p.fixed ? "bg-warning/20 text-warning" : "bg-base-200 text-base-content/30 hover:bg-base-300", "w-7 h-7 rounded-lg flex items-center justify-center border-0 cursor-pointer transition-all text-sm"])}"${ssrRenderAttr("title", p.fixed ? "ปลด fix" : "Fix ราคา")}>📌</button><div class="w-20 shrink-0">`);
           if (p.fixed) {
             _push(`<input type="number"${ssrRenderAttr("value", p.customAmount)} min="0" class="input input-bordered input-sm w-full text-right text-xs font-bold text-warning">`);
           } else {
@@ -112,7 +143,13 @@ const _sfc_main$2 = {
           }
           _push(`</div></div>`);
         });
-        _push(`<!--]--></div></div><div class="bg-primary/10 rounded-xl p-3 flex items-center justify-between"><div><div class="text-xs font-bold text-primary">💰 รวมทั้งหมด</div><div class="text-[10px] text-base-content/40">ส่งสรุปรายบุคคลเข้า LINE</div></div><div class="text-xl font-black text-primary">฿${ssrInterpolate(Math.ceil(totalAssigned.value).toLocaleString())}</div></div><div class="flex gap-2"><button class="flex-1 h-10 rounded-xl text-sm font-semibold bg-base-200 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors">${ssrInterpolate(isOver.value ? "ปิด" : "ยกเลิก")}</button>`);
+        _push(`<!--]--></div></div><div class="bg-primary/10 rounded-xl p-3 flex items-center justify-between"><div><div class="text-xs font-bold text-primary">💰 รวมทั้งหมด</div><div class="text-[10px] text-base-content/40">ส่งสรุปรายบุคคลเข้า LINE</div></div><div class="text-xl font-black text-primary">฿${ssrInterpolate(Math.ceil(totalAssigned.value).toLocaleString())}</div></div><div class="flex gap-2"><button class="h-10 px-4 rounded-xl text-sm font-semibold bg-base-200 text-base-content/70 border-0 cursor-pointer hover:bg-base-300 transition-colors">${ssrInterpolate(isOver.value ? "ปิด" : "ยกเลิก")}</button><button${ssrIncludeBooleanAttr(savingCosts.value) ? " disabled" : ""} class="h-10 px-4 rounded-xl text-sm font-bold bg-info text-white border-0 cursor-pointer hover:bg-info/80 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">`);
+        if (savingCosts.value) {
+          _push(`<span class="loading loading-spinner loading-xs"></span>`);
+        } else {
+          _push(`<!---->`);
+        }
+        _push(` 💾 บันทึก </button>`);
         if (!isOver.value) {
           _push(`<button${ssrIncludeBooleanAttr(submitting.value || totalCost.value <= 0) ? " disabled" : ""} class="flex-1 h-10 rounded-xl text-sm font-bold bg-error text-white border-0 cursor-pointer hover:bg-error/80 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">`);
           if (submitting.value) {
@@ -131,7 +168,7 @@ const _sfc_main$2 = {
           } else {
             _push(`<!---->`);
           }
-          _push(` 📨 ส่งสรุปเข้า LINE </button>`);
+          _push(` 📨 ส่งสรุปเข้า LINE (${ssrInterpolate(lineSelectedCount.value)}) </button>`);
         } else {
           _push(`<!---->`);
         }
