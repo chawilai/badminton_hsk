@@ -240,7 +240,7 @@
     "/build/assets/ForgotPassword-DjVfzIRi.js"
   ],
   "resources/js/Pages/Auth/Login.vue": [
-    "/build/assets/Login-Br8sTenP.js"
+    "/build/assets/Login-LqoYzR10.js"
   ],
   "resources/js/Pages/Auth/Register.vue": [
     "/build/assets/Register-BNxWyDIf.js"
@@ -300,12 +300,12 @@
     "/build/assets/Game3-CMSH9kqj.css"
   ],
   "resources/js/Pages/Home.vue": [
-    "/build/assets/Home-yL-kzCjj.js",
-    "/build/assets/Home-BLNiaiHN.css"
+    "/build/assets/Home-9oPrduro.js",
+    "/build/assets/Home-BZCFy_Ms.css"
   ],
-  "resources/js/Pages/Home.vue?vue&type=style&index=0&scoped=9eebb34e&lang.css": [
-    "/build/assets/Home-yL-kzCjj.js",
-    "/build/assets/Home-BLNiaiHN.css"
+  "resources/js/Pages/Home.vue?vue&type=style&index=0&scoped=00c62883&lang.css": [
+    "/build/assets/Home-9oPrduro.js",
+    "/build/assets/Home-BZCFy_Ms.css"
   ],
   "resources/js/Pages/Landing.vue": [
     "/build/assets/Landing-B58TtMRG.js",
