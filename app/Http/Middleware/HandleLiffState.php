@@ -11,13 +11,22 @@ class HandleLiffState
     /**
      * Handle liff.state query parameter from LINE LIFF redirects.
      *
-     * When LIFF opens a URL like https://liff.line.me/{LIFF_ID}/some-path,
-     * LINE redirects to the endpoint URL with ?liff.state=%2Fsome-path.
-     * This middleware extracts the path and redirects to the correct page.
+     * PHP converts dots in query param names to underscores,
+     * so liff.state becomes liff_state. We check both the raw
+     * query string and the PHP-parsed version.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $liffState = $request->query('liff.state');
+        // PHP converts "liff.state" to "liff_state" automatically
+        $liffState = $request->query('liff_state');
+
+        // Also check raw query string for liff.state (in case of edge cases)
+        if (!$liffState) {
+            $rawQuery = $request->server('QUERY_STRING', '');
+            if (preg_match('/liff\.state=([^&]+)/', $rawQuery, $matches)) {
+                $liffState = urldecode($matches[1]);
+            }
+        }
 
         if ($liffState) {
             $path = urldecode($liffState);
@@ -29,27 +38,11 @@ class HandleLiffState
 
             // If we're already on the correct path, strip liff.state and continue
             if ($request->getPathInfo() === $path) {
-                // Remove liff.state from query and redirect clean
-                $query = $request->query();
-                unset($query['liff_state'], $query['liff.state']);
-
-                if (empty($query)) {
-                    return redirect($path);
-                }
-
-                return redirect($path . '?' . http_build_query($query));
+                return redirect($path);
             }
 
             // Redirect to the path specified in liff.state
-            $query = $request->query();
-            unset($query['liff_state'], $query['liff.state']);
-
-            $url = $path;
-            if (!empty($query)) {
-                $url .= '?' . http_build_query($query);
-            }
-
-            return redirect($url);
+            return redirect($path);
         }
 
         return $next($request);
