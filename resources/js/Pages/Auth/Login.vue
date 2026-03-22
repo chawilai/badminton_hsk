@@ -49,7 +49,7 @@ onMounted(() => {
       .init({ liffId: "2001165902-9zoxvoY1" })
       .then(() => {
         if (!liff.isInClient()) return;
-        if (!liff.isLoggedIn()) { liff.login({ redirectUri: window.location.href }); return; }
+        if (!liff.isLoggedIn()) return; // ไม่เรียก liff.login() — ให้ user กด LINE Login (OAuth) เอง
 
         liff.getProfile()
           .then((profile) => {
