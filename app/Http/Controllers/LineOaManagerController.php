@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LinkedAccount;
 use App\Models\LineOaSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -36,6 +37,17 @@ class LineOaManagerController extends Controller
             Log::warning('LINE quota fetch failed', ['error' => $e->getMessage()]);
         }
 
+        // Users with LINE linked accounts
+        $lineUsers = LinkedAccount::where('provider', 'line')
+            ->with('user:id,name,avatar,profile_picture')
+            ->get()
+            ->map(fn($la) => [
+                'id' => $la->user_id,
+                'name' => $la->provider_name ?: $la->user?->name,
+                'avatar' => $la->provider_avatar ?: $la->user?->avatar ?: $la->user?->profile_picture,
+                'line_user_id' => $la->provider_id,
+            ]);
+
         return Inertia::render('LineOaManager', [
             'settings' => [
                 'channel_access_token' => $settings->channel_access_token ? '••••' . substr($settings->channel_access_token, -8) : null,
@@ -49,6 +61,7 @@ class LineOaManagerController extends Controller
                 'liff_base_url' => $settings->getLiffUrl(),
             ],
             'quota' => $quota,
+            'lineUsers' => $lineUsers,
             'envConfig' => [
                 'liff_id' => config('services.line.liff_id'),
                 'token_set' => !empty(config('services.line.channel_access_token')),
@@ -97,7 +110,10 @@ class LineOaManagerController extends Controller
 
     public function sendTestWelcome(Request $request)
     {
-        $request->validate(['line_user_id' => 'required|string']);
+        $request->validate([
+            'line_user_ids' => 'required|array|min:1',
+            'line_user_ids.*' => 'required|string',
+        ]);
 
         $settings = LineOaSetting::current();
         $token = $settings->getEffectiveToken();
@@ -107,24 +123,35 @@ class LineOaManagerController extends Controller
         }
 
         $flexMessage = $settings->buildWelcomeFlexMessage();
+        $ids = $request->input('line_user_ids');
+        $sent = 0;
+        $failed = 0;
 
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'Content-Type' => 'application/json',
-            ])->post('https://api.line.me/v2/bot/message/push', [
-                'to' => $request->input('line_user_id'),
-                'messages' => [$flexMessage],
-            ]);
+        foreach ($ids as $lineUserId) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type' => 'application/json',
+                ])->post('https://api.line.me/v2/bot/message/push', [
+                    'to' => $lineUserId,
+                    'messages' => [$flexMessage],
+                ]);
 
-            if ($response->successful()) {
-                return back()->with('success', 'ส่ง Welcome Message สำเร็จ');
+                if ($response->successful()) {
+                    $sent++;
+                } else {
+                    $failed++;
+                }
+            } catch (\Exception $e) {
+                $failed++;
             }
-
-            return back()->with('error', 'ส่งไม่สำเร็จ: ' . $response->body());
-        } catch (\Exception $e) {
-            return back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
+
+        if ($failed === 0) {
+            return back()->with('success', "ส่ง Welcome Message สำเร็จ {$sent} คน");
+        }
+
+        return back()->with('error', "ส่งสำเร็จ {$sent} คน, ล้มเหลว {$failed} คน");
     }
 
     public function updateWelcomeMessage(Request $request)

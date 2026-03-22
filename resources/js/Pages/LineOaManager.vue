@@ -11,6 +11,7 @@ const props = defineProps({
   settings: { type: Object, default: () => ({}) },
   quota: { type: Object, default: () => ({}) },
   envConfig: { type: Object, default: () => ({}) },
+  lineUsers: { type: Array, default: () => [] },
 });
 
 // ==================== Settings Form ====================
@@ -93,14 +94,41 @@ const removeFeature = (index) => {
   welcomeForm.features.splice(index, 1);
 };
 
-// Test welcome message
-const testUserId = ref('');
+// Test welcome message — user picker
+const selectedUserIds = ref([]);
+const userSearch = ref('');
 const sending = ref(false);
+
+const filteredLineUsers = computed(() => {
+  if (!userSearch.value) return props.lineUsers;
+  const q = userSearch.value.toLowerCase();
+  return props.lineUsers.filter(u =>
+    u.name?.toLowerCase().includes(q) || u.line_user_id?.toLowerCase().includes(q)
+  );
+});
+
+const toggleUser = (lineUserId) => {
+  const idx = selectedUserIds.value.indexOf(lineUserId);
+  if (idx >= 0) {
+    selectedUserIds.value.splice(idx, 1);
+  } else {
+    selectedUserIds.value.push(lineUserId);
+  }
+};
+
+const selectAll = () => {
+  if (selectedUserIds.value.length === filteredLineUsers.value.length) {
+    selectedUserIds.value = [];
+  } else {
+    selectedUserIds.value = filteredLineUsers.value.map(u => u.line_user_id);
+  }
+};
+
 const sendTestWelcome = () => {
-  if (!testUserId.value) return;
+  if (selectedUserIds.value.length === 0) return;
   sending.value = true;
   router.post('/lineoa-manager/test-welcome', {
-    line_user_id: testUserId.value,
+    line_user_ids: [...selectedUserIds.value],
   }, {
     preserveScroll: true,
     onSuccess: () => { sending.value = false; },
@@ -620,14 +648,47 @@ const getCsrfToken = () => {
 
         <!-- Send test -->
         <div class="divider text-xs text-base-content/40 m-0">ทดสอบ</div>
+
+        <!-- User Picker -->
         <div>
-          <label class="text-xs font-medium text-base-content/70 block mb-1">LINE User ID</label>
-          <input type="text" v-model="testUserId" placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-            class="input input-bordered input-sm w-full text-xs font-mono" />
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-medium text-base-content/70">เลือกผู้รับ ({{ selectedUserIds.length }}/{{ lineUsers.length }})</label>
+            <button @click="selectAll" class="btn btn-ghost btn-xs">
+              {{ selectedUserIds.length === filteredLineUsers.length && filteredLineUsers.length > 0 ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด' }}
+            </button>
+          </div>
+
+          <!-- Search -->
+          <input type="text" v-model="userSearch" placeholder="ค้นหาชื่อ..."
+            class="input input-bordered input-xs w-full text-xs mb-2" />
+
+          <!-- User List -->
+          <div class="max-h-48 overflow-y-auto space-y-1 border border-base-300 rounded-lg p-2">
+            <div v-if="filteredLineUsers.length === 0" class="text-xs text-base-content/40 text-center py-2">
+              ไม่พบผู้ใช้ที่เชื่อมต่อ LINE
+            </div>
+            <label v-for="user in filteredLineUsers" :key="user.line_user_id"
+              class="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+              :class="{ 'bg-success/10': selectedUserIds.includes(user.line_user_id) }">
+              <input type="checkbox" :checked="selectedUserIds.includes(user.line_user_id)"
+                @change="toggleUser(user.line_user_id)" class="checkbox checkbox-xs checkbox-success" />
+              <div class="w-7 h-7 rounded-full overflow-hidden bg-base-300 shrink-0">
+                <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover" alt="" @error="(e) => e.target.style.display='none'" />
+                <div v-else class="w-full h-full flex items-center justify-center text-[10px] font-bold text-base-content/50">
+                  {{ user.name?.charAt(0) || '?' }}
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-base-content truncate">{{ user.name || 'ไม่ระบุ' }}</div>
+                <div class="text-[9px] text-base-content/40 font-mono truncate">{{ user.line_user_id }}</div>
+              </div>
+            </label>
+          </div>
         </div>
-        <button @click="sendTestWelcome" :disabled="sending || !testUserId" class="btn btn-success btn-sm w-full text-white">
+
+        <button @click="sendTestWelcome" :disabled="sending || selectedUserIds.length === 0" class="btn btn-success btn-sm w-full text-white">
           <span v-if="sending" class="loading loading-spinner loading-xs"></span>
-          {{ sending ? 'กำลังส่ง...' : 'ส่ง Welcome Message ทดสอบ' }}
+          {{ sending ? 'กำลังส่ง...' : `ส่ง Welcome Message (${selectedUserIds.length} คน)` }}
         </button>
       </div>
 
