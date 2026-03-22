@@ -25,7 +25,7 @@ class LineMessagingController extends Controller
     {
         $appUrl = config('app.url', 'https://badmintonparty.com');
         $logoUrl = $appUrl . '/icons/logo2.png';
-        $liffUrl = 'https://liff.line.me/' . config('services.line.liff_id', '') . '/party-lists';
+        $liffUrl = 'https://liff.line.me/' . config('services.line.liff_id', '');
 
         $flexMessage = [
             'type' => 'flex',
