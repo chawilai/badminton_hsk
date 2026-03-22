@@ -46,7 +46,7 @@ return [
         'client_secret' => env('LINE_CLIENT_SECRET'),
         'redirect' => env('LINE_REDIRECT_URI'),
         'channel_access_token' => env('LINE_CHANNEL_ACCESS_TOKEN'),
-        'liff_id' => env('LINE_LIFF_ID', '2001165902-9zoxvoY1'),
+        'liff_id' => env('LINE_LIFF_ID', '2001165902-Nih5vWKW'),
     ],
 
     'apple' => [
