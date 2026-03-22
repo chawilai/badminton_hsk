@@ -10,7 +10,7 @@ export const useLiffStore = defineStore('liff', {
         async initializeLiff() {
             if (!this.initialized) {
                 try {
-                    await liff.init({ liffId: "2001165902-Nih5vWKW" });
+                    await liff.init({ liffId: "2001165902-Hcr8zHVQ" });
                     console.log("LIFF initialization successful");
                     this.initialized = true;
                 } catch (error) {

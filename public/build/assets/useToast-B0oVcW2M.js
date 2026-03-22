@@ -1,0 +1,1 @@
+import{G as d}from"./app-DDMokNE6.js";const s=d([]);let r=0;function f(){const c=({severity:o="info",summary:t="",detail:n="",life:e=5e3})=>{const a=++r;s.push({id:a,severity:o,summary:t,detail:n,life:e}),e>0&&setTimeout(()=>{i(a)},e)},i=o=>{const t=s.findIndex(n=>n.id===o);t>-1&&s.splice(t,1)};return{add:c,remove:i,toasts:s}}export{s as t,f as u};

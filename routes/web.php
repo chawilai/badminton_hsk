@@ -197,7 +197,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/lineoa-manager', [LineOaManagerController::class, 'index'])->name('lineoa-manager.index');
     Route::post('/lineoa-manager/update', [LineOaManagerController::class, 'update'])->name('lineoa-manager.update');
     Route::post('/lineoa-manager/test-welcome', [LineOaManagerController::class, 'sendTestWelcome'])->name('lineoa-manager.test-welcome');
+    Route::post('/lineoa-manager/welcome-message', [LineOaManagerController::class, 'updateWelcomeMessage'])->name('lineoa-manager.welcome-message');
     Route::get('/api/lineoa-richmenu', [LineOaManagerController::class, 'fetchRichMenu'])->name('lineoa-manager.richmenu');
+    Route::get('/api/lineoa-richmenu/{richMenuId}/image', [LineOaManagerController::class, 'fetchRichMenuImage'])->name('lineoa-manager.richmenu-image');
+    Route::post('/api/lineoa-richmenu', [LineOaManagerController::class, 'createRichMenu'])->name('lineoa-manager.richmenu.create');
+    Route::post('/api/lineoa-richmenu/{richMenuId}/image', [LineOaManagerController::class, 'uploadRichMenuImage'])->name('lineoa-manager.richmenu.upload-image');
+    Route::post('/api/lineoa-richmenu/{richMenuId}/default', [LineOaManagerController::class, 'setDefaultRichMenu'])->name('lineoa-manager.richmenu.set-default');
+    Route::post('/api/lineoa-richmenu/{richMenuId}/areas', [LineOaManagerController::class, 'updateRichMenuAreas'])->name('lineoa-manager.richmenu.update-areas');
+    Route::delete('/api/lineoa-richmenu/{richMenuId}', [LineOaManagerController::class, 'deleteRichMenu'])->name('lineoa-manager.richmenu.delete');
 
     // MMR Assessment
     Route::get('/mmr-assessment', [MmrController::class, 'showAssessment']);

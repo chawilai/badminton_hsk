@@ -46,7 +46,7 @@ onMounted(() => {
     if (!isGuest) return;
 
     liff
-      .init({ liffId: "2001165902-Nih5vWKW" })
+      .init({ liffId: "2001165902-Hcr8zHVQ" })
       .then(() => {
         if (!liff.isInClient()) return;
         if (!liff.isLoggedIn()) return; // ไม่เรียก liff.login() — ให้ user กด LINE Login (OAuth) เอง
