@@ -14,8 +14,9 @@ const toast = useToast();
 const page = usePage();
 
 onMounted(() => {
-  if (page.props.flash?.success) {
-    toast.add({ severity: 'success', summary: page.props.flash.success, life: 3000 });
+  const msg = page.props.flash?.success;
+  if (msg) {
+    toast.add({ severity: 'success', summary: Array.isArray(msg) ? msg[0] : msg, life: 3000 });
   }
 });
 const user = computed(() => page.props.profileUser || page.props.auth.user);
