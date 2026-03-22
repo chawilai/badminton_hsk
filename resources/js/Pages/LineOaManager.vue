@@ -686,6 +686,17 @@ const getCsrfToken = () => {
           </div>
         </div>
 
+        <!-- Credit remaining -->
+        <div v-if="quota.quota > 0" class="flex items-center justify-between text-[10px] px-1">
+          <span class="text-base-content/50">Credit คงเหลือ</span>
+          <span :class="quota.remaining < selectedUserIds.length ? 'text-error font-bold' : 'text-success font-bold'">
+            {{ quota.remaining }} / {{ quota.quota }}
+            <span v-if="selectedUserIds.length > 0" class="text-base-content/40 font-normal">
+              (ใช้ {{ selectedUserIds.length }}, เหลือ {{ quota.remaining - selectedUserIds.length }})
+            </span>
+          </span>
+        </div>
+
         <button @click="sendTestWelcome" :disabled="sending || selectedUserIds.length === 0" class="btn btn-success btn-sm w-full text-white">
           <span v-if="sending" class="loading loading-spinner loading-xs"></span>
           {{ sending ? 'กำลังส่ง...' : `ส่ง Welcome Message (${selectedUserIds.length} คน)` }}
