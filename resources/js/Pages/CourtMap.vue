@@ -150,8 +150,8 @@ const addCourtMarkers = () => {
         ? `${court.name} · ${courtData.distance.toFixed(1)} กม.`
         : court.name, {
         permanent: true,
-        direction: 'bottom',
-        offset: [0, 4],
+        direction: 'top',
+        offset: [0, -36],
         className: 'court-label',
       })
       .addTo(map);
@@ -277,13 +277,15 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <!-- Location error -->
-      <div v-if="locationError" class="absolute top-16 left-3 right-3 z-[1000]">
-        <div class="bg-error/90 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-lg backdrop-blur-sm">
-          {{ locationError }}
-          <button @click="locationError = ''" class="ml-2 underline cursor-pointer bg-transparent border-0 text-white text-xs">ปิด</button>
+      <!-- Location error (small toast) -->
+      <transition name="slide-up">
+        <div v-if="locationError" class="absolute bottom-20 left-1/2 -translate-x-1/2 z-[1000]">
+          <div class="bg-base-100/95 backdrop-blur-sm text-base-content text-xs font-medium px-4 py-2 rounded-full shadow-lg border border-base-300 flex items-center gap-2 whitespace-nowrap">
+            <span class="text-warning">⚠</span> {{ locationError }}
+            <button @click="locationError = ''" class="text-base-content/40 hover:text-base-content cursor-pointer bg-transparent border-0 text-xs ml-1">✕</button>
+          </div>
         </div>
-      </div>
+      </transition>
 
       <!-- Court list panel -->
       <transition name="slide-up">
@@ -377,17 +379,17 @@ onBeforeUnmount(() => {
   margin: 10px 12px;
 }
 :deep(.court-label) {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 11px;
+  background: rgba(255, 255, 255, 0.92);
+  border: none;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
   font-weight: 600;
-  color: #1f2937;
+  color: #166534;
   white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 :deep(.court-label::before) {
-  border-bottom-color: #d1d5db;
+  border-top-color: rgba(255, 255, 255, 0.92) !important;
 }
 </style>
