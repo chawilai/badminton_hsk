@@ -19,6 +19,7 @@ onMounted(() => {
   }
 });
 const user = computed(() => page.props.profileUser || page.props.auth.user);
+const profileMissing = computed(() => (page.props.profileMissingFields || []).length);
 const mmrLevel = computed(() => page.props.mmrLevel);
 const stats = computed(() => page.props.stats || {});
 const recentParties = computed(() => page.props.recentParties || []);
@@ -134,9 +135,10 @@ const formatDate = (d) => {
         <UserAvatar :src="user.avatar" :name="user.name" size="2xl" rounded="full" class="mx-auto border-4 border-base-100 shadow-lg mb-3" />
         <h1 class="text-lg font-bold text-base-content m-0">{{ user.name }}</h1>
         <p class="text-xs text-base-content/50 m-0 mt-0.5">{{ user.email }}</p>
-        <Link v-if="user.id === page.props.auth.user?.id" :href="route('profile.edit')" class="inline-flex items-center gap-1 mt-1.5 px-3 py-1 rounded-lg bg-base-content/10 text-[11px] text-base-content/60 no-underline hover:bg-base-content/20 transition-colors">
+        <Link v-if="user.id === page.props.auth.user?.id" :href="route('profile.edit')" class="relative inline-flex items-center gap-1 mt-1.5 px-3 py-1 rounded-lg bg-base-content/10 text-[11px] text-base-content/60 no-underline hover:bg-base-content/20 transition-colors">
           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
           แก้ไขโปรไฟล์
+          <span v-if="profileMissing > 0" class="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center rounded-full bg-error text-white text-[9px] font-bold leading-none ring-2 ring-base-100">{{ profileMissing }}</span>
         </Link>
         <div class="flex items-center justify-center gap-2 mt-2">
           <MmrBadge v-if="mmrLevel"
