@@ -181,11 +181,21 @@ const verifyEmailCode = async () => {
 const addressQuery = ref('');
 const addressResults = ref([]);
 const showAddressDropdown = ref(false);
+const addressSelected = ref(!!props.profileData.subdistrict);
 let addressTimeout = null;
+let skipNextSearch = false;
 
 const searchAddress = (val) => {
   clearTimeout(addressTimeout);
-  if (val.length < 2) { addressResults.value = []; return; }
+  if (skipNextSearch) { skipNextSearch = false; return; }
+  if (val.length < 2) { addressResults.value = []; showAddressDropdown.value = false; return; }
+  // เมื่อพิมพ์ใหม่ ล้างค่าเดิมออก
+  if (addressSelected.value) {
+    form.subdistrict = '';
+    form.district = '';
+    form.province = '';
+    addressSelected.value = false;
+  }
   addressTimeout = setTimeout(async () => {
     try {
       const res = await fetch(`/api/thai-address?q=${encodeURIComponent(val)}`, { credentials: 'same-origin' });
@@ -201,15 +211,21 @@ const selectAddress = (addr) => {
   form.subdistrict = addr.district;
   form.district = addr.amphoe;
   form.province = addr.province;
+  skipNextSearch = true;
   addressQuery.value = `${addr.district}, ${addr.amphoe}, ${addr.province}`;
+  addressSelected.value = true;
   showAddressDropdown.value = false;
 };
 
-// Compute display address
-const displayAddress = computed(() => {
-  const parts = [form.subdistrict, form.district, form.province].filter(Boolean);
-  return parts.join(', ');
-});
+const clearAddress = () => {
+  addressQuery.value = '';
+  form.subdistrict = '';
+  form.district = '';
+  form.province = '';
+  addressResults.value = [];
+  addressSelected.value = false;
+  showAddressDropdown.value = false;
+};
 
 // Init address query if data exists
 if (props.profileData.subdistrict) {
@@ -356,11 +372,16 @@ const changeEmail = () => {
             <p class="text-[10px] text-base-content/40 mb-1.5">ใช้ประเมินความหนาแน่นของนักแบดมินตันในพื้นที่</p>
             <div class="relative">
               <input v-model="addressQuery" type="text" :disabled="!profileEditing"
-                class="input input-bordered w-full" :class="!profileEditing && 'opacity-70'"
+                class="input input-bordered w-full pr-8" :class="!profileEditing && 'opacity-70'"
                 placeholder="พิมพ์ชื่อตำบล อำเภอ หรือจังหวัด..."
-                @focus="profileEditing && (showAddressDropdown = addressResults.length > 0)"
+                @focus="profileEditing && addressQuery.length >= 2 && !addressSelected && (showAddressDropdown = addressResults.length > 0)"
                 @blur="setTimeout(() => showAddressDropdown = false, 200)"
               />
+              <!-- Clear button -->
+              <button v-if="addressQuery && profileEditing" type="button" @mousedown.prevent="clearAddress"
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-base-content/10 hover:bg-base-content/20 text-base-content/50 cursor-pointer border-0 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
               <!-- Dropdown -->
               <div v-if="showAddressDropdown && addressResults.length > 0" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                 <button v-for="(addr, i) in addressResults" :key="i"
@@ -373,11 +394,11 @@ const changeEmail = () => {
                   <span class="text-base-content/30 text-xs ml-1">{{ addr.zipcode }}</span>
                 </button>
               </div>
-              <!-- Hint -->
-              <p v-if="addressQuery.length >= 2 && addressResults.length === 0 && !form.subdistrict" class="text-[10px] text-warning mt-1 m-0">กรุณาเลือกจากรายการที่ขึ้นมา</p>
+              <!-- Hint: พิมพ์แล้วยังไม่เลือก -->
+              <p v-if="addressQuery.length >= 2 && !addressSelected" class="text-[10px] text-warning mt-1 m-0">กรุณาเลือกจากรายการด้านบน</p>
             </div>
             <!-- Selected display -->
-            <div v-if="form.subdistrict" class="mt-1.5 flex items-center gap-1.5">
+            <div v-if="addressSelected && form.subdistrict" class="mt-1.5 flex items-center gap-1.5">
               <span class="badge badge-primary badge-sm gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 {{ form.subdistrict }}, {{ form.district }}, {{ form.province }}
