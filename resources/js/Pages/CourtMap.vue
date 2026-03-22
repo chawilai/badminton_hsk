@@ -23,9 +23,9 @@ const selectedCourt = ref(null);
 const searchQuery = ref('');
 const showList = ref(false);
 
-// Default center: Chiang Mai
+// Default center: Chiang Mai city
 const defaultCenter = [18.7883, 98.9853];
-const defaultZoom = 12;
+const defaultZoom = 13;
 
 // Court type labels
 const courtTypeLabel = (type) => {
@@ -146,6 +146,14 @@ const addCourtMarkers = () => {
     const courtData = courtsWithDistance.value.find(c => c.id === court.id) || court;
     const marker = L.marker([lat, lng], { icon: courtIcon })
       .bindPopup(buildPopup(courtData), { maxWidth: 280 })
+      .bindTooltip(courtData.distance != null
+        ? `${court.name} · ${courtData.distance.toFixed(1)} กม.`
+        : court.name, {
+        permanent: true,
+        direction: 'bottom',
+        offset: [0, 4],
+        className: 'court-label',
+      })
       .addTo(map);
 
     marker.on('click', () => {
@@ -154,12 +162,6 @@ const addCourtMarkers = () => {
 
     markers.push(marker);
   });
-
-  // Fit bounds if courts exist
-  if (markers.length > 0) {
-    const group = L.featureGroup(markers);
-    map.fitBounds(group.getBounds().pad(0.1));
-  }
 };
 
 // Get user location
@@ -373,5 +375,19 @@ onBeforeUnmount(() => {
 }
 :deep(.leaflet-popup-content) {
   margin: 10px 12px;
+}
+:deep(.court-label) {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+:deep(.court-label::before) {
+  border-bottom-color: #d1d5db;
 }
 </style>
