@@ -450,12 +450,12 @@
     "/build/assets/Profile-DWI82cmv.js"
   ],
   "resources/js/Pages/Profile/Edit.vue": [
-    "/build/assets/Edit-DSbwyKZW.js",
-    "/build/assets/Edit-DrbOowce.css"
+    "/build/assets/Edit-DW3U1yKd.js",
+    "/build/assets/Edit-BF388_yp.css"
   ],
-  "resources/js/Pages/Profile/Edit.vue?vue&type=style&index=0&scoped=5c21dbb1&lang.css": [
-    "/build/assets/Edit-DSbwyKZW.js",
-    "/build/assets/Edit-DrbOowce.css"
+  "resources/js/Pages/Profile/Edit.vue?vue&type=style&index=0&scoped=a7eee72a&lang.css": [
+    "/build/assets/Edit-DW3U1yKd.js",
+    "/build/assets/Edit-BF388_yp.css"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.vue": [
     "/build/assets/DeleteUserForm-CclychH2.js"

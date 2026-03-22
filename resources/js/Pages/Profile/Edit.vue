@@ -2,7 +2,7 @@
 import AppLayout from "@/layout/AppLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import { Head, useForm, usePage, router } from "@inertiajs/vue3";
-import { ref, computed, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useToast } from "@/composables/useToast";
 
 const toast = useToast();
@@ -183,11 +183,10 @@ const addressResults = ref([]);
 const showAddressDropdown = ref(false);
 const addressSelected = ref(!!props.profileData.subdistrict);
 let addressTimeout = null;
-let skipNextSearch = false;
 
-const searchAddress = (val) => {
+const onAddressInput = () => {
   clearTimeout(addressTimeout);
-  if (skipNextSearch) { skipNextSearch = false; return; }
+  const val = addressQuery.value;
   if (val.length < 2) { addressResults.value = []; showAddressDropdown.value = false; return; }
   // เมื่อพิมพ์ใหม่ ล้างค่าเดิมออก
   if (addressSelected.value) {
@@ -202,20 +201,28 @@ const searchAddress = (val) => {
       addressResults.value = await res.json();
       showAddressDropdown.value = addressResults.value.length > 0;
     } catch { addressResults.value = []; }
-  }, 300);
+  }, 400);
 };
-
-watch(addressQuery, searchAddress);
 
 const selectAddress = (addr) => {
   form.subdistrict = addr.district;
   form.district = addr.amphoe;
   form.province = addr.province;
-  skipNextSearch = true;
   addressQuery.value = `${addr.district}, ${addr.amphoe}, ${addr.province}`;
   addressSelected.value = true;
   showAddressDropdown.value = false;
+  addressResults.value = [];
 };
+
+// ปิด dropdown เมื่อกดที่อื่น
+const addressWrapperRef = ref(null);
+const onDocClickAddress = (e) => {
+  if (addressWrapperRef.value && !addressWrapperRef.value.contains(e.target)) {
+    showAddressDropdown.value = false;
+  }
+};
+onMounted(() => document.addEventListener('click', onDocClickAddress));
+onBeforeUnmount(() => document.removeEventListener('click', onDocClickAddress));
 
 const clearAddress = () => {
   addressQuery.value = '';
@@ -370,17 +377,18 @@ const changeEmail = () => {
               <span v-if="profileMissingFields.includes('address')" class="text-error ml-1">*</span>
             </label>
             <p class="text-[10px] text-base-content/40 mb-1.5">ใช้ประเมินความหนาแน่นของนักแบดมินตันในพื้นที่</p>
-            <div class="relative">
+            <div ref="addressWrapperRef" class="relative">
               <input v-model="addressQuery" type="text" :disabled="!profileEditing"
-                class="input input-bordered w-full pr-8" :class="!profileEditing && 'opacity-70'"
+                class="input input-bordered w-full pr-9" :class="!profileEditing && 'opacity-70'"
                 placeholder="พิมพ์ชื่อตำบล อำเภอ หรือจังหวัด..."
-                @focus="profileEditing && addressQuery.length >= 2 && !addressSelected && (showAddressDropdown = addressResults.length > 0)"
-                @blur="setTimeout(() => showAddressDropdown = false, 200)"
+                @input="onAddressInput"
+                @focus="profileEditing && addressResults.length > 0 && !addressSelected && (showAddressDropdown = true)"
               />
               <!-- Clear button -->
-              <button v-if="addressQuery && profileEditing" type="button" @mousedown.prevent="clearAddress"
-                class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-base-content/10 hover:bg-base-content/20 text-base-content/50 cursor-pointer border-0 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              <button v-if="addressQuery && profileEditing" type="button"
+                @mousedown.prevent="clearAddress"
+                class="absolute right-2.5 inset-y-0 my-auto w-5 h-5 flex items-center justify-center rounded-full bg-base-content/10 hover:bg-base-content/20 text-base-content/50 cursor-pointer border-0 transition-colors">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
               <!-- Dropdown -->
               <div v-if="showAddressDropdown && addressResults.length > 0" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg max-h-48 overflow-y-auto">
