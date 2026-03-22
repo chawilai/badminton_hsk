@@ -73,10 +73,18 @@
               </div>
 
               <button
+                v-if="party.status !== 'Over'"
                 @click.stop="enterParty(party.id)"
                 class="h-8 px-4 rounded-lg text-xs font-semibold border-0 cursor-pointer transition-all active:scale-[0.97] bg-primary text-white hover:bg-primary/80"
               >
                 <i class="pi pi-arrow-right mr-1 text-[10px]"></i> {{ t('common.enter') }}
+              </button>
+              <button
+                v-else
+                @click.stop="enterParty(party.id)"
+                class="h-8 px-4 rounded-lg text-xs font-medium border border-base-300 cursor-pointer transition-all active:scale-[0.97] bg-base-200 text-base-content/60 hover:bg-base-300"
+              >
+                ดูข้อมูล
               </button>
             </div>
           </div>
@@ -90,6 +98,9 @@
         </div>
         <h3 class="text-lg font-semibold text-base-content m-0">{{ t('partyList.noParties') }}</h3>
         <p class="text-sm text-base-content/60 mt-1 m-0">{{ t('partyList.joinFirst') }}</p>
+        <button @click="router.get('/party-lists')" class="btn btn-primary btn-sm mt-4">
+          ไปหน้ารายการปาร์ตี้
+        </button>
       </div>
     </div>
   </AppLayout>
