@@ -13,6 +13,25 @@ const props = defineProps({
 });
 
 const user = computed(() => page.props.auth.user);
+const profileMissingFields = computed(() => page.props.profileMissingFields || []);
+const profileCompleteness = computed(() => page.props.profileCompleteness ?? 100);
+const missingFieldLabels = {
+  gender: 'เพศ',
+  date_of_birth: 'วันเกิด',
+  phone: 'เบอร์โทรศัพท์',
+  email: 'อีเมล',
+  address: 'ที่อยู่',
+};
+const completenessColor = computed(() => {
+  if (profileCompleteness.value >= 100) return 'text-success';
+  if (profileCompleteness.value >= 60) return 'text-warning';
+  return 'text-error';
+});
+const completenessBarColor = computed(() => {
+  if (profileCompleteness.value >= 100) return 'bg-success';
+  if (profileCompleteness.value >= 60) return 'bg-warning';
+  return 'bg-error';
+});
 
 // Profile form (basic info)
 const form = useForm({
@@ -101,8 +120,9 @@ const verifyPhoneOtp = async () => {
 };
 
 // Email verification
-const emailAddress = ref(props.profileData.email || '');
-const emailVerified = ref(!!props.profileData.email_verified_at);
+const isRandomEmail = (email) => !email || email.endsWith('@example.com');
+const emailAddress = ref(isRandomEmail(props.profileData.email) ? '' : props.profileData.email);
+const emailVerified = ref(!!props.profileData.email_verified_at && !isRandomEmail(props.profileData.email));
 const emailCode = ref('');
 const emailStep = ref(emailVerified.value ? 'verified' : 'input'); // input, code, verified
 const emailSending = ref(false);
@@ -247,8 +267,39 @@ const changeEmail = () => {
         <p class="text-xs text-base-content/50 mt-1 m-0">จัดการข้อมูลส่วนตัวและการยืนยันตัวตน</p>
       </div>
 
+      <!-- Profile completeness -->
+      <div class="bg-base-100 rounded-2xl border overflow-hidden" :class="profileCompleteness >= 100 ? 'border-success/40' : 'border-warning/40'">
+        <div class="p-4">
+          <!-- Header row -->
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-bold text-base-content">ความสมบูรณ์ของโปรไฟล์</span>
+            <span class="text-lg font-extrabold" :class="completenessColor">{{ profileCompleteness }}%</span>
+          </div>
+          <!-- Progress bar -->
+          <div class="w-full h-2.5 bg-base-200 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              :class="completenessBarColor"
+              :style="{ width: profileCompleteness + '%' }"
+            ></div>
+          </div>
+          <!-- Missing items -->
+          <div v-if="profileMissingFields.length > 0" class="mt-3 flex flex-wrap gap-1.5">
+            <span v-for="field in profileMissingFields" :key="field"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-error/10 text-error text-[11px] font-semibold">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+              {{ missingFieldLabels[field] || field }}
+            </span>
+          </div>
+          <div v-else class="mt-2 flex items-center gap-1.5 text-success text-xs font-semibold">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            โปรไฟล์สมบูรณ์แล้ว!
+          </div>
+        </div>
+      </div>
+
       <!-- Basic Info -->
-      <form @submit.prevent="saveProfile" class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
+      <form @submit.prevent="saveProfile" class="bg-base-100 rounded-2xl border overflow-hidden" :class="profileMissingFields.some(f => ['gender','date_of_birth','address'].includes(f)) ? 'border-error/40' : 'border-base-300'">
         <div class="px-4 py-3 border-b border-base-200 flex items-center justify-between">
           <h2 class="text-sm font-bold text-base-content m-0">ข้อมูลส่วนตัว</h2>
           <button v-if="profileSaved && !profileEditing" @click="enableProfileEdit" type="button"
@@ -269,7 +320,10 @@ const changeEmail = () => {
 
           <!-- Gender -->
           <div>
-            <label class="text-xs font-semibold text-base-content/70 mb-1 block">เพศ</label>
+            <label class="text-xs font-semibold text-base-content/70 mb-1 block">
+              เพศ
+              <span v-if="profileMissingFields.includes('gender')" class="text-error ml-1">*</span>
+            </label>
             <div class="flex gap-2">
               <button type="button" v-for="g in [{key:'male',label:'ชาย',icon:'👨'},{key:'female',label:'หญิง',icon:'👩'},{key:'other',label:'อื่นๆ',icon:'🧑'}]" :key="g.key"
                 @click="profileEditing && (form.gender = g.key)"
@@ -285,7 +339,10 @@ const changeEmail = () => {
 
           <!-- Date of Birth -->
           <div>
-            <label class="text-xs font-semibold text-base-content/70 mb-1 block">วันเกิด</label>
+            <label class="text-xs font-semibold text-base-content/70 mb-1 block">
+              วันเกิด
+              <span v-if="profileMissingFields.includes('date_of_birth')" class="text-error ml-1">*</span>
+            </label>
             <input v-model="form.date_of_birth" type="date" :disabled="!profileEditing"
               class="input input-bordered w-full" :class="!profileEditing && 'opacity-70'" />
             <p v-if="form.errors.date_of_birth" class="text-xs text-error mt-1">{{ form.errors.date_of_birth }}</p>
@@ -293,7 +350,10 @@ const changeEmail = () => {
 
           <!-- Address -->
           <div>
-            <label class="text-xs font-semibold text-base-content/70 mb-1 block">ที่อยู่ (ตำบล/อำเภอ/จังหวัด)</label>
+            <label class="text-xs font-semibold text-base-content/70 mb-1 block">
+              ที่อยู่ (ตำบล/อำเภอ/จังหวัด)
+              <span v-if="profileMissingFields.includes('address')" class="text-error ml-1">*</span>
+            </label>
             <p class="text-[10px] text-base-content/40 mb-1.5">ใช้ประเมินความหนาแน่นของนักแบดมินตันในพื้นที่</p>
             <div class="relative">
               <input v-model="addressQuery" type="text" :disabled="!profileEditing"
@@ -372,9 +432,12 @@ const changeEmail = () => {
       </div>
 
       <!-- Phone Verification -->
-      <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
+      <div class="bg-base-100 rounded-2xl border overflow-hidden" :class="profileMissingFields.includes('phone') ? 'border-error/40' : 'border-base-300'">
         <div class="px-4 py-3 border-b border-base-200 flex items-center justify-between">
-          <h2 class="text-sm font-bold text-base-content m-0">เบอร์โทรศัพท์</h2>
+          <h2 class="text-sm font-bold text-base-content m-0">
+            เบอร์โทรศัพท์
+            <span v-if="profileMissingFields.includes('phone')" class="text-error ml-1">*</span>
+          </h2>
           <span v-if="phoneVerified" class="badge badge-success badge-sm gap-1">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
             ยืนยันแล้ว
@@ -440,9 +503,12 @@ const changeEmail = () => {
       </div>
 
       <!-- Email Verification -->
-      <div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden">
+      <div class="bg-base-100 rounded-2xl border overflow-hidden" :class="profileMissingFields.includes('email') ? 'border-error/40' : 'border-base-300'">
         <div class="px-4 py-3 border-b border-base-200 flex items-center justify-between">
-          <h2 class="text-sm font-bold text-base-content m-0">อีเมล</h2>
+          <h2 class="text-sm font-bold text-base-content m-0">
+            อีเมล
+            <span v-if="profileMissingFields.includes('email')" class="text-error ml-1">*</span>
+          </h2>
           <span v-if="emailVerified" class="badge badge-success badge-sm gap-1">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
             ยืนยันแล้ว

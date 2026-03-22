@@ -115,6 +115,7 @@ const features = [
 const quickActions = [
   { icon: '🏸', label: 'หาปาร์ตี้', href: '/party-lists', color: 'bg-primary/15 text-primary' },
   { icon: '🎮', label: 'ปาร์ตี้ของฉัน', href: '/my-parties', color: 'bg-info/15 text-info' },
+  { icon: '📍', label: 'สนามใกล้ฉัน', href: '/courts/map', color: 'bg-success/15 text-success' },
   { icon: '💬', label: 'แชท', href: '/chat', color: 'bg-secondary/15 text-secondary', badge: 'unreadChatCount' },
   { icon: '👤', label: 'โปรไฟล์', href: '/profile', color: 'bg-warning/15 text-warning' },
 ];

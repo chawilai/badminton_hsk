@@ -11,7 +11,7 @@ class Court extends Model
 
     protected $fillable = [
         'name', 'name_en', 'address', 'phone',
-        'field_total', 'court_type', 'play_price', 'geolocation',
+        'field_total', 'court_type', 'play_price', 'geolocation', 'latitude', 'longitude',
         'operation_days', 'operation_hours',
         'shoe_rental', 'racket_rental',
         'facebook_url', 'google_map_url', 'line_oa',
@@ -29,6 +29,8 @@ class Court extends Model
         'racket_rental' => 'decimal:2',
         'buffet_entry_fee' => 'decimal:2',
         'buffet_shuttle_fee' => 'decimal:2',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
         'available_for_booking' => 'boolean',
         'has_buffet_session' => 'boolean',
     ];

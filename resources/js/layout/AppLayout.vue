@@ -1,9 +1,13 @@
 <script setup>
 import BadmintonLayout from './BadmintonLayout.vue';
+
+defineProps({
+    fullWidth: { type: Boolean, default: false },
+});
 </script>
 
 <template>
-    <BadmintonLayout>
+    <BadmintonLayout :fullWidth="fullWidth">
         <template #header>
             <slot name="header" />
         </template>

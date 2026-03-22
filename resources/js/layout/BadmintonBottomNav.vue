@@ -8,6 +8,7 @@ const { t } = useLocale();
 const page = usePage();
 const isAuthenticated = computed(() => !!page.props.auth?.user);
 const unreadCount = computed(() => page.props.unreadChatCount || 0);
+const profileMissing = computed(() => (page.props.profileMissingFields || []).length);
 
 const tabs = computed(() => [
     { label: t('nav.home'), href: '/home', icon: 'home' },
@@ -56,7 +57,13 @@ const isActive = (href) => {
                   >{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
                 </div>
                 <!-- User -->
-                <svg v-else-if="tab.icon === 'user'" class="w-5 h-5 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <div v-else-if="tab.icon === 'user'" class="relative mb-1">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  <span
+                    v-if="profileMissing > 0"
+                    class="absolute -top-1.5 -right-2.5 w-4 h-4 flex items-center justify-center rounded-full bg-error text-white text-[9px] font-bold leading-none"
+                  >{{ profileMissing }}</span>
+                </div>
 
                 <span class="text-[10px] font-medium">{{ tab.label }}</span>
             </Link>

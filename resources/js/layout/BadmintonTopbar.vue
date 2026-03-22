@@ -12,6 +12,7 @@ const { t } = useLocale();
 const page = usePage();
 
 const unreadCount = computed(() => page.props.unreadChatCount || 0);
+const profileMissing = computed(() => (page.props.profileMissingFields || []).length);
 const profileMenuVisible = ref(false);
 
 const onDocumentClick = (e) => {
@@ -73,7 +74,10 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                     <span v-if="unreadCount > 0" class="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 flex items-center justify-center rounded-full bg-error text-white text-[8px] font-bold leading-none">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
                 </span>
-                <svg v-else-if="link.icon === 'user'" class="w-4 h-4 inline mr-1.5 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span v-else-if="link.icon === 'user'" class="relative inline-block mr-1.5 -mt-0.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span v-if="profileMissing > 0" class="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 flex items-center justify-center rounded-full bg-error text-white text-[8px] font-bold leading-none">{{ profileMissing }}</span>
+                </span>
                 {{ link.label }}
             </Link>
         </nav>
@@ -93,9 +97,13 @@ const userName = computed(() => page.props.auth?.user?.name || 'User');
             <div v-else class="profile-dropdown relative" @click.stop>
                 <button
                     @click="toggleProfileMenu"
-                    class="rounded-full overflow-hidden border-2 border-primary/30 cursor-pointer p-0 bg-transparent transition-all hover:border-primary"
+                    class="relative rounded-full overflow-visible border-2 border-primary/30 cursor-pointer p-0 bg-transparent transition-all hover:border-primary"
                 >
                     <UserAvatar :src="userAvatar" :name="userName" size="md" rounded="full" />
+                    <span
+                        v-if="profileMissing > 0"
+                        class="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full bg-error text-white text-[9px] font-bold leading-none ring-2 ring-base-100"
+                    >{{ profileMissing }}</span>
                 </button>
 
                 <transition name="page-fade">

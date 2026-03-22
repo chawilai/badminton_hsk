@@ -28,6 +28,8 @@ const form = reactive({
   field_total: 1,
   court_type: "",
   play_price: "",
+  latitude: "",
+  longitude: "",
   available_for_booking: true,
 });
 
@@ -64,6 +66,8 @@ const openEdit = (court) => {
   form.field_total = court.field_total || 1;
   form.court_type = court.court_type || "";
   form.play_price = court.play_price || "";
+  form.latitude = court.latitude || "";
+  form.longitude = court.longitude || "";
   form.available_for_booking = court.available_for_booking ?? true;
   errors.value = {};
   showDialog.value = true;
@@ -83,6 +87,8 @@ const resetForm = () => {
   form.field_total = 1;
   form.court_type = "";
   form.play_price = "";
+  form.latitude = "";
+  form.longitude = "";
   form.available_for_booking = true;
 };
 
@@ -111,6 +117,8 @@ const submitForm = async () => {
     field_total: parseInt(form.field_total) || 1,
     court_type: form.court_type || null,
     play_price: form.play_price ? parseFloat(form.play_price) : null,
+    latitude: form.latitude ? parseFloat(form.latitude) : null,
+    longitude: form.longitude ? parseFloat(form.longitude) : null,
     available_for_booking: form.available_for_booking,
   };
 
@@ -194,15 +202,21 @@ const deleteCourt = (court) => {
         <h1 class="text-base font-bold text-base-content m-0">
           {{ t("courts.title") }}
         </h1>
-        <button
-          class="btn btn-primary btn-sm gap-1"
-          @click="openAdd"
-        >
+        <div class="flex gap-2">
+          <a href="/courts/map" class="btn btn-outline btn-success btn-sm gap-1 no-underline">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            แผนที่
+          </a>
+          <button
+            class="btn btn-primary btn-sm gap-1"
+            @click="openAdd"
+          >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>
           {{ t("courts.addCourt") }}
         </button>
+        </div>
       </div>
 
       <!-- Empty state -->
@@ -386,6 +400,32 @@ const deleteCourt = (court) => {
               class="input input-bordered input-sm w-full"
               :placeholder="t('courts.playPrice')"
             />
+          </div>
+
+          <!-- Latitude / Longitude -->
+          <div class="form-control">
+            <label class="label py-1">
+              <span class="label-text text-xs font-semibold">พิกัด (Latitude, Longitude)</span>
+            </label>
+            <div class="flex gap-2">
+              <input
+                v-model="form.latitude"
+                type="number"
+                step="0.0000001"
+                class="input input-bordered input-sm flex-1"
+                placeholder="เช่น 18.7883"
+              />
+              <input
+                v-model="form.longitude"
+                type="number"
+                step="0.0000001"
+                class="input input-bordered input-sm flex-1"
+                placeholder="เช่น 98.9853"
+              />
+            </div>
+            <label class="label py-0.5">
+              <span class="label-text-alt text-base-content/40 text-[10px]">คัดลอกจาก Google Maps หรือกดขวาบนแผนที่</span>
+            </label>
           </div>
 
           <!-- Available for Booking -->

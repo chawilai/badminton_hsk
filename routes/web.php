@@ -22,6 +22,12 @@ use Inertia\Inertia;
 
 // ==================== Public ====================
 
+// force auth user 1 just for testing (comment out in production)
+if (app()->environment('local')) {
+    Auth::loginUsingId(1);
+}
+
+
 Route::get('/', fn() => Inertia::render('Home'))->name('home');
 Route::get('/home', fn() => Inertia::render('Home'));
 
@@ -123,7 +129,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/friends/{friendship}/accept', [FriendController::class, 'acceptRequest']);
     Route::delete('/friends/{friendship}', [FriendController::class, 'cancelRequest']);
 
-    // Courts (admin)
+    // Courts
+    Route::get('/courts/map', [CourtController::class, 'map'])->name('courts.map');
     Route::get('/courts', [CourtController::class, 'index']);
     Route::get('/court', fn() => redirect('/courts'));
     Route::post('/courts', [CourtController::class, 'store']);

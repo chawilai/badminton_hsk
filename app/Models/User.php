@@ -195,6 +195,45 @@ class User extends Authenticatable
     }
 
     /**
+     * Get list of missing profile fields.
+     */
+    public function profileMissingFields(): array
+    {
+        $missing = [];
+
+        if (empty($this->gender)) {
+            $missing[] = 'gender';
+        }
+        if (empty($this->date_of_birth)) {
+            $missing[] = 'date_of_birth';
+        }
+        if (empty($this->phone) || empty($this->phone_verified_at)) {
+            $missing[] = 'phone';
+        }
+        if (empty($this->email) || str_ends_with($this->email, '@example.com') || empty($this->email_verified_at)) {
+            $missing[] = 'email';
+        }
+        if (empty($this->province)) {
+            $missing[] = 'address';
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Total number of profile fields tracked for completeness.
+     */
+    public const PROFILE_TOTAL_FIELDS = 5;
+
+    /**
+     * Check if user profile is complete.
+     */
+    public function isProfileComplete(): bool
+    {
+        return empty($this->profileMissingFields());
+    }
+
+    /**
      * Accessor for mmr_level attribute.
      */
     public function getMmrLevelAttribute(): ?MmrLevel

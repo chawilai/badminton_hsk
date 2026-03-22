@@ -80,6 +80,12 @@ class HandleInertiaRequests extends Middleware
                     ->latest()
                     ->first()
                 : null,
+            'profileMissingFields' => fn () => $request->user()
+                ? $request->user()->profileMissingFields()
+                : [],
+            'profileCompleteness' => fn () => $request->user()
+                ? (int) round(((\App\Models\User::PROFILE_TOTAL_FIELDS - count($request->user()->profileMissingFields())) / \App\Models\User::PROFILE_TOTAL_FIELDS) * 100)
+                : 0,
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

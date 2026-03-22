@@ -8,6 +8,10 @@ import DaisyToast from '@/Components/DaisyToast.vue';
 import DaisyConfirmDialog from '@/Components/DaisyConfirmDialog.vue';
 import LevelUpDialog from '@/Components/LevelUpDialog.vue';
 
+const props = defineProps({
+    fullWidth: { type: Boolean, default: false },
+});
+
 const { initTheme } = useBadmintonLayout();
 const page = usePage();
 
@@ -20,7 +24,7 @@ onMounted(() => {
     <div class="badminton-layout min-h-screen bg-base-200 text-base-content">
         <BadmintonTopbar />
 
-        <main class="pb-20 lg:pb-6 pt-4 px-4 lg:px-8 max-w-5xl mx-auto">
+        <main :class="fullWidth ? 'pb-20 lg:pb-0' : 'pb-20 lg:pb-6 pt-4 px-4 lg:px-8 max-w-5xl mx-auto'">
             <transition name="page-fade" mode="out-in">
                 <div :key="page.url">
                     <slot />
