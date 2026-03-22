@@ -15,6 +15,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SkillAssessmentController;
 use App\Http\Controllers\MmrController;
+use App\Http\Controllers\LineOaManagerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -191,6 +192,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/feedbacks', [AdminController::class, 'feedbacks'])->name('admin.feedbacks');
     Route::patch('/admin/feedbacks/{feedback}/status', [AdminController::class, 'updateFeedbackStatus'])->name('admin.feedbacks.status');
     Route::post('/admin/feedbacks/{feedback}/reply', [AdminController::class, 'replyFeedback'])->name('admin.feedbacks.reply');
+
+    // LINE OA Manager
+    Route::get('/lineoa-manager', [LineOaManagerController::class, 'index'])->name('lineoa-manager.index');
+    Route::post('/lineoa-manager/update', [LineOaManagerController::class, 'update'])->name('lineoa-manager.update');
+    Route::post('/lineoa-manager/test-welcome', [LineOaManagerController::class, 'sendTestWelcome'])->name('lineoa-manager.test-welcome');
+    Route::get('/api/lineoa-richmenu', [LineOaManagerController::class, 'fetchRichMenu'])->name('lineoa-manager.richmenu');
 
     // MMR Assessment
     Route::get('/mmr-assessment', [MmrController::class, 'showAssessment']);

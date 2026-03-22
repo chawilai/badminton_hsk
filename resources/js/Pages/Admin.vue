@@ -32,6 +32,12 @@ const menuItems = [
     badgeClass: 'badge-warning',
   },
   {
+    icon: '📱',
+    label: 'LINE OA Manager',
+    desc: 'จัดการ LINE OA, Welcome Message, Rich Menu',
+    href: '/lineoa-manager',
+  },
+  {
     icon: '👥',
     label: 'ผู้ใช้งาน',
     desc: `ผู้ใช้ทั้งหมด ${props.stats.totalUsers} คน`,

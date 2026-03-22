@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LineOaSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -23,9 +24,13 @@ class LineMessagingController extends Controller
 
     private function sendWelcomeMessage(string $replyToken): void
     {
+        $settings = LineOaSetting::current();
         $appUrl = config('app.url', 'https://badmintonparty.com');
+        if (!str_starts_with($appUrl, 'https://')) {
+            $appUrl = 'https://badmintonparty.com';
+        }
         $logoUrl = $appUrl . '/icons/logo2.png';
-        $liffUrl = 'https://liff.line.me/' . config('services.line.liff_id', '') . '/party-lists';
+        $liffUrl = $settings->getLiffUrl('party-lists');
 
         $flexMessage = [
             'type' => 'flex',
@@ -150,7 +155,7 @@ class LineMessagingController extends Controller
 
         try {
             Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('services.line.channel_access_token'),
+                'Authorization' => 'Bearer ' . $settings->getEffectiveToken(),
                 'Content-Type' => 'application/json',
             ])->post('https://api.line.me/v2/bot/message/reply', [
                 'replyToken' => $replyToken,
