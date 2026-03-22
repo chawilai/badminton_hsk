@@ -52,7 +52,6 @@ const saveProfile = () => {
     onSuccess: () => {
       profileSaved.value = true;
       profileEditing.value = false;
-      toast.add({ severity: 'success', summary: 'บันทึกโปรไฟล์เรียบร้อย', life: 3000 });
     },
   });
 };
