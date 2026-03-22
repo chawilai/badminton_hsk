@@ -188,7 +188,7 @@ const searchAddress = (val) => {
   if (val.length < 2) { addressResults.value = []; return; }
   addressTimeout = setTimeout(async () => {
     try {
-      const res = await fetch(`/api/thai-address?q=${encodeURIComponent(val)}`);
+      const res = await fetch(`/api/thai-address?q=${encodeURIComponent(val)}`, { credentials: 'same-origin' });
       addressResults.value = await res.json();
       showAddressDropdown.value = addressResults.value.length > 0;
     } catch { addressResults.value = []; }
@@ -362,7 +362,7 @@ const changeEmail = () => {
                 @blur="setTimeout(() => showAddressDropdown = false, 200)"
               />
               <!-- Dropdown -->
-              <div v-if="showAddressDropdown" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              <div v-if="showAddressDropdown && addressResults.length > 0" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                 <button v-for="(addr, i) in addressResults" :key="i"
                   type="button"
                   @mousedown.prevent="selectAddress(addr)"
@@ -373,6 +373,8 @@ const changeEmail = () => {
                   <span class="text-base-content/30 text-xs ml-1">{{ addr.zipcode }}</span>
                 </button>
               </div>
+              <!-- Hint -->
+              <p v-if="addressQuery.length >= 2 && addressResults.length === 0 && !form.subdistrict" class="text-[10px] text-warning mt-1 m-0">กรุณาเลือกจากรายการที่ขึ้นมา</p>
             </div>
             <!-- Selected display -->
             <div v-if="form.subdistrict" class="mt-1.5 flex items-center gap-1.5">
